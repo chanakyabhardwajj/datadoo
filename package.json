@@ -1,0 +1,28 @@
+{
+  "name": "datadoo",
+  "version": "0.0.0",
+  "description": "datadoo",
+  "main": "Gruntfile.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://chanakyabhardwajj@github.com/chanakyabhardwajj/datadoo.git"
+  },
+  "author": "z33m",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chanakyabhardwajj/datadoo/issues"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-jshint": "~0.6.0",
+    "grunt-contrib-concat": "~0.3.0",
+    "grunt-contrib-watch": "~0.4.4",
+    "grunt-contrib-uglify": "~0.2.2"
+  }
+}
