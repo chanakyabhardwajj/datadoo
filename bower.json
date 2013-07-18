@@ -12,6 +12,7 @@
   "dependencies"  : {
     "jquery"  : "2.0.3",
     "underscore"  : "1.5.1",
-    "miso.dataset"  : "0.4.1"
+    "miso.dataset"  : "0.4.1",
+    "threejs" : "ad419d40bdaab80abbb34b8f359b4ee840033a02"
   }
 }
