@@ -122,68 +122,69 @@ window.DataDoo = (function() {
 //This will essentially be a very light wrapper around the MISO Dataset (http://misoproject.com/)
 
 (function(DataDoo){
-    var DataSet = function(/*datadooInstance*/ ddI, /*array of dataset configurations*/ configArr){
+    var DataSet = function(/*datadooInstance*/ ddI, id, configObj){
         if(!ddI){
             console.log("DataSet : Could not find any DataDoo instance!");
             return;
         }
 
-        if(!configArr || configArr.length==0){
+        if(!id){
+            console.log("DataSet : Could not find any id!");
+            return;
+        }
+
+        if(!configObj){
             console.log("DataSet : Could not find any configuration object!");
             return;
         }
 
-        _.each(configArr, function(config){
-            /*
-            config object should have a name property: {name : "String"}
-            Refer here for further supported options : http://misoproject.com/dataset/api.html#misodataset_constructor
-            */
-            var newDataSet = new Miso.Dataset(config);
-            if(newDataSet){
-                ddI[config.name || Date.now()] = newDataSet;
+        var newDataSet = new Miso.Dataset(configObj);
+        if(newDataSet){
+            if(ddI[id]){
+                console.log("DataSet : A dataset with the same ID already exists!!");
+                return;
             }
-            else{
-                console.log("DataSet : Could not create the Miso Dataset. Details of the failed configuration below : ");
-                console.log(config);
+            if(ddI.bucket[id]){
+                console.log("DataSet : The bucket has a dataset reference with the same ID already! Internal Error!");
+                return;
             }
-        })
 
+            ddI[id] = newDataSet;
+            ddI.bucket[id] = ddI[id];
+
+            newDataSet.fetch({
+                success: function() {
+                    ddI.eventBus.enqueue(0, "DATA.ADD", newDataSet, this.rows())
+                }
+            });
+
+            newDataSet.subscribe("add", function(event){
+                ddI.eventBus.enqueue(0, "DATA.ADD", newDataSet, _.map(event.deltas, function(obj){ return obj.changed; }))
+            });
+
+            newDataSet.subscribe("update", function(event){
+                //ToDO : add the updated rows.
+                ddI.eventBus.enqueue(0, "DATA.UPDATE", newDataSet, [])
+            });
+
+            newDataSet.subscribe("remove", function(event){
+                ddI.eventBus.enqueue(0, "DATA.DELETE", newDataSet, _.map(event.deltas, function(obj){ return obj.old; }))
+            });
+
+            return newDataSet;
+        }
+        else{
+            console.log("DataSet : Could not create the Miso Dataset. Details of the failed configuration below : ");
+            console.log(config);
+        }
     };
-
-    DataSet.prototype.fetch = function(dataset){
-        dataset.fetch({
-            success: function() {
-                console.log( "DataSet : Successfully fetched the dataset : " + dataset );
-            },
-
-            error: function() {
-                console.log( "DataSet : Error fetching the dataset : " + dataset );
-            }
-        });
-    }
-
-    DataSet.prototype.reset = function(dataset){
-        dataset.reset();
-    }
-
-    DataSet.prototype.add = function(dataset, row){
-        dataset.add(row);
-    }
-
-    DataSet.prototype.remove = function(dataset, filterFn){
-        dataset.remove(filterFn);
-    }
-
-    DataSet.prototype.update = function(dataset, options){
-        dataset.update(options);
-    }
 
     /*Other methods that will be available (by inheritance) on the DataSet instance can be found here:
     * http://misoproject.com/dataset/api.html#misodatasetdataview
     */
 
-    DataDoo.prototype.DataSet = function(/*array of dataset configurations*/ configArr){
-        return new DataSet(this, configArr);
+    DataDoo.prototype.DataSet = function(id, configObj){
+        return new DataSet(this, id, configObj);
     }
 
 })(window.DataDoo)
