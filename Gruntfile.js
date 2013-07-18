@@ -1,7 +1,7 @@
 module.exports = function(grunt) {
     grunt.initConfig({
         jshint: {
-            files: ["Gruntfile.js", "src/**/*.js"],
+            files: ["Gruntfile.js", "src/**/(!components)/*.js"],
             options: {
                 globals: {
                     datadoo: true
