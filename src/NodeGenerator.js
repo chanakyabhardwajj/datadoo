@@ -14,9 +14,9 @@
             dd.bucket.id = this.nodes;
         }
 
-        dd.eventBus.subscribe(dataSet, "data.add", this.onAddHandler, this);
-        dd.eventBus.subscribe(dataSet, "data.delete", this.onDeleteHandler, this);
-        dd.eventBus.subscribe(dataSet, "data.update", this.onUpdateHandler, this);
+        dd.eventBus.subscribe(dataSet, "DATA.ADD", this.onAddHandler, this);
+        dd.eventBus.subscribe(dataSet, "DATA.DELETE", this.onDeleteHandler, this);
+        dd.eventBus.subscribe(dataSet, "DATA.UPDATE", this.onUpdateHandler, this);
     }
     NodeGenerator.prototype.onAddHandler = function(addedRows) {
         var addedNodes = _.map(addedRows, function(row) {
