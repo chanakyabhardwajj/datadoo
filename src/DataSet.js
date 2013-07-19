@@ -32,20 +32,25 @@
             ddI[id] = newDataSet;
             ddI.bucket[id] = ddI[id];
 
-            newDataSet.fetch({
-                success:function () {
-                    ddI.eventBus.enqueue(0, "DATA.ADD", newDataSet, this.rows())
-                }
-            });
 
+            //Events for the dataset
             newDataSet.subscribe("add", function (event) {
                 ddI.eventBus.enqueue(0, "DATA.ADD", newDataSet, _.map(event.deltas, function (obj) {
                     return obj.changed;
                 }))
             });
 
-            newDataSet.subscribe("update", function (event) {
-                ddI.eventBus.enqueue(0, "DATA.UPDATE", newDataSet, [])
+            newDataSet.subscribe("update", function (e) {
+                var updatedRows = [];
+                _.each(e.deltas, function(delta){
+                    console.log("delta " + delta._id);
+                    _.each(e.dataset, function(drow){
+                        if(drow._id == delta._id){
+                            updatedRows.push(drow)
+                        }
+                    })
+                });
+                ddI.eventBus.enqueue(0, "DATA.UPDATE", newDataSet, updatedRows)
             });
 
             newDataSet.subscribe("remove", function (event) {
