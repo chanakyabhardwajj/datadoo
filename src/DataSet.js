@@ -40,7 +40,7 @@
             newDataSet.subscribe("add", function (event) {
                 ddI.eventBus.enqueue(0, "DATA.ADD", newDataSet, _.map(event.deltas, function (obj) {
                     return obj.changed;
-                }))
+                }));
             });
 
             newDataSet.subscribe("update", function (e) {
@@ -49,21 +49,21 @@
                     console.log("delta " + delta._id);
                     _.each(e.dataset, function(drow){
                         if(drow._id == delta._id){
-                            updatedRows.push(drow)
+                            updatedRows.push(drow);
                         }
-                    })
+                    });
                 });
-                ddI.eventBus.enqueue(0, "DATA.UPDATE", newDataSet, updatedRows)
+                ddI.eventBus.enqueue(0, "DATA.UPDATE", newDataSet, updatedRows);
             });
 
             newDataSet.subscribe("remove", function (event) {
                 ddI.eventBus.enqueue(0, "DATA.DELETE", newDataSet, _.map(event.deltas, function (obj) {
                     return obj.old;
-                }))
+                }));
             });
 
             newDataSet.subscribe("reset", function (event) {
-                ddI.eventBus.enqueue(0, "DATA.RESET", newDataSet, [])
+                ddI.eventBus.enqueue(0, "DATA.RESET", newDataSet, []);
             });
 
             return newDataSet;
@@ -80,15 +80,6 @@
 
     DataDoo.prototype.DataSet = function (id, configObj) {
         return new DataSet(this, id, configObj);
-    }
+    };
 
 })(window.DataDoo);
-
-/*
-var ds = new Miso.Dataset({
-    data: [
-        { year : 1971, pop : 4000000, gdp : 7 },
-        { year : 1972, pop : 5000000, gdp : 6 },
-        { year : 1973, pop : 6000000, gdp : 5 }
-    ]
-});*/
