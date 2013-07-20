@@ -18,65 +18,15 @@
             throw new Error("DataFilter : Could not find any parent DataSet object");
         }
 
-        if(!dsI.fetched){dsI.fetch();}
-
-        var uniqs = _.pluck(dsI.countBy(colName).toJSON(), colName) || [];
+        //in the following line I am using countBy
+        //which is a unexposed Miso function of Miso.Dataset
+        //hence using dsI.dataset to access the Miso.Dataset object
+        var uniqs = _.pluck(dsI.dataset.countBy(colName).toJSON(), colName) || [];
 
         if (uniqs.length === 0) {
             console.log("DataFilter : The supplied column does not have any data!");
             throw new Error("DataFilter : The supplied column does not have any data!");
         }
-
-
-        var allCols = dsI.columnNames();
-        var filteredCols = _.without(allCols, colName);
-        var currentIndex = 0;
-
-        var newDataFilter = {
-            colName:colName,
-            filter:null,
-            uniqs:uniqs,
-            currentIndex:currentIndex
-        };
-
-        newDataFilter.recompute = function () {
-            if(!dsI.fetched){dsI.fetch();}
-
-            newDataFilter.filter = dsI.where({
-                columns:filteredCols,
-                rows:function (row) {
-                    return row[newDataFilter.colName] == newDataFilter.uniqs[newDataFilter.currentIndex];
-                }
-            });
-        };
-
-        newDataFilter.next = function () {
-            if (newDataFilter.currentIndex < newDataFilter.uniqs.length - 1) {
-                newDataFilter.currentIndex++;
-            }
-            else if (newDataFilter.currentIndex == newDataFilter.uniqs.length - 1) {
-                newDataFilter.currentIndex = 0;
-            }
-
-            newDataFilter.recompute();
-        };
-
-        newDataFilter.previous = function () {
-            if (newDataFilter.currentIndex > 0) {
-                newDataFilter.currentIndex--;
-            }
-            else if (newDataFilter.currentIndex  === 0) {
-                newDataFilter.currentIndex = newDataFilter.uniqs.length - 1;
-            }
-
-            newDataFilter.recompute();
-        };
-
-        newDataFilter.getCurrentState = function () {
-            return newDataFilter.uniqs[newDataFilter.currentIndex];
-        };
-
-        newDataFilter.recompute();
 
         if (ddI[id]) {
             console.log("DataFilter : An entity with the same ID already exists!!");
@@ -87,23 +37,77 @@
             console.log("DataSet : The bucket has an entity reference with the same ID already! Internal Error!");
             throw new Error("DataSet : The bucket has an entity reference with the same ID already! Internal Error");
         }
-        ddI[id] = newDataFilter;
+
+
+        /*newDataFilter.filter.subscribe("change", function (e) {
+         ddI.eventBus.enqueue(0, "DATA......", newDataFilter, []);
+         });*/
+
+
+        this.uniqs = uniqs;
+        this.currentIndex = 0;
+        this.filter = null;
+        this.datasource = dsI;
+        this.filterColumn = colName;
+
+        ddI[id] = this;
         ddI.bucket[id] = ddI[id];
 
-        newDataFilter.filter.subscribe("change", function (e) {
-            ddI.eventBus.enqueue(0, "DATA......", newDataFilter, []);
-        });
+        if (!dsI.dataset.fetched) {
+            dsI.fetch();
+        }
+        this.compute();
 
         //Listen to the parent dataset's reset event and then recompute yourself!
         //Miso somehow does not do this! Weird!
-        dsI.subscribe("reset", function(){
-            newDataFilter.recompute();
-            ddI.eventBus.enqueue(0, "DATA.RESET", newDataFilter, []);
+        dsI.dataset.subscribe("reset", function () {
+            this.compute();
+            ddI.eventBus.enqueue(this, "DATA.RESET", []);
         });
 
 
-        return newDataFilter;
+        return this;
+    };
 
+    DataFilter.prototype.compute = function () {
+        var misoDataset = this.datasource.dataset;
+
+        if (!misoDataset.fetched) {
+            misoDataset.fetch();
+        }
+        var that = this;
+        this.filter = misoDataset.where({
+            columns:_.without(misoDataset.columnNames(), this.filterColumn),
+            rows:function (row) {
+                return row[that.filterColumn] == that.uniqs[that.currentIndex];
+            }
+        });
+    };
+
+    DataFilter.prototype.next = function () {
+        if (this.currentIndex < this.uniqs.length - 1) {
+            this.currentIndex++;
+        }
+        else if (this.currentIndex == this.uniqs.length - 1) {
+            this.currentIndex = 0;
+        }
+
+        this.compute();
+    };
+
+    DataFilter.prototype.previous = function () {
+        if (this.currentIndex > 0) {
+            this.currentIndex--;
+        }
+        else if (this.currentIndex === 0) {
+            this.currentIndex = this.uniqs.length - 1;
+        }
+
+        this.compute();
+    };
+
+    DataFilter.prototype.getCurrentState = function () {
+        return this.uniqs[this.currentIndex];
     };
 
     /*Other methods that will be available (by inheritance) on the DataSet instance can be found here:

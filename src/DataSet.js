@@ -67,14 +67,22 @@
                 ddI.eventBus.enqueue(newDataSet, "DATA.RESET", []);
             });
 
-            return newDataSet;
+            this.dataset = newDataSet;
+            return this;
         }
         else {
-
             console.log("DataSet : Could not create the Miso Dataset. Details of the failed configuration below : ");
             console.log(config);
             throw new Error("DataSet : Could not create the Miso Dataset");
         }
+    };
+
+    DataSet.prototype.fetch = function(){
+        this.dataset.fetch();
+    };
+
+    DataSet.prototype.toJSON = function(){
+        this.dataset.toJSON();
     };
 
     /*Other methods that will be available (by inheritance) on the DataSet instance can be found here:
