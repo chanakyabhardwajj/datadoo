@@ -61,10 +61,10 @@ window.DataDoo = (function() {
             requestAnimationFrame(renderFrame);
 
             // we clear the eventbus, to make sure all the components have run
-            self.eventBus.fireTillEmpty();
+            self.eventBus.execute();
 
             // render the frame
-            self.renderer.render(this.scene, this.camera);
+            self.renderer.render(self.scene, self.camera);
         }
         requestAnimationFrame(renderFrame);
     };

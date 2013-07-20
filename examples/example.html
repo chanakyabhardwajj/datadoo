@@ -8,7 +8,9 @@
         <script type="text/javascript">
             var dd = new DataDoo({
                 canvas: document.getElementById("canvas"),
-                camera: DataDoo.PERSPECTIVE
+                camera: {
+                    type: DataDoo.PERSPECTIVE
+                }
             });
 
             var ds1 = new DataDoo.DataSet(dd, "ds1", {
