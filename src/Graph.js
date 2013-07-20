@@ -3,6 +3,6 @@
     }
 
     DataDoo.prototype.graph = function() {
-        return new Graph(this)
-    }
-})(window.DataDoo)
+        return new Graph(this);
+    };
+})(window.DataDoo);

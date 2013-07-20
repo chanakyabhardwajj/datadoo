@@ -58,16 +58,16 @@
             default:
                 throw new Error("NodeGenerator : Unknown event fired");
         }
-    }
+    };
     NodeGenerator.prototype._generateNode = function(data) {
         var node = new DataDoo.Node();
         node.data = data;
         this.appFn.call(node, this.dd.bucket);
         return node;
-    }
+    };
 
     // expose the NodeGenerator constructor by patching datadoo
     DataDoo.prototype.nodeGenerator = function(id, dataSet, appFn) {
-        return new NodeGenerator(this, id, dataSet, appFn)
+        return new NodeGenerator(this, id, dataSet, appFn);
     };
 })(window.DataDoo);

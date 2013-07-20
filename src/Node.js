@@ -17,7 +17,7 @@
         this.radius = radius;
         this.geometry = new THREE.SphereGeometry(this.radius);
         this.mesh.setGeometry(this.geometry);
-    }
+    };
 
     /**
      * Node is a visual representation for each datapoint

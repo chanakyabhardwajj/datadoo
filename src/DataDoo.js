@@ -42,7 +42,7 @@ window.DataDoo = (function() {
         if(this.camera instanceof THREE.PerspectiveCamera) {
             this.camera.aspect = width/height;
         }
-    }
+    };
     /**
      * Starts the visualization render loop
      */
@@ -58,7 +58,7 @@ window.DataDoo = (function() {
             self.renderer.render(this.scene, this.camera);
         }
         requestAnimationFrame(renderFrame);
-    }
+    };
 
     /**
      * DataDoo constants TODO: move to separate file
