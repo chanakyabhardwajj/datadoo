@@ -100,9 +100,7 @@
      * http://misoproject.com/dataset/api.html#misodatasetdataview
      */
 
-    DataDoo.prototype.DataFilter = function (id, dsI, colName) {
-        return new DataFilter(this, id, dsI, colName);
-    }
+    DataDoo.DataFilter = DataFilter;
 
 })(window.DataDoo);
 

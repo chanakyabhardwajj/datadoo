@@ -66,8 +66,5 @@
         return node;
     };
 
-    // expose the NodeGenerator constructor by patching datadoo
-    DataDoo.prototype.nodeGenerator = function(id, dataSet, appFn) {
-        return new NodeGenerator(this, id, dataSet, appFn);
-    };
+    DataDoo.NodeGenerator = NodeGenerator;
 })(window.DataDoo);
