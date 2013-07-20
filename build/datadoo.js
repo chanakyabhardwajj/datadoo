@@ -49,6 +49,9 @@ window.DataDoo = (function() {
         this.light3.position.set(-250,-250,-250);
         this.scene.add(this.light3);
 
+        this.axes = new THREE.AxisHelper(100);
+        this.scene.add( this.axes );
+
         this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
     }
     DataDoo.prototype.id = "DD";
