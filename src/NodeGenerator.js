@@ -63,15 +63,6 @@
         return node;
     }
 
-    /**
-     * Node is a visual representation for each datapoint
-     * It contains a set of graphics primitives that reprents
-     * its visual
-     */
-    function Node() {
-        this.primitives = [];
-    }
-
     // expose the NodeGenerator constructor by patching datadoo
     DataDoo.prototype.nodeGenerator = function() {
         return NodeGenerator.apply({}, [this].concat(arguments));
