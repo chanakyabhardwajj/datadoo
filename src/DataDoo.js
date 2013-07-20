@@ -107,8 +107,8 @@ window.DataDoo = (function() {
                     }, this);
                     break;
             }
+            this._addOrRemoveSceneObjects(this.parentEvents);
         }, this);
-        _.each(this.event.parentEvents, this._addOrRemoveSceneObjects, this);
     };
     DataDoo.prototype._getObjects = function(nodes) {
         return _.chain(nodes).map(function(node) {
