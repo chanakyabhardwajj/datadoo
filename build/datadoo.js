@@ -245,6 +245,7 @@ window.DataDoo = (function() {
 
         //Force the syncing to be true. Miso does not allow to make an instantiated dataset syncable later on.
         configObj.sync = true;
+        configObj.resetOnFetch = true;
 
         var newDataSet = new Miso.Dataset(configObj);
         if (newDataSet) {
@@ -256,6 +257,14 @@ window.DataDoo = (function() {
             ddI.bucket[id] = newDataSet;
 
             //Events for the dataset
+            newDataSet.subscribe("change", function (event) {
+                console.log('change happened');
+                /*ddI.eventBus.enqueue(newDataSet, "DATA.ADD", _.map(event.deltas, function (obj) {
+                    return obj.changed;
+                }));*/
+                console.log(event);
+            });
+
             newDataSet.subscribe("add", function (event) {
                 console.log('add fired');
                 ddI.eventBus.enqueue(newDataSet, "DATA.ADD", _.map(event.deltas, function (obj) {

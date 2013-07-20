@@ -18,28 +18,37 @@
                 { one : 1, two : 4, three : 7 },
                 { one : 20, two : 50, three : 8 }
               ]
-            });*/
+            });
 
-            var ds1 = new Miso.Dataset({
+            var appFn = function($) {
+                var sphere = this.addSphere(100);
+
+                sphere.x = this.data.one;
+                sphere.y = this.data.two;
+                sphere.z = this.data.three;
+            };*/
+
+            var ds1 = new DataDoo.DataSet(dd, "ds1",{
                 importer : Miso.Dataset.Importers.GoogleSpreadsheet,
                 parser : Miso.Dataset.Parsers.GoogleSpreadsheet,
-                key : "0Asnl0xYK7V16dFpFVmZUUy1taXdFbUJGdGtVdFBXbFE",
-                worksheet : "1"
+                key : "0ArX_nhRDAroJdFM3aEdDWkJKdDBja1k1UHh3WnFqRlE",
+                worksheet : "1",
+                sync:true,
+                interval : 1000
             });
 
-
-            var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, function($) {
+            var appFn = function($) {
                 var sphere = this.addSphere(100);
-                console.log(this.data.ColumnTitle);
-                sphere.x = this.data.ColumnTitle;
-                sphere.y = this.data.ColumnTitle * 10;
-                sphere.z = this.data.ColumnTitle * 10;
-            });
+                console.log(this.data.Population);
+                sphere.x = this.data.Population;
+                sphere.y = this.data.Population;
+                sphere.z = this.data.Population;
+            };
 
-            _.when(ds1.fetch()).then(function() {
-                dd.eventBus.enqueue(this, "DATA.ADD", ds1.toJSON())
-                dd.startVis(ng1);
-            });
+            var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, appFn);
+
+            ds1.fetch();
+            dd.startVis(ng1);
         </script>
     </body>
 </html>
