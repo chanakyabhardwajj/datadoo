@@ -18,13 +18,16 @@
             return;
         }
 
-        var uniqs = _.pluck(dsI.countBy(colName).toJSON(), colName);
+        if(!dsI.fetched){dsI.fetch();}
+
+        var uniqs = _.pluck(dsI.countBy(colName).toJSON(), colName) || [];
         if (uniqs.length === 0) {
             console.log("DataFilter : The supplied column does not have any data!");
-            return;
+            throw new Error("DataFilter : The supplied column does not have any data!");
+            //return;
         }
 
-        var allCols = dsI.columnNames;
+        var allCols = dsI.columnNames();
         var filteredCols = _.without(allCols, colName);
         var currentIndex = 0;
 
@@ -36,8 +39,10 @@
         };
 
         newDataFilter.recompute = function () {
+            if(!dsI.fetched){dsI.fetch();}
+
             newDataFilter.filter = dsI.where({
-                //columns:filteredCols,
+                columns:filteredCols,
                 rows:function (row) {
                     return row[newDataFilter.colName] == newDataFilter.uniqs[newDataFilter.currentIndex];
                 }
@@ -64,6 +69,10 @@
             }
 
             newDataFilter.recompute();
+        };
+
+        newDataFilter.getCurrentState = function () {
+            return newDataFilter.uniqs[newDataFilter.currentIndex];
         };
 
         newDataFilter.recompute();

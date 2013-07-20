@@ -221,9 +221,7 @@ window.DataDoo = (function() {
      * http://misoproject.com/dataset/api.html#misodatasetdataview
      */
 
-    DataDoo.prototype.DataSet = function (id, configObj) {
-        return new DataSet(this, id, configObj);
-    };
+    DataDoo.DataSet = DataSet;
 
 })(window.DataDoo);
 
@@ -247,13 +245,16 @@ window.DataDoo = (function() {
             return;
         }
 
-        var uniqs = _.pluck(dsI.countBy(colName).toJSON(), colName);
+        if(!dsI.fetched){dsI.fetch();}
+
+        var uniqs = _.pluck(dsI.countBy(colName).toJSON(), colName) || [];
         if (uniqs.length === 0) {
             console.log("DataFilter : The supplied column does not have any data!");
-            return;
+            throw new Error("DataFilter : The supplied column does not have any data!");
+            //return;
         }
 
-        var allCols = dsI.columnNames;
+        var allCols = dsI.columnNames();
         var filteredCols = _.without(allCols, colName);
         var currentIndex = 0;
 
@@ -265,8 +266,10 @@ window.DataDoo = (function() {
         };
 
         newDataFilter.recompute = function () {
+            if(!dsI.fetched){dsI.fetch();}
+
             newDataFilter.filter = dsI.where({
-                //columns:filteredCols,
+                columns:filteredCols,
                 rows:function (row) {
                     return row[newDataFilter.colName] == newDataFilter.uniqs[newDataFilter.currentIndex];
                 }
@@ -293,6 +296,10 @@ window.DataDoo = (function() {
             }
 
             newDataFilter.recompute();
+        };
+
+        newDataFilter.getCurrentState = function () {
+            return newDataFilter.uniqs[newDataFilter.currentIndex];
         };
 
         newDataFilter.recompute();
@@ -329,9 +336,7 @@ window.DataDoo = (function() {
      * http://misoproject.com/dataset/api.html#misodatasetdataview
      */
 
-    DataDoo.prototype.DataFilter = function (id, dsI, colName) {
-        return new DataFilter(this, id, dsI, colName);
-    };
+    DataDoo.DataFilter = DataFilter;
 
 })(window.DataDoo);
 
@@ -404,8 +409,5 @@ window.DataDoo = (function() {
         return node;
     };
 
-    // expose the NodeGenerator constructor by patching datadoo
-    DataDoo.prototype.nodeGenerator = function(id, dataSet, appFn) {
-        return new NodeGenerator(this, id, dataSet, appFn);
-    };
+    DataDoo.NodeGenerator = NodeGenerator;
 })(window.DataDoo);
