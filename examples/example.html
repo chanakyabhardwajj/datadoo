@@ -2,7 +2,7 @@
     <head>
     </head>
     <body>
-        <canvas id="canvas" height="400" width="200"></canvas>
+        <canvas style="border: 1px solid black;" id="canvas" height="640" width="480"></canvas>
         <script src="../build/vendor.js"></script>
         <script src="../build/datadoo.js"></script>
         <script type="text/javascript">
@@ -22,8 +22,8 @@
 
             var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, function($) {
                 var sphere = this.addSphere(10);
-                sphere.x = this.data.one;
-                sphere.y = this.data.two;
+                sphere.x = 0;
+                sphere.y = 0;
                 sphere.z = 10;
             });
 

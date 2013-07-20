@@ -60,7 +60,7 @@
                 this.dd.eventBus.enqueue(this, "NODE.UPDATE", {updated: updatedNodes, oldNodes: oldNodes});
                 break;
             default:
-                throw new Error("NodeGenerator : Unknown event fired");
+                throw new Error("NodeGenerator : Unknown event "+event.eventName+" fired");
         }
     };
     NodeGenerator.prototype._generateNode = function(data) {

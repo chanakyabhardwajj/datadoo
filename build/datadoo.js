@@ -33,10 +33,14 @@ window.DataDoo = (function() {
             default:
                 throw new Error("DataDoo : unknown camera type");
         }
+        this.camera.position.set(0,150,400);
+        this.camera.lookAt(this.scene.position);
         this.scene.add(this.camera);
+        this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
     }
-    DataDoo.priority = 5;
-    DataDoo.collapseEvents = true;
+    DataDoo.prototype.id = "DD";
+    DataDoo.prototype.priority = 5;
+    DataDoo.prototype.collapseEvents = true;
     /**
      * Sets the size of the canvas
      */
@@ -52,7 +56,7 @@ window.DataDoo = (function() {
     DataDoo.prototype.startVis = function() {
         // subscribe to all the child elements
         _.each(arguments, function(entity) {
-            this.eventBus.subscribe(entity, this);
+            this.eventBus.subscribe(this, entity);
         }, this);
 
         // start the render loop
@@ -65,6 +69,8 @@ window.DataDoo = (function() {
 
             // render the frame
             self.renderer.render(self.scene, self.camera);
+
+            self.controls.update();
         }
         requestAnimationFrame(renderFrame);
     };
@@ -85,9 +91,9 @@ window.DataDoo = (function() {
     };
     DataDoo.prototype._addOrRemoveSceneObjects = function(events) {
         _.chain(events).filter(function(event) { 
-            return event.eventName.substring(0, 5) == "NODE";
+            return event.eventName.substring(0, 4) == "NODE";
         }).each(function(event) {
-            switch(event) {
+            switch(event.eventName) {
                 case "NODE.ADD":
                     _.each(this._getObjects(event.data), function(object) {
                         this.scene.add(object);
@@ -133,7 +139,7 @@ window.DataDoo = (function() {
         this._currentParentEvents = []; // maintains the parentEvents for the current execution
     }
     EventBus.prototype.enqueue = function(publisher, eventName, data) {
-        var subscribers = this.subscribers[publisher];
+        var subscribers = this.subscribers[publisher.id];
 
         // add execution schedules for this event
         _.each(subscribers, function(subscriber) {
@@ -169,14 +175,15 @@ window.DataDoo = (function() {
         this.schedule = _.sortBy(this.schedule, "priority");
     };
     EventBus.prototype.subscribe = function(subscriber, publisher) {
-        if(!this.subscribers[publisher]) {
-            this.subscribers[publisher] = [];
+        if(!this.subscribers[publisher.id]) {
+            this.subscribers[publisher.id] = [];
         }
-        this.subscribers[publisher].push(subscriber);
+        this.subscribers[publisher.id].push(subscriber);
     };
     EventBus.prototype.execute = function() {
         while(this.schedule.length > 0) {
             var item = this.schedule.shift();
+            console.log("EventBus : executing " + item.subscriber.id);
             this._currentParentEvents = item.events;
             if(item.subscriber.collapseEvents) {
                 item.subscriber.handler(item.events);
@@ -406,6 +413,49 @@ window.DataDoo = (function() {
 
 (function(DataDoo) {
     /**
+     *  Sphere primitive
+     */
+    function Sphere(radius, color) {
+        this.radius = 10;
+        this.color = color || 0x8888ff;
+
+        this.material = new THREE.MeshLambertMaterial({color: this.color});
+        this.geometry = new THREE.SphereGeometry(this.radius);
+        this.mesh = new THREE.Mesh(this.geometry, this.material);
+        this.objects = [this.mesh];
+    }
+    /**
+     * Sets the radius of the sphere
+     */
+    Sphere.prototype.setRadius = function(radius) {
+        this.radius = radius;
+        this.geometry = new THREE.SphereGeometry(this.radius);
+        this.mesh.setGeometry(this.geometry);
+    };
+    Sphere.prototype.setObjectPositions = function(x, y, z) {
+        this.mesh.position.set(x, y, z);
+    };
+
+    /**
+     * Node is a visual representation for each datapoint
+     * It contains a set of graphics primitives that reprents
+     * its visual
+     */
+    function Node(data) {
+        this.primitives = [];
+        this.data = data;
+    }
+    Node.prototype.addSphere = function(radius) {
+        var sphere = new Sphere(radius);
+        this.primitives.push(sphere);
+        return sphere;
+    };
+
+    DataDoo.Node = Node;
+})(window.DataDoo);
+
+(function(DataDoo) {
+    /**
      *  NodeGenerator class generates nodes for data points
      */
     function NodeGenerator(dd, id, dataSet, appFn) {
@@ -466,7 +516,7 @@ window.DataDoo = (function() {
                 this.dd.eventBus.enqueue(this, "NODE.UPDATE", {updated: updatedNodes, oldNodes: oldNodes});
                 break;
             default:
-                throw new Error("NodeGenerator : Unknown event fired");
+                throw new Error("NodeGenerator : Unknown event "+event.eventName+" fired");
         }
     };
     NodeGenerator.prototype._generateNode = function(data) {
