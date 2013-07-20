@@ -6,10 +6,10 @@
         this.radius = 10;
         this.color = color || 0x8888ff;
 
-        this.material = new THREE.MeshaLambertMaterial({color: this.color});
+        this.material = new THREE.MeshLambertMaterial({color: this.color});
         this.geometry = new THREE.SphereGeometry(this.radius);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
-        this.objects = [mesh];
+        this.objects = [this.mesh];
     }
     /**
      * Sets the radius of the sphere
@@ -34,6 +34,7 @@
     }
     Node.prototype.addSphere = function(radius) {
         var sphere = new Sphere(radius);
+        this.primitives.push(sphere);
         return sphere;
     };
 

@@ -16,12 +16,14 @@ module.exports = function(grunt) {
                         'src/libs/components/jquery.js',
                         'src/libs/components/underscore/underscore.js',
                         'src/libs/components/miso.dataset/dist/miso.ds.deps.0.4.1.js',
-                        'src/libs/components/threejs/build/three.js'
+                        'src/libs/components/threejs/build/three.js',
+                        'src/libs/components/threejs/examples/js/controls/OrbitControls.js'
                     ],
                     'build/datadoo.js': [
                         'src/DataDoo.js',
                         'src/DataSet.js',
                         'src/DataFilter.js',
+                        'src/Node.js',
                         'src/NodeGenerator.js'
                     ]
                 },
