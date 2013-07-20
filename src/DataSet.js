@@ -38,7 +38,8 @@
 
             //Events for the dataset
             newDataSet.subscribe("add", function (event) {
-                ddI.eventBus.enqueue(0, "DATA.ADD", newDataSet, _.map(event.deltas, function (obj) {
+                console.log('add fired');
+                ddI.eventBus.enqueue(newDataSet, "DATA.ADD", _.map(event.deltas, function (obj) {
                     return obj.changed;
                 }));
             });
@@ -53,17 +54,17 @@
                         }
                     });
                 });
-                ddI.eventBus.enqueue(0, "DATA.UPDATE", newDataSet, updatedRows);
+                ddI.eventBus.enqueue(newDataSet, "DATA.UPDATE", updatedRows);
             });
 
             newDataSet.subscribe("remove", function (event) {
-                ddI.eventBus.enqueue(0, "DATA.DELETE", newDataSet, _.map(event.deltas, function (obj) {
+                ddI.eventBus.enqueue(newDataSet, "DATA.DELETE", _.map(event.deltas, function (obj) {
                     return obj.old;
                 }));
             });
 
             newDataSet.subscribe("reset", function (event) {
-                ddI.eventBus.enqueue(0, "DATA.RESET", newDataSet, []);
+                ddI.eventBus.enqueue(newDataSet, "DATA.RESET", []);
             });
 
             return newDataSet;

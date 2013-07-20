@@ -239,7 +239,8 @@ window.DataDoo = (function() {
 
             //Events for the dataset
             newDataSet.subscribe("add", function (event) {
-                ddI.eventBus.enqueue(0, "DATA.ADD", newDataSet, _.map(event.deltas, function (obj) {
+                console.log('add fired');
+                ddI.eventBus.enqueue(newDataSet, "DATA.ADD", _.map(event.deltas, function (obj) {
                     return obj.changed;
                 }));
             });
@@ -254,17 +255,17 @@ window.DataDoo = (function() {
                         }
                     });
                 });
-                ddI.eventBus.enqueue(0, "DATA.UPDATE", newDataSet, updatedRows);
+                ddI.eventBus.enqueue(newDataSet, "DATA.UPDATE", updatedRows);
             });
 
             newDataSet.subscribe("remove", function (event) {
-                ddI.eventBus.enqueue(0, "DATA.DELETE", newDataSet, _.map(event.deltas, function (obj) {
+                ddI.eventBus.enqueue(newDataSet, "DATA.DELETE", _.map(event.deltas, function (obj) {
                     return obj.old;
                 }));
             });
 
             newDataSet.subscribe("reset", function (event) {
-                ddI.eventBus.enqueue(0, "DATA.RESET", newDataSet, []);
+                ddI.eventBus.enqueue(newDataSet, "DATA.RESET", []);
             });
 
             return newDataSet;
@@ -308,10 +309,12 @@ window.DataDoo = (function() {
         if(!dsI.fetched){dsI.fetch();}
 
         var uniqs = _.pluck(dsI.countBy(colName).toJSON(), colName) || [];
+
         if (uniqs.length === 0) {
             console.log("DataFilter : The supplied column does not have any data!");
             throw new Error("DataFilter : The supplied column does not have any data!");
         }
+
 
         var allCols = dsI.columnNames();
         var filteredCols = _.without(allCols, colName);
@@ -425,6 +428,7 @@ window.DataDoo = (function() {
     NodeGenerator.prototype.handler = function(event) {
         switch(event.eventName) {
             case "DATA.ADD":
+                console.log("receiving add");
                 var addedNodes = _.map(event.data, function(row) {
                     var node = this._generateNode(row);
                     this.nodes.push(node);

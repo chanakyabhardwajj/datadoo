@@ -7867,7 +7867,7 @@
       // first coerce all the values appropriatly
       _.each(row, function(value, key) {
         var column = this.column(key);
-
+        if(!column){return;}
         // is this a computed column? if so throw an error
         if (column.isComputed()) {
           throw "You're trying to update a computed column. Those get computed!";
@@ -7880,7 +7880,7 @@
 
           // test if value matches column type
           if (column.force || Type.test(row[column.name], column)) {
-            
+
             // do we have a before filter? If so, pass it through that first
             if (!_.isUndefined(column.before)) {
               row[column.name] = column.before(row[column.name]);
@@ -7890,10 +7890,10 @@
             row[column.name] = Type.coerce(row[column.name], column);
 
           } else {
-            throw("incorrect value '" + row[column.name] + 
+            throw("incorrect value '" + row[column.name] +
                   "' of type " + Dataset.typeOf(row[column.name], column) +
-                  " passed to column '" + column.name + "' with type " + column.type);  
-          
+                  " passed to column '" + column.name + "' with type " + column.type);
+
           }
         }
       }, this);

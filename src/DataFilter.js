@@ -21,10 +21,12 @@
         if(!dsI.fetched){dsI.fetch();}
 
         var uniqs = _.pluck(dsI.countBy(colName).toJSON(), colName) || [];
+
         if (uniqs.length === 0) {
             console.log("DataFilter : The supplied column does not have any data!");
             throw new Error("DataFilter : The supplied column does not have any data!");
         }
+
 
         var allCols = dsI.columnNames();
         var filteredCols = _.without(allCols, colName);

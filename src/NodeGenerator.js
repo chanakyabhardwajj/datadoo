@@ -23,6 +23,7 @@
     NodeGenerator.prototype.handler = function(event) {
         switch(event.eventName) {
             case "DATA.ADD":
+                console.log("receiving add");
                 var addedNodes = _.map(event.data, function(row) {
                     var node = this._generateNode(row);
                     this.nodes.push(node);
