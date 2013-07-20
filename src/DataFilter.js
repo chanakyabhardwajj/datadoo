@@ -5,17 +5,17 @@
     var DataFilter = function (/*datadooInstance*/ ddI, id, /*datasetInstance*/ dsI, /*columnName on which filter is to be applied*/ colName) {
         if (!ddI) {
             console.log("DataFilter : Could not find any DataDoo instance!");
-            return;
+            throw new Error("DataFilter : Could not find any DataDoo instance");
         }
 
         if (!id) {
             console.log("DataFilter : Could not find any id!");
-            return;
+            throw new Error("DataFilter : Could not find any id");
         }
 
         if (!dsI) {
             console.log("DataFilter : Could not find any parent DataSet object!");
-            return;
+            throw new Error("DataFilter : Could not find any parent DataSet object");
         }
 
         if(!dsI.fetched){dsI.fetch();}
@@ -24,7 +24,6 @@
         if (uniqs.length === 0) {
             console.log("DataFilter : The supplied column does not have any data!");
             throw new Error("DataFilter : The supplied column does not have any data!");
-            //return;
         }
 
         var allCols = dsI.columnNames();
@@ -64,7 +63,7 @@
             if (newDataFilter.currentIndex > 0) {
                 newDataFilter.currentIndex--;
             }
-            else if (newDataFilter.currentIndex === 0) {
+            else if (newDataFilter.currentIndex  === 0) {
                 newDataFilter.currentIndex = newDataFilter.uniqs.length - 1;
             }
 
@@ -79,12 +78,12 @@
 
         if (ddI[id]) {
             console.log("DataFilter : An entity with the same ID already exists!!");
-            return;
+            throw new Error("DataFilter : An entity with the same ID already exists");
         }
 
         if (ddI.bucket[id]) {
             console.log("DataSet : The bucket has an entity reference with the same ID already! Internal Error!");
-            return;
+            throw new Error("DataSet : The bucket has an entity reference with the same ID already! Internal Error");
         }
         ddI[id] = newDataFilter;
         ddI.bucket[id] = ddI[id];

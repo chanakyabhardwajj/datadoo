@@ -5,17 +5,17 @@
     var DataSet = function (/*datadooInstance*/ ddI, id, configObj) {
         if (!ddI) {
             console.log("DataSet : Could not find any DataDoo instance!");
-            return;
+            throw new Error("DataSet : Could not find any DataDoo instance");
         }
 
         if (!id) {
             console.log("DataSet : Could not find any id!");
-            return;
+            throw new Error("DataSet : Could not find any id");
         }
 
         if (!configObj) {
             console.log("DataSet : Could not find any configuration object!");
-            return;
+            throw new Error("DataSet : Could not find any configuration object");
         }
 
         //Force the syncing to be true. Miso does not allow to make an instantiated dataset syncable later on.
@@ -25,11 +25,11 @@
         if (newDataSet) {
             if (ddI[id]) {
                 console.log("DataSet : A dataset with the same ID already exists!!");
-                return;
+                throw new Error("DataSet : A dataset with the same ID already exists");
             }
             if (ddI.bucket[id]) {
                 console.log("DataSet : The bucket has a dataset reference with the same ID already! Internal Error!");
-                return;
+                throw new Error("DataSet : The bucket has a dataset reference with the same ID already! Internal Error");
             }
 
             ddI[id] = newDataSet;
@@ -69,8 +69,10 @@
             return newDataSet;
         }
         else {
+
             console.log("DataSet : Could not create the Miso Dataset. Details of the failed configuration below : ");
             console.log(config);
+            throw new Error("DataSet : Could not create the Miso Dataset");
         }
     };
 

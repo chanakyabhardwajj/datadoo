@@ -107,8 +107,8 @@ window.DataDoo = (function() {
                     }, this);
                     break;
             }
+            this._addOrRemoveSceneObjects(this.parentEvents);
         }, this);
-        _.each(this.event.parentEvents, this._addOrRemoveSceneObjects, this);
     };
     DataDoo.prototype._getObjects = function(nodes) {
         return _.chain(nodes).map(function(node) {
@@ -206,17 +206,17 @@ window.DataDoo = (function() {
     var DataSet = function (/*datadooInstance*/ ddI, id, configObj) {
         if (!ddI) {
             console.log("DataSet : Could not find any DataDoo instance!");
-            return;
+            throw new Error("DataSet : Could not find any DataDoo instance");
         }
 
         if (!id) {
             console.log("DataSet : Could not find any id!");
-            return;
+            throw new Error("DataSet : Could not find any id");
         }
 
         if (!configObj) {
             console.log("DataSet : Could not find any configuration object!");
-            return;
+            throw new Error("DataSet : Could not find any configuration object");
         }
 
         //Force the syncing to be true. Miso does not allow to make an instantiated dataset syncable later on.
@@ -226,11 +226,11 @@ window.DataDoo = (function() {
         if (newDataSet) {
             if (ddI[id]) {
                 console.log("DataSet : A dataset with the same ID already exists!!");
-                return;
+                throw new Error("DataSet : A dataset with the same ID already exists");
             }
             if (ddI.bucket[id]) {
                 console.log("DataSet : The bucket has a dataset reference with the same ID already! Internal Error!");
-                return;
+                throw new Error("DataSet : The bucket has a dataset reference with the same ID already! Internal Error");
             }
 
             ddI[id] = newDataSet;
@@ -270,8 +270,10 @@ window.DataDoo = (function() {
             return newDataSet;
         }
         else {
+
             console.log("DataSet : Could not create the Miso Dataset. Details of the failed configuration below : ");
             console.log(config);
+            throw new Error("DataSet : Could not create the Miso Dataset");
         }
     };
 
@@ -290,17 +292,17 @@ window.DataDoo = (function() {
     var DataFilter = function (/*datadooInstance*/ ddI, id, /*datasetInstance*/ dsI, /*columnName on which filter is to be applied*/ colName) {
         if (!ddI) {
             console.log("DataFilter : Could not find any DataDoo instance!");
-            return;
+            throw new Error("DataFilter : Could not find any DataDoo instance");
         }
 
         if (!id) {
             console.log("DataFilter : Could not find any id!");
-            return;
+            throw new Error("DataFilter : Could not find any id");
         }
 
         if (!dsI) {
             console.log("DataFilter : Could not find any parent DataSet object!");
-            return;
+            throw new Error("DataFilter : Could not find any parent DataSet object");
         }
 
         if(!dsI.fetched){dsI.fetch();}
@@ -309,7 +311,6 @@ window.DataDoo = (function() {
         if (uniqs.length === 0) {
             console.log("DataFilter : The supplied column does not have any data!");
             throw new Error("DataFilter : The supplied column does not have any data!");
-            //return;
         }
 
         var allCols = dsI.columnNames();
@@ -349,7 +350,7 @@ window.DataDoo = (function() {
             if (newDataFilter.currentIndex > 0) {
                 newDataFilter.currentIndex--;
             }
-            else if (newDataFilter.currentIndex === 0) {
+            else if (newDataFilter.currentIndex  === 0) {
                 newDataFilter.currentIndex = newDataFilter.uniqs.length - 1;
             }
 
@@ -364,12 +365,12 @@ window.DataDoo = (function() {
 
         if (ddI[id]) {
             console.log("DataFilter : An entity with the same ID already exists!!");
-            return;
+            throw new Error("DataFilter : An entity with the same ID already exists");
         }
 
         if (ddI.bucket[id]) {
             console.log("DataSet : The bucket has an entity reference with the same ID already! Internal Error!");
-            return;
+            throw new Error("DataSet : The bucket has an entity reference with the same ID already! Internal Error");
         }
         ddI[id] = newDataFilter;
         ddI.bucket[id] = ddI[id];
