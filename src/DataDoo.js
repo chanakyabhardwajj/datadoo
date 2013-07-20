@@ -137,6 +137,7 @@ window.DataDoo = (function() {
 
         // add execution schedules for this event
         _.each(subscribers, function(subscriber) {
+            console.log("Scheduling execution of " + subscriber.id + " for event " + eventName);
             // collapse events for subscribers who wants it
             if(subscriber.collapseEvents) {
                 var entry = _.find(this.schedule, function(item) {
