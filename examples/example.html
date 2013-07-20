@@ -1,6 +1,31 @@
 <html>
     <head>
+    </head>
+    <body>
+        <canvas id="canvas"></canvas>
         <script src="../build/vendor.js"></script>
         <script src="../build/datadoo.js"></script>
-    </head>
+        <script type="text/javascript">
+            var dd = new DataDoo({
+                canvas: document.getElementById("canvas"),
+                camera: DataDoo.PERSPECTIVE
+            });
+
+            var ds1 = new DataDoo.DataSet(dd, "ds1", {
+              data: [ 
+                { one : 1, two : 4, three : 7 },
+                { one : 2, two : 5, three : 8 }
+              ]
+            });
+
+            var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, function($) {
+                var sphere = this.addSphere(10);
+                sphere.x = this.data.one;
+                sphere.y = this.data.two;
+                sphere.z = 10;
+            });
+
+            dd.startVis(ng1);
+        </script>
+    </body>
 </html>

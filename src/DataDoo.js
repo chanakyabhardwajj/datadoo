@@ -33,7 +33,10 @@ window.DataDoo = (function() {
             default:
                 throw new Error("DataDoo : unknown camera type");
         }
+        this.scene.add(this.camera);
     }
+    DataDoo.priority = 5;
+    DataDoo.collapseEvents = true;
     /**
      * Sets the size of the canvas
      */
@@ -47,6 +50,12 @@ window.DataDoo = (function() {
      * Starts the visualization render loop
      */
     DataDoo.prototype.startVis = function() {
+        // subscribe to all the child elements
+        _.each(arguments, function(entity) {
+            this.eventBus.subscribe(entity, this);
+        }, this);
+
+        // start the render loop
         var self = this;
         function renderFrame() {
             requestAnimationFrame(renderFrame);
@@ -58,6 +67,55 @@ window.DataDoo = (function() {
             self.renderer.render(this.scene, this.camera);
         }
         requestAnimationFrame(renderFrame);
+    };
+    DataDoo.prototype.handler = function(events) {
+        // traverse the event chain and add or remove objects
+        this._addOrRemoveSceneObjects(events);
+
+        // Resolve node positions
+        // TODO: resolve only dirty nodes
+        _.chain(this.bucket).values().flatten().filter(function(item) {
+            return item instanceof DataDoo.Node;
+        }).map(function(node) {
+            return node.primitives;
+        }).flatten().each(function(primitive) {
+            // TODO: more advanced position resolution
+            primitive.setObjectPositions(primitive.x, primitive.y, primitive.z);
+        });
+    };
+    DataDoo.prototype._addOrRemoveSceneObjects = function(events) {
+        _.chain(events).filter(function(event) { 
+            return event.eventName.substring(0, 5) == "NODE";
+        }).each(function(event) {
+            switch(event) {
+                case "NODE.ADD":
+                    _.each(this._getObjects(event.data), function(object) {
+                        this.scene.add(object);
+                    }, this);
+                    break;
+                case "NODE.REMOVE":
+                    _.each(this._getObjects(event.data), function(object) {
+                        this.scene.add(object);
+                    }, this);
+                    break;
+                case "NODE.UPDATE":
+                    _.each(this._getObjects(event.data.updatedNodes), function(object) {
+                        this.scene.add(object);
+                    }, this);
+                    _.each(this._getObjects(event.data.oldNodes), function(object) {
+                        this.scene.remove(object);
+                    }, this);
+                    break;
+            }
+        }, this);
+        _.each(this.event.parentEvents, this._addOrRemoveSceneObjects, this);
+    };
+    DataDoo.prototype._getObjects = function(nodes) {
+        return _.chain(nodes).map(function(node) {
+            return node.primitives;
+        }).flatten().map(function(primitive) {
+            return primitive.objects;
+        }).flatten().value();
     };
 
     /**

@@ -33,7 +33,10 @@ window.DataDoo = (function() {
             default:
                 throw new Error("DataDoo : unknown camera type");
         }
+        this.scene.add(this.camera);
     }
+    DataDoo.priority = 5;
+    DataDoo.collapseEvents = true;
     /**
      * Sets the size of the canvas
      */
@@ -47,6 +50,12 @@ window.DataDoo = (function() {
      * Starts the visualization render loop
      */
     DataDoo.prototype.startVis = function() {
+        // subscribe to all the child elements
+        _.each(arguments, function(entity) {
+            this.eventBus.subscribe(entity, this);
+        }, this);
+
+        // start the render loop
         var self = this;
         function renderFrame() {
             requestAnimationFrame(renderFrame);
@@ -58,6 +67,55 @@ window.DataDoo = (function() {
             self.renderer.render(this.scene, this.camera);
         }
         requestAnimationFrame(renderFrame);
+    };
+    DataDoo.prototype.handler = function(events) {
+        // traverse the event chain and add or remove objects
+        this._addOrRemoveSceneObjects(events);
+
+        // Resolve node positions
+        // TODO: resolve only dirty nodes
+        _.chain(this.bucket).values().flatten().filter(function(item) {
+            return item instanceof DataDoo.Node;
+        }).map(function(node) {
+            return node.primitives;
+        }).flatten().each(function(primitive) {
+            // TODO: more advanced position resolution
+            primitive.setObjectPositions(primitive.x, primitive.y, primitive.z);
+        });
+    };
+    DataDoo.prototype._addOrRemoveSceneObjects = function(events) {
+        _.chain(events).filter(function(event) { 
+            return event.eventName.substring(0, 5) == "NODE";
+        }).each(function(event) {
+            switch(event) {
+                case "NODE.ADD":
+                    _.each(this._getObjects(event.data), function(object) {
+                        this.scene.add(object);
+                    }, this);
+                    break;
+                case "NODE.REMOVE":
+                    _.each(this._getObjects(event.data), function(object) {
+                        this.scene.add(object);
+                    }, this);
+                    break;
+                case "NODE.UPDATE":
+                    _.each(this._getObjects(event.data.updatedNodes), function(object) {
+                        this.scene.add(object);
+                    }, this);
+                    _.each(this._getObjects(event.data.oldNodes), function(object) {
+                        this.scene.remove(object);
+                    }, this);
+                    break;
+            }
+        }, this);
+        _.each(this.event.parentEvents, this._addOrRemoveSceneObjects, this);
+    };
+    DataDoo.prototype._getObjects = function(nodes) {
+        return _.chain(nodes).map(function(node) {
+            return node.primitives;
+        }).flatten().map(function(primitive) {
+            return primitive.objects;
+        }).flatten().value();
     };
 
     /**
@@ -221,9 +279,7 @@ window.DataDoo = (function() {
      * http://misoproject.com/dataset/api.html#misodatasetdataview
      */
 
-    DataDoo.prototype.DataSet = function (id, configObj) {
-        return new DataSet(this, id, configObj);
-    };
+    DataDoo.DataSet = DataSet;
 
 })(window.DataDoo);
 
@@ -329,9 +385,7 @@ window.DataDoo = (function() {
      * http://misoproject.com/dataset/api.html#misodatasetdataview
      */
 
-    DataDoo.prototype.DataFilter = function (id, dsI, colName) {
-        return new DataFilter(this, id, dsI, colName);
-    };
+    DataDoo.DataFilter = DataFilter;
 
 })(window.DataDoo);
 
@@ -366,7 +420,7 @@ window.DataDoo = (function() {
                     this.nodes.push(node);
                     return node;
                 }, this);
-                this.eventBus.enqueue(this, "NODE.ADD", addedNodes);
+                this.dd.eventBus.enqueue(this, "NODE.ADD", addedNodes);
                 break;
             case "DATA.DELETE":
                 var deletedNodes = _.map(event.data, function(row) {
@@ -379,19 +433,22 @@ window.DataDoo = (function() {
                         }
                     }
                 }, this);
-                this.eventBus.enqueue(this, "NODE.DELETE", deletedNodes);
+                this.dd.eventBus.enqueue(this, "NODE.DELETE", deletedNodes);
                 break;
             case "DATA.UPDATE":
-                var updatedNodes = _.map(event.data, function(row) {
+                var updatedNodes = [];
+                var oldNodes = [];
+                _.each(event.data, function(row) {
                     for(var i in this.nodes) {
                         var node = this.nodes[i];
                         if(node.data._id == row._id) {
                             this.nodes[i] = this._generateNode(row);
-                            return this.nodes[i];
+                            updatedNodes.push(nodes[i]);
+                            oldNodes.push(node);
                         }
                     }
                 }, this);
-                this.eventBus.enqueue(this, "NODE.UPDATE", updatedNodes);
+                this.dd.eventBus.enqueue(this, "NODE.UPDATE", {updated: updatedNodes, oldNodes: oldNodes});
                 break;
             default:
                 throw new Error("NodeGenerator : Unknown event fired");
@@ -404,8 +461,5 @@ window.DataDoo = (function() {
         return node;
     };
 
-    // expose the NodeGenerator constructor by patching datadoo
-    DataDoo.prototype.nodeGenerator = function(id, dataSet, appFn) {
-        return new NodeGenerator(this, id, dataSet, appFn);
-    };
+    DataDoo.NodeGenerator = NodeGenerator;
 })(window.DataDoo);

@@ -28,7 +28,7 @@
                     this.nodes.push(node);
                     return node;
                 }, this);
-                this.eventBus.enqueue(this, "NODE.ADD", addedNodes);
+                this.dd.eventBus.enqueue(this, "NODE.ADD", addedNodes);
                 break;
             case "DATA.DELETE":
                 var deletedNodes = _.map(event.data, function(row) {
@@ -41,19 +41,22 @@
                         }
                     }
                 }, this);
-                this.eventBus.enqueue(this, "NODE.DELETE", deletedNodes);
+                this.dd.eventBus.enqueue(this, "NODE.DELETE", deletedNodes);
                 break;
             case "DATA.UPDATE":
-                var updatedNodes = _.map(event.data, function(row) {
+                var updatedNodes = [];
+                var oldNodes = [];
+                _.each(event.data, function(row) {
                     for(var i in this.nodes) {
                         var node = this.nodes[i];
                         if(node.data._id == row._id) {
                             this.nodes[i] = this._generateNode(row);
-                            return this.nodes[i];
+                            updatedNodes.push(nodes[i]);
+                            oldNodes.push(node);
                         }
                     }
                 }, this);
-                this.eventBus.enqueue(this, "NODE.UPDATE", updatedNodes);
+                this.dd.eventBus.enqueue(this, "NODE.UPDATE", {updated: updatedNodes, oldNodes: oldNodes});
                 break;
             default:
                 throw new Error("NodeGenerator : Unknown event fired");
