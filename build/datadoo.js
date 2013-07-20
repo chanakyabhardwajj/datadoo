@@ -314,7 +314,7 @@ window.DataDoo = (function() {
         }
     }
     NodeGenerator.prototype._generateNode = function(data) {
-        var node = new Node();
+        var node = new DataDoo.Node();
         node.data = data;
         this.appFn.call(node, this.dd.bucket);
         return node;
