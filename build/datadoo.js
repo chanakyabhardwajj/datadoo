@@ -69,40 +69,62 @@ window.DataDoo = (function() {
      * changes in the object hierarchy
      */
     function EventBus() {
-        this.queue = [];
-        this.listeners = {};
+        this.schedule = []; // contains the list of subscriber to be executed
+        this.subscribers = {}; // contains map between publishers and subscribers
+        this._currentParentEvents = []; // maintains the parentEvents for the current execution
     }
-    EventBus.prototype.enqueue = function(priority, eventName, creator, data) {
-        this.queue.push({
-            priority: priority,
-            eventName: eventName,
-            creator: creator,
-            data: data
-        });
-        this.queue = _.sortBy(this.queue, "priority");
-    };
-    EventBus.prototype.subscribe = function(creator, eventName, callback, context) {
-        if(!this.listeners[creator]) {
-            this.listeners[creator] = {};
-        }
-        if(!this.listeners[creator][eventName]) {
-            this.listeners[creator][eventName] = [];
-        }
-        this.listeners[creator][eventName].push([callback, context]);
-    };
-    EventBus.prototype.fireTillEmpty = function() {
-        while(this.queue.length > 0) {
-            var event = this.queue.shift();
-            var callbacks = this.listeners[event.creator][event.eventName];
-            _.each(callbacks, function(callback) {
-                if(callback[1]) {
-                    // call with context if provided
-                    callback[0].call(callback[1], event.data);
-                } else {
-                    callback[0](event.data);
+    EventBus.prototype.enqueue = function(publisher, eventName, data) {
+        var subscribers = this.subscribers[publisher];
+
+        // add execution schedules for this event
+        _.each(subscribers, function(subscriber) {
+            // collapse events for subscribers who wants it
+            if(subscriber.collapseEvents) {
+                var entry = _.find(this.schedule, function(item) {
+                    return item.subscriber === subscriber;
+                });
+                if(entry) {
+                    entry.events.push({
+                        publisher: publisher, 
+                        eventName: eventName, 
+                        data: data,
+                        parentEvents: this._currentParentEvents
+                    });
+                    return;
                 }
+            }
+            this.schedule.push({
+                priority: subscriber.priority,
+                subscriber: subscriber,
+                events: [{
+                    publisher: publisher,
+                    eventName: eventName,
+                    data: data,
+                    parentEvents: this._currentParentEvents
+                }];
             });
+        }, this);
+
+        // maintain priority order
+        this.schedule = _.sortBy(this.schedule, "priority");
+    };
+    EventBus.prototype.subscribe = function(subscriber, publisher) {
+        if(!this.subscribers[publisher]) {
+            this.subscribers[publisher] = [];
         }
+        this.subscribers[publisher].push(subscriber);
+    };
+    EventBus.prototype.execute = function() {
+        while(this.schedule.length > 0) {
+            var item = this.schedule.shift();
+            this._currentParentEvents = item.events;
+            if(item.subscriber.collapseEvents) {
+                item.subscriber.handler(item.events);
+            } else {
+                item.subscriber.handler(item.events[0]);
+            }
+        }
+        this._currentParentEvents = [];
     };
 
     // Request animationframe helper
@@ -137,9 +159,6 @@ window.DataDoo = (function() {
             console.log("DataSet : Could not find any configuration object!");
             return;
         }
-
-        //Force the syncing to be true. Miso does not allow to make an instantiated dataset syncable later on.
-        configObj.sync = true;
 
         var newDataSet = new Miso.Dataset(configObj);
         if (newDataSet) {
@@ -182,10 +201,6 @@ window.DataDoo = (function() {
                 }))
             });
 
-            newDataSet.subscribe("reset", function (event) {
-                ddI.eventBus.enqueue(0, "DATA.RESET", newDataSet, [])
-            });
-
             return newDataSet;
         }
         else {
@@ -202,134 +217,63 @@ window.DataDoo = (function() {
         return new DataSet(this, id, configObj);
     }
 
-})(window.DataDoo);
-
-/*
-var ds = new Miso.Dataset({
-    data: [
-        { year : 1971, pop : 4000000, gdp : 7 },
-        { year : 1972, pop : 5000000, gdp : 6 },
-        { year : 1973, pop : 6000000, gdp : 5 }
-    ]
-});*/
-
-//This module serves the purpose of creating and connecting a filterable dataset to datadoo.
-//This will essentially be a wrapper around the MISO Dataset using the "where" option (http://misoproject.com/)
-
-(function (DataDoo) {
-    var DataFilter = function (/*datadooInstance*/ ddI, id, /*datasetInstance*/ dsI, /*columnName on which filter is to be applied*/ colName) {
-        if (!ddI) {
-            console.log("DataFilter : Could not find any DataDoo instance!");
-            return;
-        }
-
-        if (!id) {
-            console.log("DataFilter : Could not find any id!");
-            return;
-        }
-
-        if (!dsI) {
-            console.log("DataFilter : Could not find any parent DataSet object!");
-            return;
-        }
-
-        var uniqs = _.pluck(dsI.countBy(colName).toJSON(), colName);
-        if (uniqs.length == 0) {
-            console.log("DataFilter : The supplied column does not have any data!");
-            return;
-        }
-
-        var allCols = dsI.columnNames;
-        var filteredCols = _.without(allCols, colName);
-        var currentIndex = 0;
-
-        var newDataFilter = {
-            filter:null,
-            uniqs:uniqs,
-            currentIndex:currentIndex
-        };
-
-        newDataFilter.recompute = function () {
-            newDataFilter.filter = dsI.where({
-                //columns:filteredCols,
-                rows:function (row) {
-                    return row[colName] == uniqs[currentIndex];
-                }
-            });
-        };
-
-        newDataFilter.next = function () {
-            if (newDataFilter.currentIndex < newDataFilter.uniqs.length - 1) {
-                newDataFilter.currentIndex++;
-            }
-            else if (newDataFilter.currentIndex == newDataFilter.uniqs.length - 1) {
-                newDataFilter.currentIndex = 0;
-            }
-
-            newDataFilter.recompute();
-        };
-
-        newDataFilter.previous = function () {
-            if (newDataFilter.currentIndex > 0) {
-                newDataFilter.currentIndex--;
-            }
-            else if (newDataFilter.currentIndex == 0) {
-                newDataFilter.currentIndex = newDataFilter.uniqs.length - 1;
-            }
-
-            newDataFilter.recompute();
-        };
-
-        newDataFilter.recompute();
-
-        ddI[id] = newDataFilter;
-        ddI.bucket[id] = ddI[id];
-
-
-        if (ddI[id]) {
-            console.log("DataFilter : An entity with the same ID already exists!!");
-            return;
-        }
-        if (ddI.bucket[id]) {
-            console.log("DataSet : The bucket has an entity reference with the same ID already! Internal Error!");
-            return;
-        }
-
-        newDataFilter.subscribe("change", function (e) {
-            ddI.eventBus.enqueue(0, "DATA......", newDataFilter, [])
-        });
-
-        //Listen to the parent dataset's reset event and then recompute yourself!
-        //Miso somehow does not do this! Weird!
-        dsI.subscribe("reset", function(){
-            newDataFilter.recompute();
-            ddI.eventBus.enqueue(0, "DATA.RESET", newDataFilter, [])
-        });
-
-
-        return newDataFilter;
-
-    };
-
-    /*Other methods that will be available (by inheritance) on the DataSet instance can be found here:
-     * http://misoproject.com/dataset/api.html#misodatasetdataview
-     */
-
-    DataDoo.prototype.DataFilter = function (id, dsI, colName) {
-        return new DataFilter(this, id, dsI, colName);
+})(window.DataDoo)
+(function(DataDoo) {
+    function Graph() {
     }
 
-})(window.DataDoo);
-
+    DataDoo.prototype.graph = function() {
+        return Graph.apply({}, [this].concat(arguments));
+    }
+})(window.DataDoo)
 
 (function(DataDoo) {
+    /**
+     *  Sphere primitive
+     */
+    function Sphere(radius, color) {
+        this.radius = 10;
+        this.color = color || 0x8888ff;
+
+        this.material = new THREE.MeshaLambertMaterial({color: this.color});
+        this.geometry = new THREE.SphereGeometry(this.radius);
+        this.mesh = new THREE.Mesh(this.geometry, this.material);
+    }
+    /**
+     * Sets the radius of the sphere
+     */
+    Sphere.priority.setRadius = function(radius) {
+        this.radius = radius;
+        this.geometry = new THREE.SphereGeometry(this.radius);
+        this.mesh.setGeometry(this.geometry);
+    }
+
+    /**
+     * Node is a visual representation for each datapoint
+     * It contains a set of graphics primitives that reprents
+     * its visual
+     */
+    function Node(data) {
+        this.primitives = [];
+        this.data = data;
+    }
+    Node.prototype.addSphere = function() {
+        this.primitives.push(Sphere.apply({}, arguments));
+    };
+
+    DataDoo.Node = Node;
+})(window.DataDoo);
+
+(function(DataDoo) {
+    /**
+     *  NodeGenerator class generates nodes for data points
+     */
     function NodeGenerator(dd, id, dataSet, appFn) {
         this.dd = dd;
         this.id = id;
         this.dataSet = dataSet;
         this.nodes = [];
         this.appFn = appFn;
-        var self = this;
 
         // put the nodes array 
         if(dd.bucket.id) {
@@ -338,51 +282,57 @@ var ds = new Miso.Dataset({
             dd.bucket.id = this.nodes;
         }
 
-        dd.eventBus.subscribe(dataSet, "DATA.ADD", this.onAddHandler, this);
-        dd.eventBus.subscribe(dataSet, "DATA.DELETE", this.onDeleteHandler, this);
-        dd.eventBus.subscribe(dataSet, "DATA.UPDATE", this.onUpdateHandler, this);
+        dd.eventBus.subscribe(this, dataSet);
     }
-    NodeGenerator.prototype.onAddHandler = function(addedRows) {
-        var addedNodes = _.map(addedRows, function(row) {
-            var node = this._generateNode(row);
-            this.nodes.push(node);
-            return node;
-        }, this);
-    }
-    NodeGenerator.prototype.onUpdateHandler = function(updatedRows) {
-        var updatedNodes = _.map(updatedRows, function(row) {
-            for(var i in this.nodes) {
-                var node = this.nodes[i];
-                if(node.data._id == row._id) {
-                    this.nodes[i] = this._generateNode(row);
-                    return this.nodes[i];
-                }
-            }
-        }, this);
-    }
-    NodeGenerator.prototype.onDeleteHandler = function(deletedRows) {
-        var deletedNodes = _.map(deletedRows, function(row) {
-            for(var i in this.nodes) {
-                var node = this.nodes[i];
-                if(node.data._id == row._id) {
-                    this.nodes.splice(i, 1);
+    NodeGenerator.prototype.collapseEvents = false;
+    NodeGenerator.prototype.priority = 2;
+    NodeGenerator.prototype.handler(event) {
+        switch(event.eventName) {
+            case "DATA.ADD":
+                var addedNodes = _.map(event.data, function(row) {
+                    var node = this._generateNode(row);
+                    this.nodes.push(node);
                     return node;
-                }
-            }
-        }, this);
+                }, this);
+                this.eventBus.enqueue(this, "NODE.ADD", addedNodes);
+                break;
+            case "DATA.DELETE":
+                var deletedNodes = _.map(event.data, function(row) {
+                    for(var i in this.nodes) {
+                        var node = this.nodes[i];
+                        if(node.data._id == row._id) {
+                            this.nodes.splice(i, 1);
+                            // TODO: add node cleanup
+                            return node;
+                        }
+                    }
+                }, this);
+                this.eventBus.enqueue(this, "NODE.DELETE", deletedNodes);
+                break;
+            case "DATA.UPDATE":
+                var updatedNodes = _.map(event.data, function(row) {
+                    for(var i in this.nodes) {
+                        var node = this.nodes[i];
+                        if(node.data._id == row._id) {
+                            this.nodes[i] = this._generateNode(row);
+                            return this.nodes[i];
+                        }
+                    }
+                }, this);
+                this.eventBus.enqueue(this, "NODE.UPDATE", updatedNodes);
+                break;
+            default:
+                throw new Error("NodeGenerator : Unknown event fired");
+        }
     }
     NodeGenerator.prototype._generateNode = function(data) {
-        var node = new Node();
+        var node = new DataDoo.Node();
         node.data = data;
         this.appFn.call(node, this.dd.bucket);
         return node;
     }
 
-    function Node() {
-        this.primitives = [];
-    }
-
-    // expose the NodeGenerator class by patching
+    // expose the NodeGenerator constructor by patching datadoo
     DataDoo.prototype.nodeGenerator = function() {
         return NodeGenerator.apply({}, [this].concat(arguments));
     };
