@@ -36,9 +36,19 @@ window.DataDoo = (function() {
         this.camera.position.set(0,150,400);
         this.camera.lookAt(this.scene.position);
         this.scene.add(this.camera);
-        this.light = new THREE.PointLight(0xffffff);
-        this.light.position.set(10,10,10);
-        this.scene.add(this.light);
+
+        this.light1 = new THREE.PointLight(0xffffff);
+        this.light1.position.set(0,250,0);
+        this.scene.add(this.light1);
+
+        this.light2 = new THREE.PointLight(0xffffff);
+        this.light2.position.set(0,250,250);
+        this.scene.add(this.light2);
+
+        this.light3 = new THREE.PointLight(0xffffff);
+        this.light3.position.set(-250,-250,-250);
+        this.scene.add(this.light3);
+
         this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
     }
     DataDoo.prototype.id = "DD";
