@@ -13,22 +13,33 @@
                 }
             });
 
-            var ds1 = new DataDoo.DataSet(dd, "ds1", {
+            /*var ds1 = new DataDoo.DataSet(dd, "ds1", {
               data: [ 
                 { one : 1, two : 4, three : 7 },
                 { one : 20, two : 50, three : 8 }
               ]
+            });*/
+
+            var ds1 = new Miso.Dataset({
+                importer : Miso.Dataset.Importers.GoogleSpreadsheet,
+                parser : Miso.Dataset.Parsers.GoogleSpreadsheet,
+                key : "0Asnl0xYK7V16dFpFVmZUUy1taXdFbUJGdGtVdFBXbFE",
+                worksheet : "1"
             });
+
 
             var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, function($) {
                 var sphere = this.addSphere(100);
-                sphere.x = this.data.one;
-                sphere.y = this.data.two;
-                sphere.z = 10;
+                console.log(this.data.ColumnTitle);
+                sphere.x = this.data.ColumnTitle;
+                sphere.y = this.data.ColumnTitle * 10;
+                sphere.z = this.data.ColumnTitle * 10;
             });
 
-            dd.startVis(ng1);
-            ds1.fetch();
+            _.when(ds1.fetch()).then(function() {
+                dd.eventBus.enqueue(this, "DATA.ADD", ds1.toJSON())
+                dd.startVis(ng1);
+            });
         </script>
     </body>
 </html>

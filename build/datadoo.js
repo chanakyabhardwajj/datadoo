@@ -235,18 +235,12 @@ window.DataDoo = (function() {
 
         var newDataSet = new Miso.Dataset(configObj);
         if (newDataSet) {
-            if (ddI[id]) {
-                console.log("DataSet : A dataset with the same ID already exists!!");
-                throw new Error("DataSet : A dataset with the same ID already exists");
-            }
             if (ddI.bucket[id]) {
                 console.log("DataSet : The bucket has a dataset reference with the same ID already! Internal Error!");
                 throw new Error("DataSet : The bucket has a dataset reference with the same ID already! Internal Error");
             }
 
-            ddI[id] = newDataSet;
-            ddI.bucket[id] = ddI[id];
-
+            ddI.bucket[id] = newDataSet;
 
             //Events for the dataset
             newDataSet.subscribe("add", function (event) {
@@ -335,21 +329,14 @@ window.DataDoo = (function() {
             throw new Error("DataFilter : The supplied column does not have any data!");
         }
 
-        if (ddI[id]) {
-            console.log("DataFilter : An entity with the same ID already exists!!");
-            throw new Error("DataFilter : An entity with the same ID already exists");
-        }
-
         if (ddI.bucket[id]) {
             console.log("DataSet : The bucket has an entity reference with the same ID already! Internal Error!");
             throw new Error("DataSet : The bucket has an entity reference with the same ID already! Internal Error");
         }
 
-
         /*newDataFilter.filter.subscribe("change", function (e) {
          ddI.eventBus.enqueue(0, "DATA......", newDataFilter, []);
          });*/
-
 
         this.uniqs = uniqs;
         this.currentIndex = 0;
@@ -357,8 +344,7 @@ window.DataDoo = (function() {
         this.datasource = dsI;
         this.filterColumn = colName;
 
-        ddI[id] = this;
-        ddI.bucket[id] = ddI[id];
+        ddI.bucket[id] = this;
 
         if (!dsI.dataset.fetched) {
             dsI.fetch();

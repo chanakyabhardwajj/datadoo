@@ -23,18 +23,12 @@
 
         var newDataSet = new Miso.Dataset(configObj);
         if (newDataSet) {
-            if (ddI[id]) {
-                console.log("DataSet : A dataset with the same ID already exists!!");
-                throw new Error("DataSet : A dataset with the same ID already exists");
-            }
             if (ddI.bucket[id]) {
                 console.log("DataSet : The bucket has a dataset reference with the same ID already! Internal Error!");
                 throw new Error("DataSet : The bucket has a dataset reference with the same ID already! Internal Error");
             }
 
-            ddI[id] = newDataSet;
-            ddI.bucket[id] = ddI[id];
-
+            ddI.bucket[id] = newDataSet;
 
             //Events for the dataset
             newDataSet.subscribe("add", function (event) {
