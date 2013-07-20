@@ -4,6 +4,7 @@ window.DataDoo = (function() {
      * Main DataDoo class 
      */
     function DataDoo(params) {
+        params = params || {};
         _.defaults(params, {
             camera: {}
         });
@@ -101,7 +102,7 @@ window.DataDoo = (function() {
                     eventName: eventName,
                     data: data,
                     parentEvents: this._currentParentEvents
-                }];
+                }]
             });
         }, this);
 
@@ -138,4 +139,4 @@ window.DataDoo = (function() {
     );
 
     return DataDoo;
-});
+})();

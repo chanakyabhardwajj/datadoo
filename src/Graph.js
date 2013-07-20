@@ -1,8 +1,8 @@
 (function(DataDoo) {
-    function Graph() {
+    function Graph(dd) {
     }
 
     DataDoo.prototype.graph = function() {
-        return Graph.apply({}, [this].concat(arguments));
+        return new Graph(this)
     }
 })(window.DataDoo)

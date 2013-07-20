@@ -4,6 +4,7 @@ window.DataDoo = (function() {
      * Main DataDoo class 
      */
     function DataDoo(params) {
+        params = params || {};
         _.defaults(params, {
             camera: {}
         });
@@ -101,7 +102,7 @@ window.DataDoo = (function() {
                     eventName: eventName,
                     data: data,
                     parentEvents: this._currentParentEvents
-                }];
+                }]
             });
         }, this);
 
@@ -138,7 +139,7 @@ window.DataDoo = (function() {
     );
 
     return DataDoo;
-});
+})();
 
 //This module serves the purpose of creating and connecting data-streams to datadoo.
 //This will essentially be a very light wrapper around the MISO Dataset (http://misoproject.com/)
@@ -159,6 +160,9 @@ window.DataDoo = (function() {
             console.log("DataSet : Could not find any configuration object!");
             return;
         }
+
+        //Force the syncing to be true. Miso does not allow to make an instantiated dataset syncable later on.
+        configObj.sync = true;
 
         var newDataSet = new Miso.Dataset(configObj);
         if (newDataSet) {
@@ -201,6 +205,10 @@ window.DataDoo = (function() {
                 }))
             });
 
+            newDataSet.subscribe("reset", function (event) {
+                ddI.eventBus.enqueue(0, "DATA.RESET", newDataSet, [])
+            });
+
             return newDataSet;
         }
         else {
@@ -217,52 +225,125 @@ window.DataDoo = (function() {
         return new DataSet(this, id, configObj);
     }
 
-})(window.DataDoo)
-(function(DataDoo) {
-    function Graph() {
-    }
+})(window.DataDoo);
 
-    DataDoo.prototype.graph = function() {
-        return Graph.apply({}, [this].concat(arguments));
-    }
-})(window.DataDoo)
+/*
+var ds = new Miso.Dataset({
+    data: [
+        { year : 1971, pop : 4000000, gdp : 7 },
+        { year : 1972, pop : 5000000, gdp : 6 },
+        { year : 1973, pop : 6000000, gdp : 5 }
+    ]
+});*/
 
-(function(DataDoo) {
-    /**
-     *  Sphere primitive
-     */
-    function Sphere(radius, color) {
-        this.radius = 10;
-        this.color = color || 0x8888ff;
+//This module serves the purpose of creating and connecting a filterable dataset to datadoo.
+//This will essentially be a wrapper around the MISO Dataset using the "where" option (http://misoproject.com/)
 
-        this.material = new THREE.MeshaLambertMaterial({color: this.color});
-        this.geometry = new THREE.SphereGeometry(this.radius);
-        this.mesh = new THREE.Mesh(this.geometry, this.material);
-    }
-    /**
-     * Sets the radius of the sphere
-     */
-    Sphere.priority.setRadius = function(radius) {
-        this.radius = radius;
-        this.geometry = new THREE.SphereGeometry(this.radius);
-        this.mesh.setGeometry(this.geometry);
-    }
+(function (DataDoo) {
+    var DataFilter = function (/*datadooInstance*/ ddI, id, /*datasetInstance*/ dsI, /*columnName on which filter is to be applied*/ colName) {
+        if (!ddI) {
+            console.log("DataFilter : Could not find any DataDoo instance!");
+            return;
+        }
 
-    /**
-     * Node is a visual representation for each datapoint
-     * It contains a set of graphics primitives that reprents
-     * its visual
-     */
-    function Node(data) {
-        this.primitives = [];
-        this.data = data;
-    }
-    Node.prototype.addSphere = function() {
-        this.primitives.push(Sphere.apply({}, arguments));
+        if (!id) {
+            console.log("DataFilter : Could not find any id!");
+            return;
+        }
+
+        if (!dsI) {
+            console.log("DataFilter : Could not find any parent DataSet object!");
+            return;
+        }
+
+        var uniqs = _.pluck(dsI.countBy(colName).toJSON(), colName);
+        if (uniqs.length == 0) {
+            console.log("DataFilter : The supplied column does not have any data!");
+            return;
+        }
+
+        var allCols = dsI.columnNames;
+        var filteredCols = _.without(allCols, colName);
+        var currentIndex = 0;
+
+        var newDataFilter = {
+            filter:null,
+            uniqs:uniqs,
+            currentIndex:currentIndex
+        };
+
+        newDataFilter.recompute = function () {
+            newDataFilter.filter = dsI.where({
+                //columns:filteredCols,
+                rows:function (row) {
+                    return row[colName] == uniqs[currentIndex];
+                }
+            });
+        };
+
+        newDataFilter.next = function () {
+            if (newDataFilter.currentIndex < newDataFilter.uniqs.length - 1) {
+                newDataFilter.currentIndex++;
+            }
+            else if (newDataFilter.currentIndex == newDataFilter.uniqs.length - 1) {
+                newDataFilter.currentIndex = 0;
+            }
+
+            newDataFilter.recompute();
+        };
+
+        newDataFilter.previous = function () {
+            if (newDataFilter.currentIndex > 0) {
+                newDataFilter.currentIndex--;
+            }
+            else if (newDataFilter.currentIndex == 0) {
+                newDataFilter.currentIndex = newDataFilter.uniqs.length - 1;
+            }
+
+            newDataFilter.recompute();
+        };
+
+        newDataFilter.recompute();
+
+        ddI[id] = newDataFilter;
+        ddI.bucket[id] = ddI[id];
+
+
+        if (ddI[id]) {
+            console.log("DataFilter : An entity with the same ID already exists!!");
+            return;
+        }
+        if (ddI.bucket[id]) {
+            console.log("DataSet : The bucket has an entity reference with the same ID already! Internal Error!");
+            return;
+        }
+
+        newDataFilter.subscribe("change", function (e) {
+            ddI.eventBus.enqueue(0, "DATA......", newDataFilter, [])
+        });
+
+        //Listen to the parent dataset's reset event and then recompute yourself!
+        //Miso somehow does not do this! Weird!
+        dsI.subscribe("reset", function(){
+            newDataFilter.recompute();
+            ddI.eventBus.enqueue(0, "DATA.RESET", newDataFilter, [])
+        });
+
+
+        return newDataFilter;
+
     };
 
-    DataDoo.Node = Node;
+    /*Other methods that will be available (by inheritance) on the DataSet instance can be found here:
+     * http://misoproject.com/dataset/api.html#misodatasetdataview
+     */
+
+    DataDoo.prototype.DataFilter = function (id, dsI, colName) {
+        return new DataFilter(this, id, dsI, colName);
+    }
+
 })(window.DataDoo);
+
 
 (function(DataDoo) {
     /**
@@ -286,7 +367,7 @@ window.DataDoo = (function() {
     }
     NodeGenerator.prototype.collapseEvents = false;
     NodeGenerator.prototype.priority = 2;
-    NodeGenerator.prototype.handler(event) {
+    NodeGenerator.prototype.handler = function(event) {
         switch(event.eventName) {
             case "DATA.ADD":
                 var addedNodes = _.map(event.data, function(row) {
@@ -333,7 +414,7 @@ window.DataDoo = (function() {
     }
 
     // expose the NodeGenerator constructor by patching datadoo
-    DataDoo.prototype.nodeGenerator = function() {
-        return NodeGenerator.apply({}, [this].concat(arguments));
+    DataDoo.prototype.nodeGenerator = function(id, dataSet, appFn) {
+        return new NodeGenerator(this, id, dataSet, appFn)
     };
 })(window.DataDoo);

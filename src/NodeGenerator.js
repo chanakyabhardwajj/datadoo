@@ -20,7 +20,7 @@
     }
     NodeGenerator.prototype.collapseEvents = false;
     NodeGenerator.prototype.priority = 2;
-    NodeGenerator.prototype.handler(event) {
+    NodeGenerator.prototype.handler = function(event) {
         switch(event.eventName) {
             case "DATA.ADD":
                 var addedNodes = _.map(event.data, function(row) {
@@ -67,7 +67,7 @@
     }
 
     // expose the NodeGenerator constructor by patching datadoo
-    DataDoo.prototype.nodeGenerator = function() {
-        return NodeGenerator.apply({}, [this].concat(arguments));
+    DataDoo.prototype.nodeGenerator = function(id, dataSet, appFn) {
+        return new NodeGenerator(this, id, dataSet, appFn)
     };
 })(window.DataDoo);
