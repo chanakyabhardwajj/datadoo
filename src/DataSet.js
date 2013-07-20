@@ -78,8 +78,6 @@
      * http://misoproject.com/dataset/api.html#misodatasetdataview
      */
 
-    DataDoo.prototype.DataSet = function (id, configObj) {
-        return new DataSet(this, id, configObj);
-    };
+    DataDoo.DataSet = DataSet;
 
 })(window.DataDoo);
