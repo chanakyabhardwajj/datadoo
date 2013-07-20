@@ -69,39 +69,44 @@ window.DataDoo = (function() {
      * changes in the object hierarchy
      */
     function EventBus() {
-        this.queue = [];
-        this.listeners = {};
+        this.schedule = []; // contains the list of subscriber to be executed
+        this.subscribers = {}; // contains map between publishers and subscribers
     }
-    EventBus.prototype.enqueue = function(priority, eventName, creator, data) {
-        this.queue.push({
-            priority: priority,
-            eventName: eventName,
-            creator: creator,
-            data: data
-        });
-        this.queue = _.sortBy(this.queue, "priority");
-    };
-    EventBus.prototype.subscribe = function(creator, eventName, callback, context) {
-        if(!this.listeners[creator]) {
-            this.listeners[creator] = {};
-        }
-        if(!this.listeners[creator][eventName]) {
-            this.listeners[creator][eventName] = [];
-        }
-        this.listeners[creator][eventName].push([callback, context]);
-    };
-    EventBus.prototype.fireTillEmpty = function() {
-        while(this.queue.length > 0) {
-            var event = this.queue.shift();
-            var callbacks = this.listeners[event.creator][event.eventName];
-            _.each(callbacks, function(callback) {
-                if(callback[1]) {
-                    // call with context if provided
-                    callback[0].call(callback[1], event.data);
-                } else {
-                    callback[0](event.data);
+    EventBus.prototype.enqueue = function(publisher, eventName, data) {
+        var subscribers = this.subscribers[publisher];
+
+        // add execution schedules for this event
+        _.each(subscribers, function(subscriber) {
+            // collapse events for subscribers who wants it
+            if(subscriber.collapseEvents) {
+                var entry = _.find(this.schedule, function(item) {
+                    return item.subscriber === subscriber;
+                });
+                if(entry) {
+                    entry.events.push({publisher: publisher, eventName: eventName, data: data});
+                    return;
                 }
+            }
+            this.schedule.push({
+                priority: subscriber.priority,
+                subscriber: subscriber,
+                events: [{publisher: publisher, eventName: eventName, data: data}]
             });
+        }, this);
+
+        // maintain priority order
+        this.schedule = _.sortBy(this.schedule, "priority");
+    };
+    EventBus.prototype.subscribe = function(subscriber, publisher) {
+        if(!this.subscribers[publisher]) {
+            this.subscribers[publisher] = [];
+        }
+        this.subscribers[publisher].push(subscriber);
+    };
+    EventBus.prototype.execute = function() {
+        while(this.schedule.length > 0) {
+            var item = this.schedule.shift();
+            item.subscriber.handle(item.events);
         }
     };
 
