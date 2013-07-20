@@ -26,7 +26,7 @@ window.DataDoo = (function() {
             case DataDoo.PERSPECTIVE:
                 var canvas = this.renderer.domElement;
                 this.camera = new THREE.PerspectiveCamera(params.camera.viewAngle,
-                                                          canvas.innerWidth/canvas.innerHeight,
+                                                          canvas.width/canvas.height,
                                                           params.camera.near,
                                                           params.camera.far);
                 break;
