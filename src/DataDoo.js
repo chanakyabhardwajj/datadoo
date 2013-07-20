@@ -118,7 +118,11 @@ window.DataDoo = (function() {
         while(this.schedule.length > 0) {
             var item = this.schedule.shift();
             this._currentParentEvents = item.events;
-            item.subscriber.handle(item.events);
+            if(item.subscriber.collapseEvents) {
+                item.subscriber.handler(item.events);
+            } else {
+                item.subscriber.handler(item.events[0]);
+            }
         }
         this._currentParentEvents = [];
     };
