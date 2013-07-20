@@ -69,40 +69,58 @@ window.DataDoo = (function() {
      * changes in the object hierarchy
      */
     function EventBus() {
-        this.queue = [];
-        this.listeners = {};
+        this.schedule = []; // contains the list of subscriber to be executed
+        this.subscribers = {}; // contains map between publishers and subscribers
+        this._currentParentEvents = []; // maintains the parentEvents for the current execution
     }
-    EventBus.prototype.enqueue = function(priority, eventName, creator, data) {
-        this.queue.push({
-            priority: priority,
-            eventName: eventName,
-            creator: creator,
-            data: data
-        });
-        this.queue = _.sortBy(this.queue, "priority");
-    };
-    EventBus.prototype.subscribe = function(creator, eventName, callback, context) {
-        if(!this.listeners[creator]) {
-            this.listeners[creator] = {};
-        }
-        if(!this.listeners[creator][eventName]) {
-            this.listeners[creator][eventName] = [];
-        }
-        this.listeners[creator][eventName].push([callback, context]);
-    };
-    EventBus.prototype.fireTillEmpty = function() {
-        while(this.queue.length > 0) {
-            var event = this.queue.shift();
-            var callbacks = this.listeners[event.creator][event.eventName];
-            _.each(callbacks, function(callback) {
-                if(callback[1]) {
-                    // call with context if provided
-                    callback[0].call(callback[1], event.data);
-                } else {
-                    callback[0](event.data);
+    EventBus.prototype.enqueue = function(publisher, eventName, data) {
+        var subscribers = this.subscribers[publisher];
+
+        // add execution schedules for this event
+        _.each(subscribers, function(subscriber) {
+            // collapse events for subscribers who wants it
+            if(subscriber.collapseEvents) {
+                var entry = _.find(this.schedule, function(item) {
+                    return item.subscriber === subscriber;
+                });
+                if(entry) {
+                    entry.events.push({
+                        publisher: publisher, 
+                        eventName: eventName, 
+                        data: data,
+                        parentEvents: this._currentParentEvents
+                    });
+                    return;
                 }
+            }
+            this.schedule.push({
+                priority: subscriber.priority,
+                subscriber: subscriber,
+                events: [{
+                    publisher: publisher,
+                    eventName: eventName,
+                    data: data,
+                    parentEvents: this._currentParentEvents
+                }];
             });
+        }, this);
+
+        // maintain priority order
+        this.schedule = _.sortBy(this.schedule, "priority");
+    };
+    EventBus.prototype.subscribe = function(subscriber, publisher) {
+        if(!this.subscribers[publisher]) {
+            this.subscribers[publisher] = [];
         }
+        this.subscribers[publisher].push(subscriber);
+    };
+    EventBus.prototype.execute = function() {
+        while(this.schedule.length > 0) {
+            var item = this.schedule.shift();
+            this._currentParentEvents = item.events;
+            item.subscriber.handle(item.events);
+        }
+        this._currentParentEvents = [];
     };
 
     // Request animationframe helper
@@ -121,30 +139,30 @@ window.DataDoo = (function() {
 //This module serves the purpose of creating and connecting data-streams to datadoo.
 //This will essentially be a very light wrapper around the MISO Dataset (http://misoproject.com/)
 
-(function(DataDoo){
-    var DataSet = function(/*datadooInstance*/ ddI, id, configObj){
-        if(!ddI){
+(function (DataDoo) {
+    var DataSet = function (/*datadooInstance*/ ddI, id, configObj) {
+        if (!ddI) {
             console.log("DataSet : Could not find any DataDoo instance!");
             return;
         }
 
-        if(!id){
+        if (!id) {
             console.log("DataSet : Could not find any id!");
             return;
         }
 
-        if(!configObj){
+        if (!configObj) {
             console.log("DataSet : Could not find any configuration object!");
             return;
         }
 
         var newDataSet = new Miso.Dataset(configObj);
-        if(newDataSet){
-            if(ddI[id]){
+        if (newDataSet) {
+            if (ddI[id]) {
                 console.log("DataSet : A dataset with the same ID already exists!!");
                 return;
             }
-            if(ddI.bucket[id]){
+            if (ddI.bucket[id]) {
                 console.log("DataSet : The bucket has a dataset reference with the same ID already! Internal Error!");
                 return;
             }
@@ -152,38 +170,46 @@ window.DataDoo = (function() {
             ddI[id] = newDataSet;
             ddI.bucket[id] = ddI[id];
 
-            newDataSet.fetch({
-                success: function() {
-                    ddI.eventBus.enqueue(0, "DATA.ADD", newDataSet, this.rows())
-                }
+
+            //Events for the dataset
+            newDataSet.subscribe("add", function (event) {
+                ddI.eventBus.enqueue(0, "DATA.ADD", newDataSet, _.map(event.deltas, function (obj) {
+                    return obj.changed;
+                }))
             });
 
-            newDataSet.subscribe("add", function(event){
-                ddI.eventBus.enqueue(0, "DATA.ADD", newDataSet, _.map(event.deltas, function(obj){ return obj.changed; }))
+            newDataSet.subscribe("update", function (e) {
+                var updatedRows = [];
+                _.each(e.deltas, function(delta){
+                    console.log("delta " + delta._id);
+                    _.each(e.dataset, function(drow){
+                        if(drow._id == delta._id){
+                            updatedRows.push(drow)
+                        }
+                    })
+                });
+                ddI.eventBus.enqueue(0, "DATA.UPDATE", newDataSet, updatedRows)
             });
 
-            newDataSet.subscribe("update", function(event){
-                //ToDO : add the updated rows.
-                ddI.eventBus.enqueue(0, "DATA.UPDATE", newDataSet, [])
-            });
-
-            newDataSet.subscribe("remove", function(event){
-                ddI.eventBus.enqueue(0, "DATA.DELETE", newDataSet, _.map(event.deltas, function(obj){ return obj.old; }))
+            newDataSet.subscribe("remove", function (event) {
+                ddI.eventBus.enqueue(0, "DATA.DELETE", newDataSet, _.map(event.deltas, function (obj) {
+                    return obj.old;
+                }))
             });
 
             return newDataSet;
         }
-        else{
+        else {
             console.log("DataSet : Could not create the Miso Dataset. Details of the failed configuration below : ");
             console.log(config);
         }
     };
 
     /*Other methods that will be available (by inheritance) on the DataSet instance can be found here:
-    * http://misoproject.com/dataset/api.html#misodatasetdataview
-    */
+     * http://misoproject.com/dataset/api.html#misodatasetdataview
+     */
 
-    DataDoo.prototype.DataSet = function(id, configObj){
+    DataDoo.prototype.DataSet = function (id, configObj) {
         return new DataSet(this, id, configObj);
     }
 
@@ -204,9 +230,9 @@ window.DataDoo = (function() {
             dd.bucket.id = this.nodes;
         }
 
-        dd.eventBus.subscribe(dataSet, "data.add", this.onAddHandler, this);
-        dd.eventBus.subscribe(dataSet, "data.delete", this.onDeleteHandler, this);
-        dd.eventBus.subscribe(dataSet, "data.update", this.onUpdateHandler, this);
+        dd.eventBus.subscribe(dataSet, "DATA.ADD", this.onAddHandler, this);
+        dd.eventBus.subscribe(dataSet, "DATA.DELETE", this.onDeleteHandler, this);
+        dd.eventBus.subscribe(dataSet, "DATA.UPDATE", this.onUpdateHandler, this);
     }
     NodeGenerator.prototype.onAddHandler = function(addedRows) {
         var addedNodes = _.map(addedRows, function(row) {

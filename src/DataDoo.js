@@ -71,6 +71,7 @@ window.DataDoo = (function() {
     function EventBus() {
         this.schedule = []; // contains the list of subscriber to be executed
         this.subscribers = {}; // contains map between publishers and subscribers
+        this._currentParentEvents = []; // maintains the parentEvents for the current execution
     }
     EventBus.prototype.enqueue = function(publisher, eventName, data) {
         var subscribers = this.subscribers[publisher];
@@ -83,14 +84,24 @@ window.DataDoo = (function() {
                     return item.subscriber === subscriber;
                 });
                 if(entry) {
-                    entry.events.push({publisher: publisher, eventName: eventName, data: data});
+                    entry.events.push({
+                        publisher: publisher, 
+                        eventName: eventName, 
+                        data: data,
+                        parentEvents: this._currentParentEvents
+                    });
                     return;
                 }
             }
             this.schedule.push({
                 priority: subscriber.priority,
                 subscriber: subscriber,
-                events: [{publisher: publisher, eventName: eventName, data: data}]
+                events: [{
+                    publisher: publisher,
+                    eventName: eventName,
+                    data: data,
+                    parentEvents: this._currentParentEvents
+                }];
             });
         }, this);
 
@@ -106,8 +117,10 @@ window.DataDoo = (function() {
     EventBus.prototype.execute = function() {
         while(this.schedule.length > 0) {
             var item = this.schedule.shift();
+            this._currentParentEvents = item.events;
             item.subscriber.handle(item.events);
         }
+        this._currentParentEvents = [];
     };
 
     // Request animationframe helper
