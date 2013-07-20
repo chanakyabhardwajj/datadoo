@@ -36,6 +36,9 @@ window.DataDoo = (function() {
         this.camera.position.set(0,150,400);
         this.camera.lookAt(this.scene.position);
         this.scene.add(this.camera);
+        this.light = new THREE.PointLight(0xffffff);
+        this.light.position.set(10,10,10);
+        this.scene.add(this.light);
         this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
     }
     DataDoo.prototype.id = "DD";
