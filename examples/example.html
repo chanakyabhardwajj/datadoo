@@ -16,14 +16,14 @@
             var ds1 = new DataDoo.DataSet(dd, "ds1", {
               data: [ 
                 { one : 1, two : 4, three : 7 },
-                { one : 2, two : 5, three : 8 }
+                { one : 20, two : 50, three : 8 }
               ]
             });
 
             var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, function($) {
                 var sphere = this.addSphere(100);
-                sphere.x = 0;
-                sphere.y = 0;
+                sphere.x = this.data.one;
+                sphere.y = this.data.two;
                 sphere.z = 10;
             });
 

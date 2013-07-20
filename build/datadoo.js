@@ -478,10 +478,10 @@ window.DataDoo = (function() {
         this.appFn = appFn;
 
         // put the nodes array 
-        if(dd.bucket.id) {
+        if(dd.bucket[id]) {
             throw new Error("NodeGenerator : id '"+id+"' already used");
         } else {
-            dd.bucket.id = this.nodes;
+            dd.bucket[id] = this.nodes;
         }
 
         dd.eventBus.subscribe(this, dataSet);
