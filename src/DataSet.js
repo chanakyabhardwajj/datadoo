@@ -18,6 +18,9 @@
             return;
         }
 
+        //Force the syncing to be true. Miso does not allow to make an instantiated dataset syncable later on.
+        configObj.sync = true;
+
         var newDataSet = new Miso.Dataset(configObj);
         if (newDataSet) {
             if (ddI[id]) {
@@ -59,6 +62,10 @@
                 }))
             });
 
+            newDataSet.subscribe("reset", function (event) {
+                ddI.eventBus.enqueue(0, "DATA.RESET", newDataSet, [])
+            });
+
             return newDataSet;
         }
         else {
@@ -75,4 +82,13 @@
         return new DataSet(this, id, configObj);
     }
 
-})(window.DataDoo)
+})(window.DataDoo);
+
+/*
+var ds = new Miso.Dataset({
+    data: [
+        { year : 1971, pop : 4000000, gdp : 7 },
+        { year : 1972, pop : 5000000, gdp : 6 },
+        { year : 1973, pop : 6000000, gdp : 5 }
+    ]
+});*/

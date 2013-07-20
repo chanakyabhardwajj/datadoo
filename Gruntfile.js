@@ -14,11 +14,16 @@ module.exports = function(grunt) {
                 files: {
                     'build/vendor.js': [
                         'src/libs/components/jquery.js',
-                        'src/libs/components/miso.dataset/dist/miso.ds.0.4.1.js',
                         'src/libs/components/underscore/underscore.js',
+                        'src/libs/components/miso.dataset/dist/miso.ds.deps.0.4.1.js',
                         'src/libs/components/threejs/build/three.js'
                     ],
-                    'build/datadoo.js': ['src/*.js']
+                    'build/datadoo.js': [
+                        'src/DataDoo.js',
+                        'src/DataSet.js',
+                        'src/DataFilter.js',
+                        'src/NodeGenerator.js'
+                    ]
                 },
 
                 options: {
