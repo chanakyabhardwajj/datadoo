@@ -139,9 +139,7 @@ window.DataDoo = (function () {
     };
 
     DataDoo.prototype._addOrRemoveSceneObjects = function (events) {
-        _.chain(events).filter(function (event) {
-            return event.eventName.substring(0, 4) == "NODE";
-        }).each(function (event) {
+        _.each(events, function(event) {
             switch (event.eventName) {
                 case "NODE.ADD":
                     _.each(this._getObjects(event.data), function (object) {
@@ -160,6 +158,10 @@ window.DataDoo = (function () {
                     _.each(this._getObjects(event.data.oldNodes), function (object) {
                         this.scene.remove(object);
                     }, this);
+                    break;
+
+                case "RELATION.UPDATE":
+                    // Remove old relation primitives and add new ones here
                     break;
             }
             this._addOrRemoveSceneObjects(this.parentEvents);
