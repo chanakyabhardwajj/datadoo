@@ -70,5 +70,22 @@
         return node;
     };
 
+    /**
+     * Node is a visual representation for each datapoint
+     * It contains a set of graphics primitives that reprents
+     * its visual
+     */
+    function Node(data) {
+        this.primitives = [];
+        this.data = data;
+    }
+    Node.prototype = {
+        addSphere : function(radius, color) {
+            var sphere = new Sphere(radius, color);
+            this.primitives.push(sphere);
+            return sphere;
+        }
+    };
+
     DataDoo.NodeGenerator = NodeGenerator;
 })(window.DataDoo);

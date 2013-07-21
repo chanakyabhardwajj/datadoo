@@ -55,71 +55,96 @@ window.DataDoo = (function () {
         this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
     }
 
-    DataDoo.prototype.id = "DD";
-    DataDoo.prototype.priority = 5;
-    DataDoo.prototype.collapseEvents = true;
-    /**
-     * Sets the size of the canvas
-     */
-    DataDoo.prototype.setSize = function (width, height) {
-        this.renderer.setSize(width, height);
-        if (this.camera instanceof THREE.PerspectiveCamera) {
-            this.camera.aspect = width / height;
-        }
-    };
-    /**
-     * Starts the visualization render loop
-     */
-    DataDoo.prototype.startVis = function () {
-        // subscribe to all the child elements
-        _.each(arguments, function (entity) {
-            this.eventBus.subscribe(this, entity);
-        }, this);
+    DataDoo.prototype = {
+        id : "DD",
+        priority : 5,
+        collapseEvents : true,
 
-        // start the render loop
-        var self = this;
+        /**
+         * Sets the size of the canvas
+         */
+        setSize : function (width, height) {
+            this.renderer.setSize(width, height);
+            if (this.camera instanceof THREE.PerspectiveCamera) {
+                this.camera.aspect = width / height;
+            }
+        },
 
-        function renderFrame() {
+        /**
+         * Starts the visualization render loop
+         */
+        startVis : function () {
+            // subscribe to all the child elements
+            _.each(arguments, function (entity) {
+                this.eventBus.subscribe(this, entity);
+            }, this);
+
+            // start the render loop
+            var self = this;
+
+            function renderFrame() {
+                requestAnimationFrame(renderFrame);
+
+                // we clear the eventbus, to make sure all the components have run
+                self.eventBus.execute();
+
+                // render the frame
+                self.renderer.render(self.scene, self.camera);
+
+                self.controls.update();
+            }
+
             requestAnimationFrame(renderFrame);
+        },
 
-            // we clear the eventbus, to make sure all the components have run
-            self.eventBus.execute();
+        handler : function (events) {
+            // traverse the event chain and add or remove objects
+            this._addOrRemoveSceneObjects(events);
 
-            // render the frame
-            self.renderer.render(self.scene, self.camera);
+            // Resolve primitive positions
 
-            self.controls.update();
-        }
-
-        requestAnimationFrame(renderFrame);
-    };
-    DataDoo.prototype.handler = function (events) {
-        console.log("DataDoo handler");
-        console.log(events);
-        // traverse the event chain and add or remove objects
-        this._addOrRemoveSceneObjects(events);
-
-        // Resolve node positions
-        // TODO: resolve only dirty nodes
-        _.chain(this.bucket).values().flatten().filter(function (item) {
-            return item instanceof DataDoo.Node;
-        }).map(function (node) {
+            // TODO: resolve only dirty nodes/relations
+            var primitives = _.chain(this.bucket).values().flatten().filter(function (item) {
+                return item instanceof DataDoo.Node || item instanceof DataDoo.Relation;
+            }).map(function (node) {
                 return node.primitives;
-            }).flatten().each(function (primitive) {
-                // TODO: more advanced position resolution
-                primitive.setObjectPositions(primitive.x, primitive.y, primitive.z);
+            }).flatten();
+            
+            var positions = _.chain(primitives).each(function(primitive) {
+                return primitive.getPositions();
+            }).flatten();
+
+            // resolve absolute positions
+            positions.filter(function(p) {
+                return p instanceof DataDoo.AbsolutePosition;
+            }).each(function(p) {
+                p.resolvedX = p.x;
+                p.resolvedY = p.y;
+                p.resolvedZ = p.z;
             });
-    };
 
-    DataDoo.prototype._addOrRemoveSceneObjects = function (events) {
-        /*if(_.findWhere(events, {eventName : "RELATION.DELETE"}).length>0){
-            this.scene.remove();
-        }*/
+            //TODO: resolve CoSyPosition
 
+            // resolve relativePositions. TODO: dependency sorting
+            positions.filter(function(p) {
+                return p instanceof DataDoo.RelativePosition;
+            }).each(function(p) {
+                p.resolvedX = p.relatedPos.resolvedX + p.xoff;
+                p.resolvedY = p.relatedPos.resolvedY + p.yoff;
+                p.resolvedZ = p.relatedPos.resolvedZ + p.zoff;
+            });
 
-        _.chain(events).filter(function (event) {
-            return event.eventName.substring(0, 4) == "NODE";
-        }).each(function (event) {
+            // call onResolve on all primitives so that
+            // they can set positions for three.js primitives
+            primitives.each(function (primitive) {
+                primitive.onResolve();
+            });
+        },
+
+        _addOrRemoveSceneObjects : function (events) {
+            _.chain(events).filter(function (event) {
+                return event.eventName.substring(0, 4) == "NODE";
+            }).each(function (event) {
                 switch (event.eventName) {
                     case "NODE.ADD":
                         _.each(this._getObjects(event.data), function (object) {
@@ -142,13 +167,15 @@ window.DataDoo = (function () {
                 }
                 this._addOrRemoveSceneObjects(this.parentEvents);
             }, this);
-    };
-    DataDoo.prototype._getObjects = function (nodes) {
-        return _.chain(nodes).map(function (node) {
-            return node.primitives;
-        }).flatten().map(function (primitive) {
+        },
+
+        _getObjects : function (nodes) {
+            return _.chain(nodes).map(function (node) {
+                return node.primitives;
+            }).flatten().map(function (primitive) {
                 return primitive.objects;
             }).flatten().value();
+        }
     };
 
     /**
@@ -165,63 +192,66 @@ window.DataDoo = (function () {
         this.subscribers = {}; // contains map between publishers and subscribers
         this._currentParentEvents = []; // maintains the parentEvents for the current execution
     }
+    EventBus.prototype = {
+        enqueue : function (publisher, eventName, data) {
+            var subscribers = this.subscribers[publisher.id];
 
-    EventBus.prototype.enqueue = function (publisher, eventName, data) {
-        var subscribers = this.subscribers[publisher.id];
-
-        // add execution schedules for this event
-        _.each(subscribers, function (subscriber) {
-            console.log("Scheduling execution of " + subscriber.id + " for event " + eventName);
-            // collapse events for subscribers who wants it
-            if (subscriber.collapseEvents) {
-                var entry = _.find(this.schedule, function (item) {
-                    return item.subscriber === subscriber;
-                });
-                if (entry) {
-                    entry.events.push({
-                        publisher:publisher,
-                        eventName:eventName,
-                        data:data,
-                        parentEvents:this._currentParentEvents
+            // add execution schedules for this event
+            _.each(subscribers, function (subscriber) {
+                console.log("Scheduling execution of " + subscriber.id + " for event " + eventName);
+                // collapse events for subscribers who wants it
+                if (subscriber.collapseEvents) {
+                    var entry = _.find(this.schedule, function (item) {
+                        return item.subscriber === subscriber;
                     });
-                    return;
+                    if (entry) {
+                        entry.events.push({
+                            publisher:publisher,
+                            eventName:eventName,
+                            data:data,
+                            parentEvents:this._currentParentEvents
+                        });
+                        return;
+                    }
+                }
+                this.schedule.push({
+                    priority:subscriber.priority,
+                    subscriber:subscriber,
+                    events:[
+                        {
+                            publisher:publisher,
+                            eventName:eventName,
+                            data:data,
+                            parentEvents:this._currentParentEvents
+                        }
+                    ]
+                });
+            }, this);
+
+            // maintain priority order
+            this.schedule = _.sortBy(this.schedule, "priority");
+        },
+
+        subscribe : function (subscriber, publisher) {
+            if (!this.subscribers[publisher.id]) {
+                this.subscribers[publisher.id] = [];
+            }
+            this.subscribers[publisher.id].push(subscriber);
+        },
+        
+        execute : function () {
+            while (this.schedule.length > 0) {
+                var item = this.schedule.shift();
+                console.log("EventBus : executing " + item.subscriber.id);
+                this._currentParentEvents = item.events;
+                if (item.subscriber.collapseEvents) {
+                    item.subscriber.handler(item.events);
+                } else {
+                    item.subscriber.handler(item.events[0]);
                 }
             }
-            this.schedule.push({
-                priority:subscriber.priority,
-                subscriber:subscriber,
-                events:[
-                    {
-                        publisher:publisher,
-                        eventName:eventName,
-                        data:data,
-                        parentEvents:this._currentParentEvents
-                    }
-                ]
-            });
-        }, this);
-
-        // maintain priority order
-        this.schedule = _.sortBy(this.schedule, "priority");
-    };
-    EventBus.prototype.subscribe = function (subscriber, publisher) {
-        if (!this.subscribers[publisher.id]) {
-            this.subscribers[publisher.id] = [];
+            this._currentParentEvents = [];
         }
-        this.subscribers[publisher.id].push(subscriber);
-    };
-    EventBus.prototype.execute = function () {
-        while (this.schedule.length > 0) {
-            var item = this.schedule.shift();
-            console.log("EventBus : executing " + item.subscriber.id);
-            this._currentParentEvents = item.events;
-            if (item.subscriber.collapseEvents) {
-                item.subscriber.handler(item.events);
-            } else {
-                item.subscriber.handler(item.events[0]);
-            }
-        }
-        this._currentParentEvents = [];
     };
 
     // Request animationframe helper
@@ -440,72 +470,11 @@ window.DataDoo = (function () {
 
 
 (function(DataDoo) {
-    /**
-     *  Sphere primitive
-     */
-    function Sphere(radius, color) {
-        this.radius = 10;
-        this.color = color || 0x8888ff;
 
-        this.material = new THREE.MeshLambertMaterial({color: this.color});
-        this.geometry = new THREE.SphereGeometry(this.radius);
-        this.mesh = new THREE.Mesh(this.geometry, this.material);
-        this.objects = [this.mesh];
-    }
-    /**
-     * Sets the radius of the sphere
-     */
-    Sphere.prototype.setRadius = function(radius) {
-        this.radius = radius;
-        this.geometry = new THREE.SphereGeometry(this.radius);
-        this.mesh.setGeometry(this.geometry);
-    };
-    Sphere.prototype.setObjectPositions = function(x, y, z) {
-        this.mesh.position.set(x, y, z);
-    };
 
-    /**
-     * Node is a visual representation for each datapoint
-     * It contains a set of graphics primitives that reprents
-     * its visual
-     */
-    function Node(data) {
-        this.primitives = [];
-        this.data = data;
-    }
-    Node.prototype.addSphere = function(radius, color) {
-        var sphere = new Sphere(radius, color);
-        this.primitives.push(sphere);
-        return sphere;
-    };
-
-    DataDoo.Node = Node;
 })(window.DataDoo);
 
 (function(DataDoo) {
-    /**
-     *  DashedLine primitive
-     */
-    function DashedLine(color, dashSize, gapSize, sourceNode, destNode) {
-        this.dashSize = dashSize || 4;
-        this.gapSize = gapSize || 2;
-        this.color = color || 0x8888ff;
-        this.sourcePosition = sourceNode.position || new THREE.Vector3(0,0,0);
-        this.destinationPosition = destNode.position || new THREE.Vector3(10,10,10);
-
-        this.material = new THREE.MeshLambertMaterial({color: this.color});
-        this.geometry = new THREE.SphereGeometry(this.radius);
-        this.mesh = new THREE.Mesh(this.geometry, this.material);
-        this.objects = [this.mesh];
-
-        this.lineGeometry = new THREE.Geometry();
-        var vertArray = this.lineGeometry.vertices;
-        vertArray.push( this.sourcePosition, this.destinationPosition);
-        this.lineGeometry.computeLineDistances();
-        this.lineMaterial = new THREE.LineDashedMaterial( { color: this.color, dashSize: this.dashSize, gapSize: this.gapSize } );
-        this.mesh = new THREE.Line( this.lineGeometry, this.lineMaterial );
-        this.objects = [this.mesh];
-    }
 
     /**
      * Relation is a visual representation of connections between nodes
@@ -554,16 +523,31 @@ window.DataDoo = (function () {
 
     RelationGenerator.prototype.collapseEvents = true;
     RelationGenerator.prototype.priority = 3;
-    RelationGenerator.prototype.handler = function(/*array*/ events) {
-        console.log("RelationGenerator" + this.id +": Received Events Array : " + _.flatten(events));
-        this.dd.eventBus.enqueue(this, "RELATION.DELETE", this.relations);
-        this.generateRelations();
-        this.dd.eventBus.enqueue(this, "RELATION.CREATE", this.relations);
+    RelationGenerator.prototype.handler = function(event) {
+        switch(event.eventName) {
+            case "NODE.ADD":
+                console.log("RelationGenerator" + id +": Received NODE.ADD");
+                this.generateRelations();
+                this.dd.eventBus.enqueue(this, "RELATION.UPDATE", this.relations);
+                break;
+            case "NODE.DELETE":
+                console.log("RelationGenerator" + id +": Received NODE.DELETE");
+                this.generateRelations();
+                this.dd.eventBus.enqueue(this, "RELATION.UPDATE", this.relations);
+                break;
+            case "NODE.UPDATE":
+                console.log("RelationGenerator" + id +": Received NODE.UPDATE");
+                this.generateRelations();
+                this.dd.eventBus.enqueue(this, "RELATION.UPDATE", this.relations);
+                break;
+            default:
+                throw new Error("RelationGenerator : Unknown event fired : " + event.toString());
+        }
     };
 
     RelationGenerator.prototype.generateRelations = function() {
         this.relations = [];
-        var relns = this.appFn.call(this.dd.bucket);
+        var relns = this.appFn.call(this.ngs);
         this.relations = relns;
     };
 
@@ -640,6 +624,23 @@ window.DataDoo = (function () {
         node.data = data;
         this.appFn.call(node, this.dd.bucket);
         return node;
+    };
+
+    /**
+     * Node is a visual representation for each datapoint
+     * It contains a set of graphics primitives that reprents
+     * its visual
+     */
+    function Node(data) {
+        this.primitives = [];
+        this.data = data;
+    }
+    Node.prototype = {
+        addSphere : function(radius, color) {
+            var sphere = new Sphere(radius, color);
+            this.primitives.push(sphere);
+            return sphere;
+        }
     };
 
     DataDoo.NodeGenerator = NodeGenerator;
