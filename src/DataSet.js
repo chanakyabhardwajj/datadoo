@@ -61,6 +61,7 @@
             });
 
             this.dataset = newDataSet;
+            this.id = id;
             return this;
         }
         else {
