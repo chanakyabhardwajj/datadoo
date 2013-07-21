@@ -32,16 +32,7 @@
             ddI.bucket[id] = newDataSet;
 
             //Events for the dataset
-            newDataSet.subscribe("change", function (event) {
-                console.log('change happened');
-                /*ddI.eventBus.enqueue(newDataSet, "DATA.ADD", _.map(event.deltas, function (obj) {
-                    return obj.changed;
-                }));*/
-                console.log(event);
-            });
-
             newDataSet.subscribe("add", function (event) {
-                console.log('add fired');
                 ddI.eventBus.enqueue(newDataSet, "DATA.ADD", _.map(event.deltas, function (obj) {
                     return obj.changed;
                 }));

@@ -32,8 +32,8 @@
         this.primitives = [];
         this.data = data;
     }
-    Node.prototype.addSphere = function(radius) {
-        var sphere = new Sphere(radius);
+    Node.prototype.addSphere = function(radius, color) {
+        var sphere = new Sphere(radius, color);
         this.primitives.push(sphere);
         return sphere;
     };

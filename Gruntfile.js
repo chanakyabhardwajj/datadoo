@@ -24,6 +24,8 @@ module.exports = function(grunt) {
                         'src/DataSet.js',
                         'src/DataFilter.js',
                         'src/Node.js',
+                        'src/Relation.js',
+                        'src/RelationGenerator.js',
                         'src/NodeGenerator.js'
                     ]
                 },
