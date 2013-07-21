@@ -43,7 +43,7 @@
         this.datasource = dsI;
         this.filterColumn = colName;
         this.id = id;
-        
+
         ddI.bucket[id] = this;
 
         if (!dsI.dataset.fetched) {

@@ -21,24 +21,25 @@
         //Force the syncing to be true. Miso does not allow to make an instantiated dataset syncable later on.
         configObj.sync = true;
         configObj.resetOnFetch = true;
-
-        var newDataSet = new Miso.Dataset(configObj);
-        if (newDataSet) {
+        var that = this;
+        this.id = id;
+        this.dataset = new Miso.Dataset(configObj);
+        if (this.dataset) {
             if (ddI.bucket[id]) {
                 console.log("DataSet : The bucket has a dataset reference with the same ID already! Internal Error!");
                 throw new Error("DataSet : The bucket has a dataset reference with the same ID already! Internal Error");
             }
 
-            ddI.bucket[id] = newDataSet;
+            ddI.bucket[id] = this.dataset;
 
             //Events for the dataset
-            newDataSet.subscribe("add", function (event) {
-                ddI.eventBus.enqueue(newDataSet, "DATA.ADD", _.map(event.deltas, function (obj) {
+            this.dataset.subscribe("add", function (event) {
+                ddI.eventBus.enqueue(that, "DATA.ADD", _.map(event.deltas, function (obj) {
                     return obj.changed;
                 }));
             });
 
-            newDataSet.subscribe("update", function (e) {
+            this.dataset.subscribe("update", function (e) {
                 var updatedRows = [];
                 _.each(e.deltas, function(delta){
                     _.each(e.dataset, function(drow){
@@ -47,21 +48,19 @@
                         }
                     });
                 });
-                ddI.eventBus.enqueue(newDataSet, "DATA.UPDATE", updatedRows);
+                ddI.eventBus.enqueue(that, "DATA.UPDATE", updatedRows);
             });
 
-            newDataSet.subscribe("remove", function (event) {
-                ddI.eventBus.enqueue(newDataSet, "DATA.DELETE", _.map(event.deltas, function (obj) {
+            this.dataset.subscribe("remove", function (event) {
+                ddI.eventBus.enqueue(that, "DATA.DELETE", _.map(event.deltas, function (obj) {
                     return obj.old;
                 }));
             });
 
-            newDataSet.subscribe("reset", function (event) {
-                ddI.eventBus.enqueue(newDataSet, "DATA.RESET", []);
+            this.dataset.subscribe("reset", function (event) {
+                ddI.eventBus.enqueue(that, "DATA.RESET", []);
             });
 
-            this.dataset = newDataSet;
-            this.id = id;
             return this;
         }
         else {
