@@ -11,14 +11,15 @@
     Primitive.prototype.onResolve = function() {
         throw new Error("Primitive : onResolve not implemented");
     };
+    DataDoo.Primitive = Primitive;
 
     /**
      *  Sphere primitive
      */
-    function Sphere(radius, color) {
-        this.radius = 10;
+    function Sphere(radius, color, center) {
+        this.radius = radius || 10;
         this.color = color || 0x8888ff;
-        this.center = new DataDoo.AbsolutePosition(0,0,0);
+        this.center = center || new DataDoo.Position(0,0,0);
 
         this.material = new THREE.MeshLambertMaterial({color: this.color});
         this.geometry = new THREE.SphereGeometry(this.radius);
@@ -45,7 +46,7 @@
     /**
      *  Line primitive
      */
-    function DashedLine(startPos, endPos, color, dashSize, gapSize) {
+    function DashedLine(startPos, endPos, color, dashSize, gapSize, radius) {
         this.dashSize = dashSize || 4;
         this.gapSize = gapSize || 2;
         this.color = color || 0x8888ff;

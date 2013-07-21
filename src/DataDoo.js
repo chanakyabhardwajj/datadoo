@@ -113,7 +113,7 @@ window.DataDoo = (function () {
 
         // resolve absolute positions
         positions.filter(function(p) {
-            return p instanceof DataDoo.AbsolutePosition;
+            return p.type == DataDoo.ABSOLUTE;
         }).each(function(p) {
             p.resolvedX = p.x;
             p.resolvedY = p.y;
@@ -124,11 +124,11 @@ window.DataDoo = (function () {
 
         // resolve relativePositions. TODO: dependency sorting
         positions.filter(function(p) {
-            return p instanceof DataDoo.RelativePosition;
+            return p.type == DataDoo.RELATIVE;
         }).each(function(p) {
-            p.resolvedX = p.relatedPos.resolvedX + p.xoff;
-            p.resolvedY = p.relatedPos.resolvedY + p.yoff;
-            p.resolvedZ = p.relatedPos.resolvedZ + p.zoff;
+            p.resolvedX = p.relatedPos.resolvedX + p.x;
+            p.resolvedY = p.relatedPos.resolvedY + p.y;
+            p.resolvedZ = p.relatedPos.resolvedZ + p.z;
         });
 
         // call onResolve on all primitives so that
@@ -181,6 +181,9 @@ window.DataDoo = (function () {
      * DataDoo constants TODO: move to separate file
      */
     DataDoo.PERSPECTIVE = 1;
+    DataDoo.ABSOLUTE = 2;
+    DataDoo.RELATIVE = 3;
+    DataDoo.COSY = 4;
 
     /**
      * DataDoo's special priority event bus for propagating

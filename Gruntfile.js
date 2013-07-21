@@ -18,7 +18,6 @@ module.exports = function(grunt) {
                         'src/DataFilter.js',
                         'src/Position.js',
                         'src/Primitives.js',
-                        'src/Node.js',
                         'src/Relation.js',
                         'src/RelationGenerator.js',
                         'src/NodeGenerator.js'
