@@ -64,7 +64,7 @@
         }
     };
     NodeGenerator.prototype._generateNode = function(data) {
-        var node = new DataDoo.Node();
+        var node = new Node();
         node.data = data;
         this.appFn.call(node, this.dd.bucket);
         return node;
@@ -81,7 +81,7 @@
     }
     Node.prototype = {
         addSphere : function(radius, color) {
-            var sphere = new Sphere(radius, color);
+            var sphere = new DataDoo.Sphere(radius, color);
             this.primitives.push(sphere);
             return sphere;
         }

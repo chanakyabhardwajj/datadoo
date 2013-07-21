@@ -470,6 +470,64 @@ window.DataDoo = (function () {
 
 
 (function(DataDoo) {
+    /**
+     * Position Base Class
+     */
+    function Position() {
+        this.resolvedX = 0;
+        this.resolvedY = 0;
+        this.resolvedZ = 0;
+    }
+    Position.prototype = {
+        applyToVector : function(vec) {
+            vec.set(this.resolvedX, this.resolvedY, this.resolvedZ);
+        },
+
+        toVector : function() {
+            return new THREE.Vector3(this.resolvedX, this.resolvedY, this.resolvedZ);
+        }
+    };
+
+    /**
+     * Absolute position. This position is used as is,
+     * no resolving is done
+     */
+    function AbsolutePosition(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = x;
+    }
+    AbsolutePosition.prototype = Object.create(Position.prototype);
+    DataDoo.AbsolutePosition = AbsolutePosition;
+
+    /**
+     * CoSy position. This position is resolved on a value
+     * based coordinate system
+     */
+    function CoSyPosition(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = x;
+    }
+    AbsolutePosition.prototype = Object.create(Position.prototype);
+    DataDoo.CoSyPosition = CoSyPosition;
+
+    /**
+     * Relative Position. This position is resolved relative
+     * to other position objects.
+     */
+    function RelativePosition(relatedPos, xoff, yoff, zoff) {
+        this.relatedPos = relatedPos;
+        this.xoff = xoff;
+        this.yoff = yoff;
+        this.zoff = zoff;
+    }
+    AbsolutePosition.prototype = Object.create(Position.prototype);
+    DataDoo.RelativePosition = RelativePosition;
+
+})(window.DataDoo);
+
+(function(DataDoo) {
 
 
 })(window.DataDoo);
@@ -523,31 +581,16 @@ window.DataDoo = (function () {
 
     RelationGenerator.prototype.collapseEvents = true;
     RelationGenerator.prototype.priority = 3;
-    RelationGenerator.prototype.handler = function(event) {
-        switch(event.eventName) {
-            case "NODE.ADD":
-                console.log("RelationGenerator" + id +": Received NODE.ADD");
-                this.generateRelations();
-                this.dd.eventBus.enqueue(this, "RELATION.UPDATE", this.relations);
-                break;
-            case "NODE.DELETE":
-                console.log("RelationGenerator" + id +": Received NODE.DELETE");
-                this.generateRelations();
-                this.dd.eventBus.enqueue(this, "RELATION.UPDATE", this.relations);
-                break;
-            case "NODE.UPDATE":
-                console.log("RelationGenerator" + id +": Received NODE.UPDATE");
-                this.generateRelations();
-                this.dd.eventBus.enqueue(this, "RELATION.UPDATE", this.relations);
-                break;
-            default:
-                throw new Error("RelationGenerator : Unknown event fired : " + event.toString());
-        }
+    RelationGenerator.prototype.handler = function(/*array*/ events) {
+        console.log("RelationGenerator" + this.id +": Received Events Array : " + _.flatten(events));
+        this.dd.eventBus.enqueue(this, "RELATION.DELETE", this.relations);
+        this.generateRelations();
+        this.dd.eventBus.enqueue(this, "RELATION.CREATE", this.relations);
     };
 
     RelationGenerator.prototype.generateRelations = function() {
         this.relations = [];
-        var relns = this.appFn.call(this.ngs);
+        var relns = this.appFn.call(this.dd.bucket);
         this.relations = relns;
     };
 
@@ -620,7 +663,7 @@ window.DataDoo = (function () {
         }
     };
     NodeGenerator.prototype._generateNode = function(data) {
-        var node = new DataDoo.Node();
+        var node = new Node();
         node.data = data;
         this.appFn.call(node, this.dd.bucket);
         return node;
@@ -637,7 +680,7 @@ window.DataDoo = (function () {
     }
     Node.prototype = {
         addSphere : function(radius, color) {
-            var sphere = new Sphere(radius, color);
+            var sphere = new DataDoo.Sphere(radius, color);
             this.primitives.push(sphere);
             return sphere;
         }

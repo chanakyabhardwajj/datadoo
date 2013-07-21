@@ -15,7 +15,7 @@
         toVector : function() {
             return new THREE.Vector3(this.resolvedX, this.resolvedY, this.resolvedZ);
         }
-    }
+    };
 
     /**
      * Absolute position. This position is used as is,
