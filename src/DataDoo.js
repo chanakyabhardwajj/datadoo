@@ -161,6 +161,8 @@ window.DataDoo = (function () {
                     break;
 
                 case "RELATION.UPDATE":
+                    console.log("relation updates");
+                    console.dir(event);
                     // Remove old relation primitives and add new ones here
                     break;
             }

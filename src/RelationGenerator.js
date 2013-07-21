@@ -25,16 +25,19 @@
     RelationGenerator.prototype.collapseEvents = true;
     RelationGenerator.prototype.priority = 3;
     RelationGenerator.prototype.handler = function(/*array*/ events) {
-        console.log("RelationGenerator" + this.id +": Received Events Array : " + _.flatten(events));
-        this.dd.eventBus.enqueue(this, "RELATION.DELETE", this.relations);
+        console.log("RelationGenerator" + this.id +": Received An Event");
+
+        this.deleteRelations();
         this.generateRelations();
-        this.dd.eventBus.enqueue(this, "RELATION.CREATE", this.relations);
+        this.dd.eventBus.enqueue(this, "RELATION.UPDATE", this.relations);
+    };
+
+    RelationGenerator.prototype.deleteRelations = function() {
+        this.relations = [];
     };
 
     RelationGenerator.prototype.generateRelations = function() {
-        this.relations = [];
-        var relns = this.appFn.call(this.dd.bucket);
-        this.relations = relns;
+        this.relations = this.appFn.call(this.dd.bucket);
     };
 
     DataDoo.RelationGenerator = RelationGenerator;

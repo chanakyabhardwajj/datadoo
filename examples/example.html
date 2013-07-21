@@ -47,31 +47,17 @@
                 sphere.center.z = this.data.three;
             };
 
-            var relnAppFn = function(ngArr){
-                var l = ngArr.length;
-                var color = [0xeaeaea, 0xcd762e];
-                for(var x =0; x<l-1; x++){
-                    var ng = ngArr[x].nodes;
-                    var ngNext = ngArr[x+1].nodes;
-
-                    for(var y=0; y<ng.length; y++){
-                        for(var z=0;z<ngNext.length; z++){
-                            this.addDashedLine(color[x],4,2, ng[y], ngNext[z]);
-                            console.log("adding dashed line relations")
-                        }
-
-                    }
-                }
-
+            var relnAppFn = function($){
+                return [1,2];
             };
 
             var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, nodeAppFn1);
             var ng2 = new DataDoo.NodeGenerator(dd, "ng2", ds2, nodeAppFn2);
 
-            //var rg1 = new DataDoo.RelationGenerator(dd, "rg1", [ng1, ng2], relnAppFn);
+            var rg1 = new DataDoo.RelationGenerator(dd, "rg1", [ng1, ng2], relnAppFn);
             ds1.fetch();
             ds2.fetch();
-            dd.startVis(ng1,ng2);
+            dd.startVis(rg1);
         </script>
     </body>
 </html>
