@@ -595,7 +595,7 @@ window.DataDoo = (function () {
     DataDoo.Sphere = Sphere;
 
     /**
-     *  Line primitive
+     *  DashedLine primitive
      */
     function DashedLine(startPos, endPos, color, dashSize, gapSize, radius) {
         this.dashSize = dashSize || 4;
@@ -631,6 +631,34 @@ window.DataDoo = (function () {
         this.endPos.applyToVector(this.sphere2.position);
     };
     DataDoo.DashedLine = DashedLine;
+
+
+    function Spline(points, color, subdivisions){
+        this.points = points;
+        this.color = color || 0xfc12340;
+        this.subdivisions = subdivisions || 6;
+        this.spline = new THREE.Spline( points );
+        this.geometrySpline = new THREE.Geometry();
+        this.position = new DataDoo.Position(0,0,0);
+
+        for ( var i = 0; i < this.points.length * this.subdivisions; i ++ ) {
+            var index = i / ( this.points.length * this.subdivisions );
+            var position = this.spline.getPoint( index );
+            this.geometrySpline.vertices[ i ] = new THREE.Vector3( position.x, position.y, position.z );
+        }
+        this.geometrySpline.computeLineDistances();
+
+        this.mesh = new THREE.Line( this.geometrySpline, new THREE.LineDashedMaterial( { color: this.color, dashSize: 1, gapSize: 0.5 } ), THREE.LineStrip );
+        this.objects = [this.mesh];
+    }
+    Spline.prototype = Object.create(Primitive.prototype);
+    Spline.prototype.getPositions = function() {
+        return [this.position];
+    };
+    Spline.prototype.onResolve = function() {
+        this.position.applyToVector(this.mesh.position);
+    };
+    DataDoo.Spline = Spline;
 })(window.DataDoo);
 
 (function(DataDoo) {
@@ -643,6 +671,12 @@ window.DataDoo = (function () {
         this.primitives = [];
         this.data = data || {};
     }
+
+    Relation.prototype.addSpline= function(points, color, subdivisions) {
+        var spline = new DataDoo.Spline(points, color, subdivisions);
+        this.primitives.push(spline);
+        return spline;
+    };
 
     Relation.prototype.addDashedLine = function(startPos, endPos, color, dashSize, gapSize, radius) {
         var line = new DataDoo.DashedLine(startPos, endPos, color, dashSize, gapSize, radius);

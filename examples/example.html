@@ -12,7 +12,7 @@
         </style>
     </head>
     <body>
-        <canvas style="border: 1px solid black;" id="canvas"></canvas>
+        <canvas id="canvas"></canvas>
         <script src="../build/vendor.js"></script>
         <script src="../build/datadoo.js"></script>
         <script type="text/javascript">
@@ -67,10 +67,26 @@
                 var dst = $.ng2[$.ng2.length-1];
 
                 if(src && dst){
-                    var rel = new DataDoo.Relation();
-                    rel.addDashedLine(src.primitives[0].center, dst.primitives[0].center);
-                    arr.push(rel);
+                 var rel = new DataDoo.Relation();
+                 rel.addDashedLine(src.primitives[0].center, dst.primitives[0].center);
+                 arr.push(rel);
+                 }
+
+                if ($.ng1.length>0 && $.ng2.length>0) {
+                    var ns = [];
+                    ns.push($.ng1[$.ng1.length - 1].primitives[0].center);
+                    ns.push($.ng2[$.ng2.length - 1].primitives[0].center);
+                    ns.push($.ng1[$.ng1.length - 5].primitives[0].center);
+                    ns.push($.ng2[$.ng2.length - 3].primitives[0].center);
+                    ns.push($.ng1[$.ng1.length - 2].primitives[0].center);
+                    ns.push($.ng2[$.ng2.length - 2].primitives[0].center);
+                    ns.push($.ng1[$.ng1.length - 6].primitives[0].center);
+
+                    var rel2 = new DataDoo.Relation();
+                    arr.push(rel2);
+                    rel2.addSpline(ns, 0xff0000, 8);
                 }
+
                 return arr;
             };
 

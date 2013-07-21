@@ -9,6 +9,12 @@
         this.data = data || {};
     }
 
+    Relation.prototype.addSpline= function(points, color, subdivisions) {
+        var spline = new DataDoo.Spline(points, color, subdivisions);
+        this.primitives.push(spline);
+        return spline;
+    };
+
     Relation.prototype.addDashedLine = function(startPos, endPos, color, dashSize, gapSize, radius) {
         var line = new DataDoo.DashedLine(startPos, endPos, color, dashSize, gapSize, radius);
         this.primitives.push(line);
