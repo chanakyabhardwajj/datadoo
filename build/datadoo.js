@@ -94,6 +94,8 @@ window.DataDoo = (function () {
         requestAnimationFrame(renderFrame);
     };
     DataDoo.prototype.handler = function (events) {
+        console.log("DataDoo handler");
+        console.log(events);
         // traverse the event chain and add or remove objects
         this._addOrRemoveSceneObjects(events);
 
@@ -108,7 +110,13 @@ window.DataDoo = (function () {
                 primitive.setObjectPositions(primitive.x, primitive.y, primitive.z);
             });
     };
+
     DataDoo.prototype._addOrRemoveSceneObjects = function (events) {
+        /*if(_.findWhere(events, {eventName : "RELATION.DELETE"}).length>0){
+            this.scene.remove();
+        }*/
+
+
         _.chain(events).filter(function (event) {
             return event.eventName.substring(0, 4) == "NODE";
         }).each(function (event) {
@@ -476,7 +484,7 @@ window.DataDoo = (function () {
 
 (function(DataDoo) {
     /**
-     *  Line primitive
+     *  DashedLine primitive
      */
     function DashedLine(color, dashSize, gapSize, sourceNode, destNode) {
         this.dashSize = dashSize || 4;
@@ -546,31 +554,16 @@ window.DataDoo = (function () {
 
     RelationGenerator.prototype.collapseEvents = true;
     RelationGenerator.prototype.priority = 3;
-    RelationGenerator.prototype.handler = function(event) {
-        switch(event.eventName) {
-            case "NODE.ADD":
-                console.log("RelationGenerator" + id +": Received NODE.ADD");
-                this.generateRelations();
-                this.dd.eventBus.enqueue(this, "RELATION.UPDATE", this.relations);
-                break;
-            case "NODE.DELETE":
-                console.log("RelationGenerator" + id +": Received NODE.DELETE");
-                this.generateRelations();
-                this.dd.eventBus.enqueue(this, "RELATION.UPDATE", this.relations);
-                break;
-            case "NODE.UPDATE":
-                console.log("RelationGenerator" + id +": Received NODE.UPDATE");
-                this.generateRelations();
-                this.dd.eventBus.enqueue(this, "RELATION.UPDATE", this.relations);
-                break;
-            default:
-                throw new Error("RelationGenerator : Unknown event fired : " + event.toString());
-        }
+    RelationGenerator.prototype.handler = function(/*array*/ events) {
+        console.log("RelationGenerator" + this.id +": Received Events Array : " + _.flatten(events));
+        this.dd.eventBus.enqueue(this, "RELATION.DELETE", this.relations);
+        this.generateRelations();
+        this.dd.eventBus.enqueue(this, "RELATION.CREATE", this.relations);
     };
 
     RelationGenerator.prototype.generateRelations = function() {
         this.relations = [];
-        var relns = this.appFn.call(this.ngs);
+        var relns = this.appFn.call(this.dd.bucket);
         this.relations = relns;
     };
 

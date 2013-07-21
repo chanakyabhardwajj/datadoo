@@ -94,6 +94,8 @@ window.DataDoo = (function () {
         requestAnimationFrame(renderFrame);
     };
     DataDoo.prototype.handler = function (events) {
+        console.log("DataDoo handler");
+        console.log(events);
         // traverse the event chain and add or remove objects
         this._addOrRemoveSceneObjects(events);
 
@@ -108,7 +110,13 @@ window.DataDoo = (function () {
                 primitive.setObjectPositions(primitive.x, primitive.y, primitive.z);
             });
     };
+
     DataDoo.prototype._addOrRemoveSceneObjects = function (events) {
+        /*if(_.findWhere(events, {eventName : "RELATION.DELETE"}).length>0){
+            this.scene.remove();
+        }*/
+
+
         _.chain(events).filter(function (event) {
             return event.eventName.substring(0, 4) == "NODE";
         }).each(function (event) {

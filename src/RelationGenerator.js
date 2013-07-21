@@ -24,31 +24,16 @@
 
     RelationGenerator.prototype.collapseEvents = true;
     RelationGenerator.prototype.priority = 3;
-    RelationGenerator.prototype.handler = function(event) {
-        switch(event.eventName) {
-            case "NODE.ADD":
-                console.log("RelationGenerator" + id +": Received NODE.ADD");
-                this.generateRelations();
-                this.dd.eventBus.enqueue(this, "RELATION.UPDATE", this.relations);
-                break;
-            case "NODE.DELETE":
-                console.log("RelationGenerator" + id +": Received NODE.DELETE");
-                this.generateRelations();
-                this.dd.eventBus.enqueue(this, "RELATION.UPDATE", this.relations);
-                break;
-            case "NODE.UPDATE":
-                console.log("RelationGenerator" + id +": Received NODE.UPDATE");
-                this.generateRelations();
-                this.dd.eventBus.enqueue(this, "RELATION.UPDATE", this.relations);
-                break;
-            default:
-                throw new Error("RelationGenerator : Unknown event fired : " + event.toString());
-        }
+    RelationGenerator.prototype.handler = function(/*array*/ events) {
+        console.log("RelationGenerator" + this.id +": Received Events Array : " + _.flatten(events));
+        this.dd.eventBus.enqueue(this, "RELATION.DELETE", this.relations);
+        this.generateRelations();
+        this.dd.eventBus.enqueue(this, "RELATION.CREATE", this.relations);
     };
 
     RelationGenerator.prototype.generateRelations = function() {
         this.relations = [];
-        var relns = this.appFn.call(this.ngs);
+        var relns = this.appFn.call(this.dd.bucket);
         this.relations = relns;
     };
 

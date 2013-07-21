@@ -1,6 +1,6 @@
 (function(DataDoo) {
     /**
-     *  Line primitive
+     *  DashedLine primitive
      */
     function DashedLine(color, dashSize, gapSize, sourceNode, destNode) {
         this.dashSize = dashSize || 4;
