@@ -32,6 +32,7 @@
 
     RelationGenerator.prototype.generateRelations = function() {
         this.relations = this.appFn(this.dd.bucket);
+        this.dd.bucket[this.id] = this.relations;
     };
 
     DataDoo.RelationGenerator = RelationGenerator;
