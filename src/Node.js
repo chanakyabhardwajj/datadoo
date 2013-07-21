@@ -5,23 +5,30 @@
     function Sphere(radius, color) {
         this.radius = 10;
         this.color = color || 0x8888ff;
+        this.center = new DataDoo.AbsolutePosition(0,0,0);
 
         this.material = new THREE.MeshLambertMaterial({color: this.color});
         this.geometry = new THREE.SphereGeometry(this.radius);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         this.objects = [this.mesh];
     }
-    /**
-     * Sets the radius of the sphere
-     */
-    Sphere.prototype.setRadius = function(radius) {
-        this.radius = radius;
-        this.geometry = new THREE.SphereGeometry(this.radius);
-        this.mesh.setGeometry(this.geometry);
+    Sphere.prototype = {
+        /**
+         * Sets the radius of the sphere
+         */
+        setRadius : function(radius) {
+            this.radius = radius;
+            this.geometry = new THREE.SphereGeometry(this.radius);
+            this.mesh.setGeometry(this.geometry);
+        },
+        getPositions : function() {
+            return [this.center];
+        },
+        onResolve : function() {
+            this.center.applyToVector(this.mesh.position);
+        }
     };
-    Sphere.prototype.setObjectPositions = function(x, y, z) {
-        this.mesh.position.set(x, y, z);
-    };
+
 
     /**
      * Node is a visual representation for each datapoint

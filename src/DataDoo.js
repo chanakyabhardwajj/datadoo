@@ -97,16 +97,44 @@ window.DataDoo = (function () {
         // traverse the event chain and add or remove objects
         this._addOrRemoveSceneObjects(events);
 
-        // Resolve node positions
-        // TODO: resolve only dirty nodes
-        _.chain(this.bucket).values().flatten().filter(function (item) {
-            return item instanceof DataDoo.Node;
+        // Resolve primitive positions
+
+        // TODO: resolve only dirty nodes/relations
+        var primitives = _.chain(this.bucket).values().flatten().filter(function (item) {
+            return item instanceof DataDoo.Node || item instanceof DataDoo.Relation;
         }).map(function (node) {
-                return node.primitives;
-            }).flatten().each(function (primitive) {
-                // TODO: more advanced position resolution
-                primitive.setObjectPositions(primitive.x, primitive.y, primitive.z);
-            });
+            return node.primitives;
+        }).flatten();
+        
+        var positions = _.chain(primitives).each(function(primitive) {
+            return primitive.getPositions();
+        }).flatten();
+
+        // resolve absolute positions
+        positions.filter(function(p) {
+            return p instanceof DataDoo.AbsolutePosition
+        }).each(function(p) {
+            p.resolvedX = p.x;
+            p.resolvedY = p.y;
+            p.resolvedZ = p.z;
+        });
+
+        //TODO: resolve CoSyPosition
+
+        // resolve relativePositions
+        positions.filter(function(p) {
+            return p instanceof DataDoo.RelativePosition
+        }).each(function(p) {
+            p.resolvedX = p.relatedPos.resolvedX + p.xoff;
+            p.resolvedY = p.relatedPos.resolvedY + p.yoff;
+            p.resolvedZ = p.relatedPos.resolvedZ + p.zoff;
+        });
+
+        // call onResolve on all primitives so that
+        // they can set positions for three.js primitives
+        primitives.each(function (primitive) {
+            primitive.onResolve();
+        });
     };
     DataDoo.prototype._addOrRemoveSceneObjects = function (events) {
         _.chain(events).filter(function (event) {
