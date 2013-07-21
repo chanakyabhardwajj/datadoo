@@ -107,7 +107,7 @@ window.DataDoo = (function () {
             return node.primitives;
         }).flatten();
         
-        var positions = _.chain(primitives).each(function(primitive) {
+        var positions = primitives.map(function(primitive) {
             return primitive.getPositions();
         }).flatten();
 
