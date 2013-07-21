@@ -43,14 +43,16 @@
             this.center.applyToVector(this.mesh.position);
         }
     });
+    DataDoo.Sphere = Sphere;
 
     /**
      *  Line primitive
      */
-    function DashedLine(color, dashSize, gapSize, startPos, endPos) {
+    function DashedLine(startPos, endPos, color, dashSize, gapSize) {
         this.dashSize = dashSize || 4;
         this.gapSize = gapSize || 2;
         this.color = color || 0x8888ff;
+        this.radius = radius || 3;
         this.startPos = startPos;
         this.endPos = endPos;
 
@@ -80,4 +82,5 @@
             this.endPos.applyToVector(this.sphere2.position);
         }
     });
+    DataDoo.DashedLine = DashedLine;
 })(window.DataDoo);
