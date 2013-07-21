@@ -164,7 +164,7 @@ window.DataDoo = (function () {
                     // Remove old relation primitives and add new ones here
                     break;
             }
-            this._addOrRemoveSceneObjects(this.parentEvents);
+            this._addOrRemoveSceneObjects(event.parentEvents);
         }, this);
     };
     DataDoo.prototype._getObjects = function (nodes) {
