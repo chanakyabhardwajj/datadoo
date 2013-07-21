@@ -23,7 +23,7 @@
     NodeGenerator.prototype.handler = function(event) {
         switch(event.eventName) {
             case "DATA.ADD":
-                console.log("receiving add");
+                console.log("NodeGenerator "+ this.id + ": Received NODE.ADD");
                 var addedNodes = _.map(event.data, function(row) {
                     var node = this._generateNode(row);
                     this.nodes.push(node);
@@ -32,6 +32,7 @@
                 this.dd.eventBus.enqueue(this, "NODE.ADD", addedNodes);
                 break;
             case "DATA.DELETE":
+                console.log("NodeGenerator "+ this.id + ": Received NODE.DELETE");
                 var deletedNodes = _.map(event.data, function(row) {
                     for(var i in this.nodes) {
                         var node = this.nodes[i];
@@ -45,6 +46,7 @@
                 this.dd.eventBus.enqueue(this, "NODE.DELETE", deletedNodes);
                 break;
             case "DATA.UPDATE":
+                console.log("NodeGenerator "+ this.id + ": Received NODE.UPDATE");
                 var updatedNodes = [];
                 var oldNodes = [];
                 _.each(event.data, function(row) {
@@ -60,7 +62,7 @@
                 this.dd.eventBus.enqueue(this, "NODE.UPDATE", {updated: updatedNodes, oldNodes: oldNodes});
                 break;
             default:
-                throw new Error("NodeGenerator : Unknown event "+event.eventName+" fired");
+                throw new Error("NodeGenerator "+ this.id + ": Unknown event "+event.eventName+" fired");
         }
     };
     NodeGenerator.prototype._generateNode = function(data) {

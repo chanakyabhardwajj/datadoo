@@ -310,7 +310,6 @@ window.DataDoo = (function () {
             newDataSet.subscribe("update", function (e) {
                 var updatedRows = [];
                 _.each(e.deltas, function(delta){
-                    console.log("delta " + delta._id);
                     _.each(e.dataset, function(drow){
                         if(drow._id == delta._id){
                             updatedRows.push(drow);
@@ -622,7 +621,7 @@ window.DataDoo = (function () {
     NodeGenerator.prototype.handler = function(event) {
         switch(event.eventName) {
             case "DATA.ADD":
-                console.log("receiving add");
+                console.log("NodeGenerator "+ this.id + ": Received NODE.ADD");
                 var addedNodes = _.map(event.data, function(row) {
                     var node = this._generateNode(row);
                     this.nodes.push(node);
@@ -631,6 +630,7 @@ window.DataDoo = (function () {
                 this.dd.eventBus.enqueue(this, "NODE.ADD", addedNodes);
                 break;
             case "DATA.DELETE":
+                console.log("NodeGenerator "+ this.id + ": Received NODE.DELETE");
                 var deletedNodes = _.map(event.data, function(row) {
                     for(var i in this.nodes) {
                         var node = this.nodes[i];
@@ -644,6 +644,7 @@ window.DataDoo = (function () {
                 this.dd.eventBus.enqueue(this, "NODE.DELETE", deletedNodes);
                 break;
             case "DATA.UPDATE":
+                console.log("NodeGenerator "+ this.id + ": Received NODE.UPDATE");
                 var updatedNodes = [];
                 var oldNodes = [];
                 _.each(event.data, function(row) {
@@ -659,7 +660,7 @@ window.DataDoo = (function () {
                 this.dd.eventBus.enqueue(this, "NODE.UPDATE", {updated: updatedNodes, oldNodes: oldNodes});
                 break;
             default:
-                throw new Error("NodeGenerator : Unknown event "+event.eventName+" fired");
+                throw new Error("NodeGenerator "+ this.id + ": Unknown event "+event.eventName+" fired");
         }
     };
     NodeGenerator.prototype._generateNode = function(data) {

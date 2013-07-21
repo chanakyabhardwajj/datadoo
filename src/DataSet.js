@@ -41,7 +41,6 @@
             newDataSet.subscribe("update", function (e) {
                 var updatedRows = [];
                 _.each(e.deltas, function(delta){
-                    console.log("delta " + delta._id);
                     _.each(e.dataset, function(drow){
                         if(drow._id == delta._id){
                             updatedRows.push(drow);
