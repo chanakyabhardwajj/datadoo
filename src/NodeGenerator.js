@@ -86,6 +86,11 @@
         this.primitives.push(sphere);
         return sphere;
     };
+    Node.prototype.addDashedLine = function(startPos, endPos, color, dashSize, gapSize, radius) {
+        var line = new DataDoo.DashedLine(startPos, endPos, color, dashSize, gapSize, radius);
+        this.primitives.push(line);
+        return line;
+    };
     DataDoo.Node = Node;
 
     DataDoo.NodeGenerator = NodeGenerator;

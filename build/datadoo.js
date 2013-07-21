@@ -500,7 +500,7 @@ window.DataDoo = (function () {
         this.y = y;
         this.z = x;
     }
-    AbsolutePosition.prototype = Object.create(Position.prototype);
+    CoSyPosition.prototype = Object.create(Position.prototype);
     DataDoo.CoSyPosition = CoSyPosition;
 
     /**
@@ -509,11 +509,11 @@ window.DataDoo = (function () {
      */
     function RelativePosition(relatedPos, xoff, yoff, zoff) {
         this.relatedPos = relatedPos;
-        this.xoff = xoff;
-        this.yoff = yoff;
-        this.zoff = zoff;
+        this.xoff = xoff || 0;
+        this.yoff = yoff || 0;
+        this.zoff = zoff || 0;
     }
-    AbsolutePosition.prototype = Object.create(Position.prototype);
+    RelativePosition.prototype = Object.create(Position.prototype);
     DataDoo.RelativePosition = RelativePosition;
 
 })(window.DataDoo);
@@ -536,7 +536,7 @@ window.DataDoo = (function () {
      *  Sphere primitive
      */
     function Sphere(radius, color) {
-        this.radius = 10;
+        this.radius = radius || 10;
         this.color = color || 0x8888ff;
         this.center = new DataDoo.AbsolutePosition(0,0,0);
 
@@ -565,7 +565,7 @@ window.DataDoo = (function () {
     /**
      *  Line primitive
      */
-    function DashedLine(startPos, endPos, color, dashSize, gapSize) {
+    function DashedLine(startPos, endPos, color, dashSize, gapSize, radius) {
         this.dashSize = dashSize || 4;
         this.gapSize = gapSize || 2;
         this.color = color || 0x8888ff;
@@ -758,6 +758,11 @@ window.DataDoo = (function () {
         var sphere = new DataDoo.Sphere(radius, color);
         this.primitives.push(sphere);
         return sphere;
+    };
+    Node.prototype.addDashedLine = function(startPos, endPos, color, dashSize, gapSize, radius) {
+        var line = new DataDoo.DashedLine(startPos, endPos, color, dashSize, gapSize, radius);
+        this.primitives.push(line);
+        return line;
     };
     DataDoo.Node = Node;
 

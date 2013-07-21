@@ -35,7 +35,7 @@
         this.y = y;
         this.z = x;
     }
-    AbsolutePosition.prototype = Object.create(Position.prototype);
+    CoSyPosition.prototype = Object.create(Position.prototype);
     DataDoo.CoSyPosition = CoSyPosition;
 
     /**
@@ -44,11 +44,11 @@
      */
     function RelativePosition(relatedPos, xoff, yoff, zoff) {
         this.relatedPos = relatedPos;
-        this.xoff = xoff;
-        this.yoff = yoff;
-        this.zoff = zoff;
+        this.xoff = xoff || 0;
+        this.yoff = yoff || 0;
+        this.zoff = zoff || 0;
     }
-    AbsolutePosition.prototype = Object.create(Position.prototype);
+    RelativePosition.prototype = Object.create(Position.prototype);
     DataDoo.RelativePosition = RelativePosition;
 
 })(window.DataDoo);
