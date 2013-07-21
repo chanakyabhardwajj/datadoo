@@ -55,8 +55,8 @@ window.DataDoo = (function () {
         this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
     }
     DataDoo.prototype.id = "DD";
-    DataDoo.priority = 5;
-    DataDoo.collapseEvents = true;
+    DataDoo.prototype.priority = 5;
+    DataDoo.prototype.collapseEvents = true;
     /**
      * Sets the size of the canvas
      */
