@@ -507,7 +507,9 @@ window.DataDoo = (function () {
         return new THREE.Vector3(this.resolvedX, this.resolvedY, this.resolvedZ);
     };
     DataDoo.Position = Position;
+})(window.DataDoo);
 
+(function(DataDoo) {
     /**
      *  Primitive base class
      */
@@ -528,7 +530,7 @@ window.DataDoo = (function () {
     function Sphere(radius, color, center) {
         this.radius = radius || 10;
         this.color = color || 0x8888ff;
-        this.center = center || new Position(0,0,0);
+        this.center = center || new DataDoo.Position(0,0,0);
 
         this.material = new THREE.MeshLambertMaterial({color: this.color});
         this.geometry = new THREE.SphereGeometry(this.radius);
