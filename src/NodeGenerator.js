@@ -66,7 +66,7 @@
         }
     };
     NodeGenerator.prototype._generateNode = function(data) {
-        var node = new Node();
+        var node = new DataDoo.Node();
         node.data = data;
         this.appFn.call(node, this.dd.bucket);
         return node;
@@ -81,13 +81,12 @@
         this.primitives = [];
         this.data = data;
     }
-    Node.prototype = {
-        addSphere : function(radius, color) {
-            var sphere = new DataDoo.Sphere(radius, color);
-            this.primitives.push(sphere);
-            return sphere;
-        }
+    Node.prototype.addSphere = function(radius, color) {
+        var sphere = new DataDoo.Sphere(radius, color);
+        this.primitives.push(sphere);
+        return sphere;
     };
+    DataDoo.Node = Node;
 
     DataDoo.NodeGenerator = NodeGenerator;
 })(window.DataDoo);

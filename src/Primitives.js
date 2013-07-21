@@ -5,13 +5,11 @@
     function Primitive() {
         this.objects = [];
     }
-    Primitive.prototype = {
-        getPositions : function() {
-            return [];
-        },
-        onResolve : function() {
-            throw new Error("Primitive : onResolve not implemented");
-        }
+    Primitive.prototype.getPositions = function() {
+        return [];
+    };
+    Primitive.prototype.onResolve = function() {
+        throw new Error("Primitive : onResolve not implemented");
     };
 
     /**
@@ -25,32 +23,33 @@
         this.material = new THREE.MeshLambertMaterial({color: this.color});
         this.geometry = new THREE.SphereGeometry(this.radius);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
-        this.objects.push(this.mesh);
+        this.objects = [this.mesh];
     }
-    Sphere.prototype = Object.create(Primitive.prototype, {
-        /**
-         * Sets the radius of the sphere
-         */
-        setRadius : function(radius) {
-            this.radius = radius;
-            this.geometry = new THREE.SphereGeometry(this.radius);
-            this.mesh.setGeometry(this.geometry);
-        },
-        getPositions : function() {
-            return [this.center];
-        },
-        onResolve : function() {
-            this.center.applyToVector(this.mesh.position);
-        }
-    });
+    Sphere.prototype = Object.create(Primitive.prototype);
+    /**
+     * Sets the radius of the sphere
+     */
+    Sphere.prototype.setRadius = function(radius) {
+        this.radius = radius;
+        this.geometry = new THREE.SphereGeometry(this.radius);
+        this.mesh.setGeometry(this.geometry);
+    };
+    Sphere.prototype.getPositions = function() {
+        return [this.center];
+    };
+    Sphere.prototype.onResolve = function() {
+        this.center.applyToVector(this.mesh.position);
+    };
+    DataDoo.Sphere = Sphere;
 
     /**
      *  Line primitive
      */
-    function DashedLine(color, dashSize, gapSize, startPos, endPos) {
+    function DashedLine(startPos, endPos, color, dashSize, gapSize) {
         this.dashSize = dashSize || 4;
         this.gapSize = gapSize || 2;
         this.color = color || 0x8888ff;
+        this.radius = radius || 3;
         this.startPos = startPos;
         this.endPos = endPos;
 
@@ -65,19 +64,19 @@
         this.lineMaterial = new THREE.LineDashedMaterial( { color: this.color, dashSize: this.dashSize, gapSize: this.gapSize } );
         this.line = new THREE.Line( this.lineGeometry, this.lineMaterial );
 
-        this.objects.push(this.sphere1, this.sphere2, this.line);
+        this.objects = [this.sphere1, this.sphere2, this.line];
     }
-    DashedLine.prototype = Object.create(Primitive.prototype, {
-        getPositions : function() {
-            return [this.startPos, this.endPos];
-        },
-        onResolve: function() {
-            this.startPos.applyToVector(this.lineGeometry.vertices[0]);
-            this.endPos.applyToVector(this.lineGeometry.vertices[1]);
-            this.lineGeometry.computeLineDistances();
+    DashedLine.prototype = Object.create(Primitive.prototype);
+    DashedLine.prototype.getPositions = function() {
+        return [this.startPos, this.endPos];
+    };
+    DashedLine.prototype.onResolve = function() {
+        this.startPos.applyToVector(this.lineGeometry.vertices[0]);
+        this.endPos.applyToVector(this.lineGeometry.vertices[1]);
+        this.lineGeometry.computeLineDistances();
 
-            this.startPos.applyToVector(this.sphere1.position);
-            this.endPos.applyToVector(this.sphere2.position);
-        }
-    });
+        this.startPos.applyToVector(this.sphere1.position);
+        this.endPos.applyToVector(this.sphere2.position);
+    };
+    DataDoo.DashedLine = DashedLine;
 })(window.DataDoo);
