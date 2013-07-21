@@ -7,14 +7,11 @@
         this.resolvedY = 0;
         this.resolvedZ = 0;
     }
-    Position.prototype = {
-        applyToVector : function(vec) {
-            vec.set(this.resolvedX, this.resolvedY, this.resolvedZ);
-        },
-
-        toVector : function() {
-            return new THREE.Vector3(this.resolvedX, this.resolvedY, this.resolvedZ);
-        }
+    Position.prototype.applyToVector = function(vec) {
+        vec.set(this.resolvedX, this.resolvedY, this.resolvedZ);
+    };
+    Position.prototype.toVector = function() {
+        return new THREE.Vector3(this.resolvedX, this.resolvedY, this.resolvedZ);
     };
 
     /**
