@@ -53,9 +53,10 @@
 
         //Listen to the parent dataset's reset event and then recompute yourself!
         //Miso somehow does not do this! Weird!
+        var that = this;
         dsI.dataset.subscribe("reset", function () {
-            this.compute();
-            ddI.eventBus.enqueue(this, "DATA.RESET", []);
+            that.compute();
+            ddI.eventBus.enqueue(that, "DATA.RESET", []);
         });
 
 
