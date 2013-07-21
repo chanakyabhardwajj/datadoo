@@ -33,24 +33,23 @@
 
             var nodeAppFn1 = function($) {
                 var sphere = this.addSphere(10, 0xffcc00);
-
-                sphere.center.x = this.data.Population;
-                sphere.center.y = this.data.Population;
-                sphere.center.z = this.data.Population;
+                sphere.center.set(this.data.Population,
+                                  this.data.Population,
+                                  this.data.Population);
             };
 
             var nodeAppFn2 = function($) {
                 var sphere = this.addSphere(10, 0xfc12340);
 
-                sphere.center.x = this.data.one;
-                sphere.center.y = this.data.two;
-                sphere.center.z = this.data.three;
+                sphere.center.set(this.data.one,
+                                  this.data.two,
+                                  this.data.three);
 
                 var sphere2 = this.addSphere(5, 0x11cc88);
-                sphere2.center = new DataDoo.RelativePosition(sphere.center, -20, -20, -20);
+                sphere2.center = sphere.center.relative(-20, -20, -20);
 
-                var line = this.addDashedLine(new DataDoo.RelativePosition(sphere.center),
-                                              new DataDoo.RelativePosition(sphere2.center));
+                var line = this.addDashedLine(sphere.center.relative(),
+                                              sphere2.center.relative());
             };
 
             var relnAppFn = function(ngArr){

@@ -1,4 +1,0 @@
-(function(DataDoo) {
-
-
-})(window.DataDoo);

@@ -113,7 +113,7 @@ window.DataDoo = (function () {
 
         // resolve absolute positions
         positions.filter(function(p) {
-            return p instanceof DataDoo.AbsolutePosition;
+            return p.type == DataDoo.ABSOLUTE;
         }).each(function(p) {
             p.resolvedX = p.x;
             p.resolvedY = p.y;
@@ -124,11 +124,11 @@ window.DataDoo = (function () {
 
         // resolve relativePositions. TODO: dependency sorting
         positions.filter(function(p) {
-            return p instanceof DataDoo.RelativePosition;
+            return p.type == DataDoo.RELATIVE;
         }).each(function(p) {
-            p.resolvedX = p.relatedPos.resolvedX + p.xoff;
-            p.resolvedY = p.relatedPos.resolvedY + p.yoff;
-            p.resolvedZ = p.relatedPos.resolvedZ + p.zoff;
+            p.resolvedX = p.relatedPos.resolvedX + p.x;
+            p.resolvedY = p.relatedPos.resolvedY + p.y;
+            p.resolvedZ = p.relatedPos.resolvedZ + p.z;
         });
 
         // call onResolve on all primitives so that
@@ -179,6 +179,9 @@ window.DataDoo = (function () {
      * DataDoo constants TODO: move to separate file
      */
     DataDoo.PERSPECTIVE = 1;
+    DataDoo.ABSOLUTE = 2;
+    DataDoo.RELATIVE = 3;
+    DataDoo.COSY = 4;
 
     /**
      * DataDoo's special priority event bus for propagating
@@ -467,58 +470,44 @@ window.DataDoo = (function () {
     /**
      * Position Base Class
      */
-    function Position() {
+    function Position(x, y, z, type, relatedPos) {
         this.resolvedX = 0;
         this.resolvedY = 0;
         this.resolvedZ = 0;
+        this.x = x || 0;
+        this.y = y || 0;
+        this.z = z || 0;
+        this.type = type || DataDoo.ABSOLUTE;
+        this.relatedPos = (type == DataDoo.RELATIVE?relatedPos:null);
     }
+    Position.prototype.setType = function(type) {
+        this.type = type;
+    };
+    Position.prototype.set = function(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    };
+    Position.prototype.setX = function(x) {
+        this.x = x;
+    };
+    Position.prototype.setY = function(y) {
+        this.x = y;
+    };
+    Position.prototype.setZ = function(z) {
+        this.x = z;
+    };
+    Position.prototype.relative = function(x, y, z) {
+        return new Position(x, y, z, DataDoo.RELATIVE, this);
+    };
     Position.prototype.applyToVector = function(vec) {
         vec.set(this.resolvedX, this.resolvedY, this.resolvedZ);
     };
     Position.prototype.toVector = function() {
         return new THREE.Vector3(this.resolvedX, this.resolvedY, this.resolvedZ);
     };
+    DataDoo.Position = Position;
 
-    /**
-     * Absolute position. This position is used as is,
-     * no resolving is done
-     */
-    function AbsolutePosition(x, y, z) {
-        this.x = x;
-        this.y = y;
-        this.z = x;
-    }
-    AbsolutePosition.prototype = Object.create(Position.prototype);
-    DataDoo.AbsolutePosition = AbsolutePosition;
-
-    /**
-     * CoSy position. This position is resolved on a value
-     * based coordinate system
-     */
-    function CoSyPosition(x, y, z) {
-        this.x = x;
-        this.y = y;
-        this.z = x;
-    }
-    CoSyPosition.prototype = Object.create(Position.prototype);
-    DataDoo.CoSyPosition = CoSyPosition;
-
-    /**
-     * Relative Position. This position is resolved relative
-     * to other position objects.
-     */
-    function RelativePosition(relatedPos, xoff, yoff, zoff) {
-        this.relatedPos = relatedPos;
-        this.xoff = xoff || 0;
-        this.yoff = yoff || 0;
-        this.zoff = zoff || 0;
-    }
-    RelativePosition.prototype = Object.create(Position.prototype);
-    DataDoo.RelativePosition = RelativePosition;
-
-})(window.DataDoo);
-
-(function(DataDoo) {
     /**
      *  Primitive base class
      */
@@ -531,14 +520,15 @@ window.DataDoo = (function () {
     Primitive.prototype.onResolve = function() {
         throw new Error("Primitive : onResolve not implemented");
     };
+    DataDoo.Primitive = Primitive;
 
     /**
      *  Sphere primitive
      */
-    function Sphere(radius, color) {
+    function Sphere(radius, color, center) {
         this.radius = radius || 10;
         this.color = color || 0x8888ff;
-        this.center = new DataDoo.AbsolutePosition(0,0,0);
+        this.center = center || new Position(0,0,0);
 
         this.material = new THREE.MeshLambertMaterial({color: this.color});
         this.geometry = new THREE.SphereGeometry(this.radius);
@@ -599,11 +589,6 @@ window.DataDoo = (function () {
         this.endPos.applyToVector(this.sphere2.position);
     };
     DataDoo.DashedLine = DashedLine;
-})(window.DataDoo);
-
-(function(DataDoo) {
-
-
 })(window.DataDoo);
 
 (function(DataDoo) {
