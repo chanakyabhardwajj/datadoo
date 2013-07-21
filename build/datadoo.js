@@ -164,6 +164,10 @@ window.DataDoo = (function () {
                     console.log("relation updates");
                     console.dir(event);
                     // Remove old relation primitives and add new ones here
+
+                    _.each(this._getObjects(event.data), function (object) {
+                        this.scene.add(object);
+                    }, this);
                     break;
             }
             this._addOrRemoveSceneObjects(event.parentEvents);
@@ -601,14 +605,13 @@ window.DataDoo = (function () {
      * Relation is a visual representation of connections between nodes
      * It contains a set of graphics primitives that represent itself.
      */
-    function Relation(/*array of nodes*/ nodes, /*optional*/ data) {
-        this.nodes = nodes;
+    function Relation(data) {
         this.primitives = [];
-        this.data = data;
+        this.data = data || {};
     }
 
-    Relation.prototype.addDashedLine = function(color, dashSize, gapSize, sourceNode, destNode) {
-        var line = new DashedLine(color, dashSize, gapSize, sourceNode, destNode);
+    Relation.prototype.addDashedLine = function(startPos, endPos, color, dashSize, gapSize, radius) {
+        var line = new DataDoo.DashedLine(startPos, endPos, color, dashSize, gapSize, radius);
         this.primitives.push(line);
         return line;
     };
@@ -629,7 +632,7 @@ window.DataDoo = (function () {
         this.relations = [];
         this.appFn = appFn;
 
-        // put the nodes array
+        // put the relations array
         if(dd.bucket[id]) {
             throw new Error("RelationGenerator : id '"+id+"' already used");
         } else {
@@ -646,18 +649,12 @@ window.DataDoo = (function () {
     RelationGenerator.prototype.priority = 3;
     RelationGenerator.prototype.handler = function(/*array*/ events) {
         console.log("RelationGenerator" + this.id +": Received An Event");
-
-        this.deleteRelations();
         this.generateRelations();
         this.dd.eventBus.enqueue(this, "RELATION.UPDATE", this.relations);
     };
 
-    RelationGenerator.prototype.deleteRelations = function() {
-        this.relations = [];
-    };
-
     RelationGenerator.prototype.generateRelations = function() {
-        this.relations = this.appFn.call(this.dd.bucket);
+        this.relations = this.appFn(this.dd.bucket);
     };
 
     DataDoo.RelationGenerator = RelationGenerator;

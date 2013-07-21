@@ -164,6 +164,10 @@ window.DataDoo = (function () {
                     console.log("relation updates");
                     console.dir(event);
                     // Remove old relation primitives and add new ones here
+
+                    _.each(this._getObjects(event.data), function (object) {
+                        this.scene.add(object);
+                    }, this);
                     break;
             }
             this._addOrRemoveSceneObjects(event.parentEvents);

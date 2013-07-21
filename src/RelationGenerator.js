@@ -9,7 +9,7 @@
         this.relations = [];
         this.appFn = appFn;
 
-        // put the nodes array
+        // put the relations array
         if(dd.bucket[id]) {
             throw new Error("RelationGenerator : id '"+id+"' already used");
         } else {
@@ -26,18 +26,12 @@
     RelationGenerator.prototype.priority = 3;
     RelationGenerator.prototype.handler = function(/*array*/ events) {
         console.log("RelationGenerator" + this.id +": Received An Event");
-
-        this.deleteRelations();
         this.generateRelations();
         this.dd.eventBus.enqueue(this, "RELATION.UPDATE", this.relations);
     };
 
-    RelationGenerator.prototype.deleteRelations = function() {
-        this.relations = [];
-    };
-
     RelationGenerator.prototype.generateRelations = function() {
-        this.relations = this.appFn.call(this.dd.bucket);
+        this.relations = this.appFn(this.dd.bucket);
     };
 
     DataDoo.RelationGenerator = RelationGenerator;
