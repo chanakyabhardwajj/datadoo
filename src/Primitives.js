@@ -22,7 +22,7 @@
         this.center = center || new DataDoo.Position(0,0,0);
 
         this.material = new THREE.MeshLambertMaterial({color: this.color});
-        this.geometry = new THREE.SphereGeometry(this.radius);
+        this.geometry = new THREE.SphereGeometry(this.radius,20,20);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         this.objects = [this.mesh];
     }

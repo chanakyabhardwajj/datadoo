@@ -6,13 +6,13 @@ window.DataDoo = (function () {
     function DataDoo(params) {
         params = params || {};
         _.defaults(params, {
-            camera:{}
+            camera : {}
         });
         _.defaults(params.camera, {
-            type:DataDoo.PERSPECTIVE,
-            viewAngle:45,
-            near:0.1,
-            far:20000
+            type : DataDoo.PERSPECTIVE,
+            viewAngle : 45,
+            near : 0.1,
+            far : 20000
         });
 
         // initialize global eventbus and bucket
@@ -21,7 +21,25 @@ window.DataDoo = (function () {
 
         // create three.js stuff
         this.scene = new THREE.Scene();
-        this.renderer = new THREE.WebGLRenderer({canvas:params.canvas});
+        this.scene.fog = new THREE.Fog( 0xffffff, 1000, 10000 );
+
+        this.renderer = new THREE.WebGLRenderer({
+            canvas : params.canvas,
+            antialias: true,
+            alpha: false,
+            //clearColor: 0xfafafa,
+            clearAlpha: 1
+        });
+
+        this.renderer.setClearColor( this.scene.fog.color, 1 );
+        this.renderer.setSize( window.innerWidth, window.innerHeight);
+        this.renderer.gammaInput = true;
+        this.renderer.gammaOutput = true;
+        this.renderer.physicallyBasedShading = true;
+
+        this.renderer.shadowMapEnabled = true;
+        this.renderer.shadowMapSoft = true;
+
         switch (params.camera.type) {
             case DataDoo.PERSPECTIVE:
                 var canvas = this.renderer.domElement;
@@ -37,35 +55,49 @@ window.DataDoo = (function () {
         this.camera.lookAt(this.scene.position);
         this.scene.add(this.camera);
 
-        this.light1 = new THREE.PointLight(0xffffff);
-        this.light1.position.set(0, 250, 0);
-        this.scene.add(this.light1);
+        this.directionalLight = new THREE.DirectionalLight( 0xffffff, 1.475 );
+        this.directionalLight.position.set( 100, 100, -100 );
+        this.scene.add( this.directionalLight );
 
-        this.light2 = new THREE.PointLight(0xffffff);
-        this.light2.position.set(0, 250, 250);
-        this.scene.add(this.light2);
-
-        this.light3 = new THREE.PointLight(0xffffff);
-        this.light3.position.set(-250, -250, -250);
-        this.scene.add(this.light3);
+        this.hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 1.25 );
+        this.hemiLight.color.setHSL( 0.6, 1, 0.75 );
+        this.hemiLight.groundColor.setHSL( 0.1, 0.8, 0.7 );
+        this.hemiLight.position.y = 500;
+        this.scene.add( this.hemiLight );
 
         this.axes = new THREE.AxisHelper(100);
         this.scene.add(this.axes);
 
+        var size = 500, step = 10;
+
+        var geometry = new THREE.Geometry();
+        var material = new THREE.LineBasicMaterial( { color: 0xBED6E5, opacity: 0.5, linewidth:2 } );
+
+        for ( var i = - size; i <= size; i += step ) {
+
+            geometry.vertices.push( new THREE.Vector3( - size, 0, i ) );
+            geometry.vertices.push( new THREE.Vector3(   size, 0, i ) );
+
+            geometry.vertices.push( new THREE.Vector3( i, 0, - size ) );
+            geometry.vertices.push( new THREE.Vector3( i, 0,   size ) );
+
+        }
+
+        this.grid = new THREE.Line( geometry, material, THREE.LinePieces );
+        this.scene.add( this.grid );
+
         this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
     }
+
+    /*DataDoo.prototype.onWindowResize = function( event ) {
+        this.renderer.setSize( window.innerWidth, window.innerHeight );
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+    };*/
+
     DataDoo.prototype.id = "DD";
     DataDoo.prototype.priority = 5;
     DataDoo.prototype.collapseEvents = true;
-    /**
-     * Sets the size of the canvas
-     */
-    DataDoo.prototype.setSize = function (width, height) {
-        this.renderer.setSize(width, height);
-        if (this.camera instanceof THREE.PerspectiveCamera) {
-            this.camera.aspect = width / height;
-        }
-    };
 
     /**
      * Starts the visualization render loop
@@ -104,32 +136,32 @@ window.DataDoo = (function () {
         var primitives = _.chain(this.bucket).values().flatten().filter(function (item) {
             return item instanceof DataDoo.Node || item instanceof DataDoo.Relation;
         }).map(function (node) {
-            return node.primitives;
-        }).flatten();
-        
-        var positions = primitives.map(function(primitive) {
+                return node.primitives;
+            }).flatten();
+
+        var positions = primitives.map(function (primitive) {
             return primitive.getPositions();
         }).flatten();
 
         // resolve absolute positions
-        positions.filter(function(p) {
+        positions.filter(function (p) {
             return p.type == DataDoo.ABSOLUTE;
-        }).each(function(p) {
-            p.resolvedX = p.x;
-            p.resolvedY = p.y;
-            p.resolvedZ = p.z;
-        });
+        }).each(function (p) {
+                p.resolvedX = p.x;
+                p.resolvedY = p.y;
+                p.resolvedZ = p.z;
+            });
 
         //TODO: resolve CoSyPosition
 
         // resolve relativePositions. TODO: dependency sorting
-        positions.filter(function(p) {
+        positions.filter(function (p) {
             return p.type == DataDoo.RELATIVE;
-        }).each(function(p) {
-            p.resolvedX = p.relatedPos.resolvedX + p.x;
-            p.resolvedY = p.relatedPos.resolvedY + p.y;
-            p.resolvedZ = p.relatedPos.resolvedZ + p.z;
-        });
+        }).each(function (p) {
+                p.resolvedX = p.relatedPos.resolvedX + p.x;
+                p.resolvedY = p.relatedPos.resolvedY + p.y;
+                p.resolvedZ = p.relatedPos.resolvedZ + p.z;
+            });
 
         // call onResolve on all primitives so that
         // they can set positions for three.js primitives
@@ -139,7 +171,7 @@ window.DataDoo = (function () {
     };
 
     DataDoo.prototype._addOrRemoveSceneObjects = function (events) {
-        _.each(events, function(event) {
+        _.each(events, function (event) {
             switch (event.eventName) {
                 case "NODE.ADD":
                     _.each(this._getObjects(event.data), function (object) {
@@ -177,8 +209,8 @@ window.DataDoo = (function () {
         return _.chain(nodes).map(function (node) {
             return node.primitives;
         }).flatten().map(function (primitive) {
-            return primitive.objects;
-        }).flatten().value();
+                return primitive.objects;
+            }).flatten().value();
     };
 
     /**
@@ -198,6 +230,7 @@ window.DataDoo = (function () {
         this.subscribers = {}; // contains map between publishers and subscribers
         this._currentParentEvents = []; // maintains the parentEvents for the current execution
     }
+
     EventBus.prototype.enqueue = function (publisher, eventName, data) {
         var subscribers = this.subscribers[publisher.id];
 
@@ -211,23 +244,23 @@ window.DataDoo = (function () {
                 });
                 if (entry) {
                     entry.events.push({
-                        publisher:publisher,
-                        eventName:eventName,
-                        data:data,
-                        parentEvents:this._currentParentEvents
+                        publisher : publisher,
+                        eventName : eventName,
+                        data : data,
+                        parentEvents : this._currentParentEvents
                     });
                     return;
                 }
             }
             this.schedule.push({
-                priority:subscriber.priority,
-                subscriber:subscriber,
-                events:[
+                priority : subscriber.priority,
+                subscriber : subscriber,
+                events : [
                     {
-                        publisher:publisher,
-                        eventName:eventName,
-                        data:data,
-                        parentEvents:this._currentParentEvents
+                        publisher : publisher,
+                        eventName : eventName,
+                        data : data,
+                        parentEvents : this._currentParentEvents
                     }
                 ]
             });
@@ -249,7 +282,8 @@ window.DataDoo = (function () {
             this._currentParentEvents = item.events;
             if (item.subscriber.collapseEvents) {
                 item.subscriber.handler(item.events);
-            } else {
+            }
+            else {
                 item.subscriber.handler(item.events[0]);
             }
         }
@@ -539,7 +573,7 @@ window.DataDoo = (function () {
         this.center = center || new DataDoo.Position(0,0,0);
 
         this.material = new THREE.MeshLambertMaterial({color: this.color});
-        this.geometry = new THREE.SphereGeometry(this.radius);
+        this.geometry = new THREE.SphereGeometry(this.radius,20,20);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         this.objects = [this.mesh];
     }
