@@ -632,7 +632,9 @@ window.DataDoo = (function () {
     };
     DataDoo.DashedLine = DashedLine;
 
-
+    /**
+     *  Spline primitive
+     */
     function Spline(points, color, subdivisions){
         this.points = points;
         this.color = color || 0xfc12340;
@@ -659,6 +661,30 @@ window.DataDoo = (function () {
         this.position.applyToVector(this.mesh.position);
     };
     DataDoo.Spline = Spline;
+
+    /**
+     *  Sprite primitive
+     */
+    function Sprite(url, datadooPosition, scale){
+        this.map = THREE.ImageUtils.loadTexture(url);
+        this.scale = scale;
+        this.material = new THREE.SpriteMaterial( { map: this.map, useScreenCoordinates: false, color: 0xffffff, fog: true } );
+        this.position = datadooPosition || new DataDoo.Position(0,0,0);
+        this.sprite = new THREE.Sprite( this.material );
+        this.sprite.scale.x = this.sprite.scale.y = this.sprite.scale.z = this.scale;
+        this.objects = [this.sprite];
+    }
+
+    Sprite.prototype = Object.create(Primitive.prototype);
+    Sprite.prototype.getPositions = function() {
+        return [this.position];
+    };
+    Sprite.prototype.onResolve = function() {
+        this.position.applyToVector(this.sprite.position);
+        //this.sprite.position.multiplyScalar(this.radius);
+    };
+    DataDoo.Sprite = Sprite;
+
 })(window.DataDoo);
 
 (function(DataDoo) {
@@ -682,6 +708,12 @@ window.DataDoo = (function () {
         var line = new DataDoo.DashedLine(startPos, endPos, color, dashSize, gapSize, radius);
         this.primitives.push(line);
         return line;
+    };
+
+    Relation.prototype.addSprite = function(url, position, scale) {
+        var sprite = new DataDoo.Sprite(url, position, scale);
+        this.primitives.push(sprite);
+        return sprite;
     };
 
     DataDoo.Relation = Relation;
@@ -821,6 +853,12 @@ window.DataDoo = (function () {
         var line = new DataDoo.DashedLine(startPos, endPos, color, dashSize, gapSize, radius);
         this.primitives.push(line);
         return line;
+    };
+
+    Node.prototype.addSprite = function(url, position, scale) {
+        var sprite = new DataDoo.Sprite(url, position, scale);
+        this.primitives.push(sprite);
+        return sprite;
     };
     DataDoo.Node = Node;
 

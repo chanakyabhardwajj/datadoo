@@ -21,6 +21,12 @@
         return line;
     };
 
+    Relation.prototype.addSprite = function(url, position, scale) {
+        var sprite = new DataDoo.Sprite(url, position, scale);
+        this.primitives.push(sprite);
+        return sprite;
+    };
+
     DataDoo.Relation = Relation;
 })(window.DataDoo);
 

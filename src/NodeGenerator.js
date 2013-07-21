@@ -91,6 +91,12 @@
         this.primitives.push(line);
         return line;
     };
+
+    Node.prototype.addSprite = function(url, position, scale) {
+        var sprite = new DataDoo.Sprite(url, position, scale);
+        this.primitives.push(sprite);
+        return sprite;
+    };
     DataDoo.Node = Node;
 
     DataDoo.NodeGenerator = NodeGenerator;
