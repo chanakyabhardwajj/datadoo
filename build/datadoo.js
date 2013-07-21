@@ -648,7 +648,7 @@ window.DataDoo = (function () {
         }
         this.geometrySpline.computeLineDistances();
 
-        this.mesh = new THREE.Line( this.geometrySpline, new THREE.LineDashedMaterial( { color: this.color, dashSize: 1, gapSize: 0.5 } ), THREE.LineStrip );
+        this.mesh = new THREE.Line( this.geometrySpline, new THREE.LineDashedMaterial( { color: this.color, dashSize: 4, gapSize: 2, linewidth : 3 } ), THREE.LineStrip );
         this.objects = [this.mesh];
     }
     Spline.prototype = Object.create(Primitive.prototype);
