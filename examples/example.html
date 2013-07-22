@@ -55,10 +55,16 @@
                                   this.data.two,
                                   this.data.three);
 
-                //var sphere2 = this.addSphere(5, 0x11cc88);
-                //sphere2.center = sphere.center.relative(-20, -20, -20);
+                var sphere2 = this.addSphere(5, 0x11cc88);
+                sphere2.center = sphere.center.relative(-20, -20, -20);
 
-                //var line = this.addDashedLine(sphere.center.relative(),sphere2.center.relative());
+                var sphere3 = this.addSphere(2, 0x11cc88);
+                sphere3.center = sphere2.center.relative(-20, -20, 20);
+
+                var line = this.addDashedLine(sphere.center,sphere2.center);
+
+                var line = this.addDashedLine(sphere3.center, sphere2.center);
+                var line = this.addDashedLine(sphere3.center, sphere.center);
             };
 
             var relnAppFn = function($){
