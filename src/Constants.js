@@ -10,6 +10,10 @@
 
         // Axis types
         COLUMNVALUE: 5,
-        NUMBER: 6
+        NUMBER: 6,
+
+        // sort order
+        ASCENDING: 7,
+        DESCENDING: 8
     });
 })(window.DataDoo);

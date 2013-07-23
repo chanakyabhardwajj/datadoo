@@ -150,6 +150,9 @@ window.DataDoo = (function () {
         // traverse the event chain and add or remove objects
         this._addOrRemoveSceneObjects(events);
 
+        // compute axis values
+        this._computeAxisValues();
+
         // Resolve primitive positions
 
         // TODO: resolve only dirty nodes/relations
@@ -172,10 +175,41 @@ window.DataDoo = (function () {
         });
     };
 
-    DataDoo.prototype._computeAxisValues = function() {
+    DataDoo.prototype._computeAxisValues = function(events) {
+        var changedDs = [];
+        function findChangedDs(events) {
+            _.each(events, function(event) {
+                if(event.eventName.substring(0, 4) == "DATA") {
+                    changedDs.push(event.publisher.id);
+                }
+                findChangedDs(event.parentEvents);
+            });
+        }
+        changedDs = _.uniq(changedDs);
+
         _.each(this.axes, function(name, axis) {
-            if(axis.type == DataDoo.COLUMNVALUE){}
-        });
+            if(axis.type == DataDoo.COLUMNVALUE) {
+                var split = axis.column.split(".");
+                var dsId = split[0];
+                var colName = split[1];
+                if(!_.contains(changedDs, dsId)) {
+                    return;
+                }
+                var values = _.pluck(this.bucket[dsId].dataset.countBy(colName).toJSON(), colName);
+                if(!_.isUndefined(axis.sort)) {
+                    values.sort();
+                    if(axis.sort == DataDoo.DESCENDING) {
+                        values.reverse();
+                    }
+                }
+                var posMap = _.chain(values).map(function(value, i) {
+                    return [value, (i+1)*axis.spacing];
+                }).object().value();
+
+                axis.values = values;
+                axis.posMap = posMap;
+            }
+        }, this);
     };
 
     DataDoo.prototype._addOrRemoveSceneObjects = function (events) {
@@ -273,7 +307,16 @@ window.DataDoo = (function () {
                     pos.resolvedZ = pos.relatedPos.resolvedZ + pos.z;
                     break;
                 case DataDoo.COSY:
-                    throw new Error("CoSy position not implemented yet");
+                    _.each(this.axes, function(axisName, axis) {
+                        var resName = "resolved" + axisName.toUpper();
+                        if(axis.type == DataDoo.NUMBER) {
+                            pos[resName] = pos[axisName];
+                        }
+                        if(axis.type = DataDoo.COLUMNVALUE) {
+                            pos[resName] = axis.posMap[pos[axisName]];
+                        }
+                    });
+                    break;
             }
 
             var oldPos = pos;
