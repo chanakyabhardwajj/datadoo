@@ -22,18 +22,14 @@
                 canvas: document.getElementById("canvas"),
                 camera: {
                     type: DataDoo.PERSPECTIVE
-                }/*,
-                coordinate: {
+                },
+                axes: {
                     x: {
-                        type: "number"
-                    },
-                    y: {
                         type: DataDoo.COLUMNVALUE,
-                        column: "ds1.blah",
-                        sort: true,
-                        spacing: 10
+                        column: "ds2.one",
+                        spacing: 30
                     }
-                }*/
+                }
             });
 
             var ds1 = new DataDoo.DataSet(dd, "ds1",{
@@ -47,10 +43,10 @@
 
             var ds2 = new DataDoo.DataSet(dd, "ds2", {
                 data: [
-                    { one : 10, two : -10, three : 10 },
-                    { one : 20, two : -20, three : 20 },
-                    { one : 30, two : -30, three : 30 },
-                    { one : 40, two : -40, three : 40 }
+                    { one : "India", two : -10, three : 10 },
+                    { one : "Germany", two : -20, three : 20 },
+                    { one : "Japan", two : -30, three : 30 },
+                    { one : "Sweden", two : -40, three : 40 }
                 ]
             })
 
