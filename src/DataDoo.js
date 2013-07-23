@@ -33,7 +33,7 @@ window.DataDoo = (function () {
         this.scene = new THREE.Scene();
         this.scene.fog = new THREE.Fog( 0xffffff, 1000, 10000 );
 
-        this.axes = params.axes;
+        this.axesConf = params.axes;
 
         this.renderer = new THREE.WebGLRenderer({
             canvas : params.canvas,
@@ -151,7 +151,7 @@ window.DataDoo = (function () {
         this._addOrRemoveSceneObjects(events);
 
         // compute axis values
-        this._computeAxisValues();
+        this._computeAxisValues(events);
 
         // Resolve primitive positions
 
@@ -185,9 +185,10 @@ window.DataDoo = (function () {
                 findChangedDs(event.parentEvents);
             });
         }
+        findChangedDs(events);
         changedDs = _.uniq(changedDs);
 
-        _.each(this.axes, function(name, axis) {
+        _.each(this.axesConf, function(axis, name) {
             if(axis.type == DataDoo.COLUMNVALUE) {
                 var split = axis.column.split(".");
                 var dsId = split[0];
@@ -195,7 +196,7 @@ window.DataDoo = (function () {
                 if(!_.contains(changedDs, dsId)) {
                     return;
                 }
-                var values = _.pluck(this.bucket[dsId].dataset.countBy(colName).toJSON(), colName);
+                var values = _.pluck(this.bucket[dsId].countBy(colName).toJSON(), colName);
                 if(!_.isUndefined(axis.sort)) {
                     values.sort();
                     if(axis.sort == DataDoo.DESCENDING) {
@@ -307,15 +308,16 @@ window.DataDoo = (function () {
                     pos.resolvedZ = pos.relatedPos.resolvedZ + pos.z;
                     break;
                 case DataDoo.COSY:
-                    _.each(this.axes, function(axisName, axis) {
-                        var resName = "resolved" + axisName.toUpper();
+                    for(var axisName in this.axesConf) {
+                        var axis = this.axesConf[axisName];
+                        var resName = "resolved" + axisName.toUpperCase();
                         if(axis.type == DataDoo.NUMBER) {
                             pos[resName] = pos[axisName];
                         }
-                        if(axis.type = DataDoo.COLUMNVALUE) {
+                        if(axis.type == DataDoo.COLUMNVALUE) {
                             pos[resName] = axis.posMap[pos[axisName]];
                         }
-                    });
+                    }
                     break;
             }
 

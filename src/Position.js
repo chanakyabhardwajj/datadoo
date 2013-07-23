@@ -19,6 +19,12 @@
         this.x = x;
         this.y = y;
         this.z = z;
+
+        // if any one of the coordinate values are non numeric
+        // then set the type to COSY
+        if(!_.isNumber(this.x)  || !_.isNumber(this.y) || !_.isNumber(this.z)) {
+            this.type = DataDoo.COSY;
+        }
     };
     Position.prototype.setX = function(x) {
         this.x = x;
