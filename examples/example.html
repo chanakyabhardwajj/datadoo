@@ -27,7 +27,13 @@
                     x: {
                         type: DataDoo.COLUMNVALUE,
                         column: "ds2.one",
-                        spacing: 30
+                        spacing: 30//,
+
+                        /*axisLabel : "x-axis",
+                        axisLineColor : 0xff0000,
+                        axisLabelColor : 0xff0000,
+                        dir : new THREE.Vector3(1,0,0),
+                        length : 100*/
                     }
                 }
             });
@@ -109,8 +115,8 @@
             var ng2 = new DataDoo.NodeGenerator(dd, "ng2", ds2, nodeAppFn2);
 
             var rg1 = new DataDoo.RelationGenerator(dd, "rg1", [ng1, ng2], relnAppFn);
-            //ds1.fetch();
-            //ds2.fetch();
+            ds1.fetch();
+            ds2.fetch();
             dd.startVis(rg1);
         </script>
     </body>

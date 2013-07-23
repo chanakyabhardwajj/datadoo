@@ -5,134 +5,157 @@ window.DataDoo = (function () {
      */
     function DataDoo(params) {
         params = params || {};
+        // initialize global eventbus and bucket
+        this.eventBus = new EventBus();
+
         DataDoo.utils.rDefault(params, {
-            camera: {
+            grid : true,
+            camera : {
                 type : DataDoo.PERSPECTIVE,
                 viewAngle : 45,
                 near : 0.1,
-                far : 20000
+                far : 20000,
+                position : {x : 0, y : 150, z : 400}
             },
-            axes: {
-                x: {
-                    type: DataDoo.NUMBER
+            axes : {
+                x : {
+                    type : DataDoo.NUMBER,
+                    axisLabel : "X",
+                    axisLineColor : 0xff0000,
+                    axisLabelColor : 0xff0000,
+                    dir : new THREE.Vector3(1, 0, 0),
+                    length : 50
                 },
-                y: {
-                    type: DataDoo.NUMBER
+                y : {
+                    type : DataDoo.NUMBER,
+                    axisLabel : "y-axis",
+                    axisLineColor : 0x00ff00,
+                    axisLabelColor : 0x00ff00,
+                    dir : new THREE.Vector3(0, 1, 0),
+                    length : 50
                 },
-                z: {
-                    type: DataDoo.NUMBER
+                z : {
+                    type : DataDoo.NUMBER,
+                    axisLabel : "z-axis",
+                    axisLineColor : 0x0000ff,
+                    axisLabelColor : 0x0000ff,
+                    dir : new THREE.Vector3(0, 0, 1),
+                    length : 50
+                }
+            },
+
+            lights : {
+                directionalLight : {
+                    color : 0xffffff,
+                    intensity : 1.475,
+                    position : {x : 100, y : 100, z : 100}
+                },
+                hemiLight : {
+                    skyColor : 0xffffff,
+                    groundColor : 0xffffff,
+                    intensity : 1.25,
+                    colorHSL : {h : 0.6, s : 1, l : 0.75},
+                    groundColorHSL : {h : 0.1, s : 0.8, l : 0.7},
+                    position : {x : 0, y : 200, z : 0}
+                }
+            },
+
+            scene : {
+                fog : {
+                    color : 0xffffff,
+                    near : 1000,
+                    far : 10000
                 }
             }
         });
-
-        // initialize global eventbus and bucket
-        this.eventBus = new EventBus();
         this.bucket = {};
 
         // create three.js stuff
         this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.Fog( 0xffffff, 1000, 10000 );
-
-        this.axesConf = params.axes;
 
         this.renderer = new THREE.WebGLRenderer({
             canvas : params.canvas,
-            antialias: true,
-            alpha: false,
-            //clearColor: 0xfafafa,
-            clearAlpha: 1
+            antialias : true,
+            alpha : false,
+            clearAlpha : 1,
+            clearColor : 0xfafafa,
+            gammaInput : true,
+            gammaOutput : true,
+            physicallyBasedShading : true,
+            shadowMapEnabled : true,
+            shadowMapSoft : true
         });
 
-        /*this.renderer = new THREE.CanvasRenderer({
-            canvas : params.canvas,
-            antialias: true,
-            alpha: false,
-            //clearColor: 0xfafafa,
-            clearAlpha: 1
-        });*/
-
-        this.renderer.setClearColor( this.scene.fog.color, 1 );
-        this.renderer.setSize( window.innerWidth, window.innerHeight);
-        this.renderer.gammaInput = true;
-        this.renderer.gammaOutput = true;
-        this.renderer.physicallyBasedShading = true;
-
-        this.renderer.shadowMapEnabled = true;
-        this.renderer.shadowMapSoft = true;
-
-        switch (params.camera.type) {
-            case DataDoo.PERSPECTIVE:
-                var canvas = this.renderer.domElement;
-                this.camera = new THREE.PerspectiveCamera(params.camera.viewAngle,
-                    canvas.width / canvas.height,
-                    params.camera.near,
-                    params.camera.far);
-                break;
-            default:
-                throw new Error("DataDoo : unknown camera type");
-        }
-        this.camera.position.set(0, 150, 400);
-        this.camera.lookAt(this.scene.position);
-        this.scene.add(this.camera);
-
-        this.directionalLight = new THREE.DirectionalLight( 0xffffff, 1.475 );
-        this.directionalLight.position.set( 100, 100, -100 );
-        this.scene.add( this.directionalLight );
-
-        this.hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 1.25 );
-        this.hemiLight.color.setHSL( 0.6, 1, 0.75 );
-        this.hemiLight.groundColor.setHSL( 0.1, 0.8, 0.7 );
-        this.hemiLight.position.y = 500;
-        this.scene.add( this.hemiLight );
-
-        //this.axes = new THREE.AxisHelper(100);
-        this.axes = new DataDoo.AxesHelper({
-            axisLabel : "x-axis",
-            axisLineColor : 0xff0000,
-            axisLabelColor : 0xff0000,
-            dir : new THREE.Vector3(1,0,0),
-            length : 100
-        }, {
-            axisLabel : "y-axis",
-            axisLineColor : 0x00ff00,
-            axisLabelColor : 0x00ff00,
-            dir : new THREE.Vector3(0,1,0),
-            length : 40
-        }, {
-            axisLabel : "z-axis",
-            axisLineColor : 0x0000ff,
-            axisLabelColor : 0x0000ff,
-            dir : new THREE.Vector3(0,0,1),
-            length : 200
-        });
-        this.scene.add(this.axes);
-
-        var size = 500, step = 10;
-
-        var geometry = new THREE.Geometry();
-        var material = new THREE.LineBasicMaterial( { color: 0xBED6E5, opacity: 0.5, linewidth:2 } );
-
-        for ( var i = - size; i <= size; i += step ) {
-
-            geometry.vertices.push( new THREE.Vector3( - size, 0, i ) );
-            geometry.vertices.push( new THREE.Vector3(   size, 0, i ) );
-
-            geometry.vertices.push( new THREE.Vector3( i, 0, - size ) );
-            geometry.vertices.push( new THREE.Vector3( i, 0,   size ) );
-
-        }
-
-        this.grid = new THREE.Line( geometry, material, THREE.LinePieces );
-        this.scene.add( this.grid );
-
-        this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+        this.axesConf = params.axes;
+        this.cameraConf = params.camera;
+        this.gridBoolean = params.grid;
+        this.lightsConf = params.lights;
+        this.sceneConf = params.scene;
+        this.goldenDim = 500;
     }
 
-    /*DataDoo.prototype.onWindowResize = function( event ) {
-        this.renderer.setSize( window.innerWidth, window.innerHeight );
-        this.camera.aspect = window.innerWidth / window.innerHeight;
-        this.camera.updateProjectionMatrix();
-    };*/
+    DataDoo.prototype.prepareScene = function () {
+        //GRID
+        if (this.gridBoolean) {
+            var size = this.goldenDim, step = this.goldenDim / 10;
+
+            var geometry = new THREE.Geometry();
+            var material = new THREE.LineBasicMaterial({ color : 0xBED6E5, opacity : 0.5, linewidth : 1 });
+
+            for (var i = -size; i <= size; i += step) {
+
+                geometry.vertices.push(new THREE.Vector3(-size, 0, i));
+                geometry.vertices.push(new THREE.Vector3(size, 0, i));
+
+                geometry.vertices.push(new THREE.Vector3(i, 0, -size));
+                geometry.vertices.push(new THREE.Vector3(i, 0, size));
+
+            }
+
+            this.grid = new THREE.Line(geometry, material, THREE.LinePieces);
+            this.scene.add(this.grid);
+        }
+
+        //LIGHTS
+        var dirLight = this.lightsConf.directionalLight;
+        var hemiLight = this.lightsConf.hemiLight;
+        this.directionalLight = new THREE.DirectionalLight(dirLight.color, dirLight.intensity);
+        this.directionalLight.position.x = dirLight.position.x;
+        this.directionalLight.position.y = dirLight.position.y;
+        this.directionalLight.position.z = dirLight.position.z;
+        this.scene.add(this.directionalLight);
+
+        this.hemiLight = new THREE.HemisphereLight(hemiLight.skyColor, hemiLight.groundColor, hemiLight.intensity);
+        this.hemiLight.color.setHSL(hemiLight.colorHSL.h, hemiLight.colorHSL.s, hemiLight.colorHSL.l);
+        this.hemiLight.groundColor.setHSL(hemiLight.groundColorHSL.h, hemiLight.groundColorHSL.s, hemiLight.groundColorHSL.l);
+        this.hemiLight.position.set(hemiLight.position.x, hemiLight.position.y, hemiLight.position.z);
+        this.scene.add(this.hemiLight);
+
+        //SCENE
+        this.scene.fog = new THREE.Fog(this.sceneConf.fog.color, this.sceneConf.fog.near, this.sceneConf.fog.far);
+        this.renderer.setClearColor(this.scene.fog.color, 1);
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+        //AXES
+        this.axes = new DataDoo.AxesHelper(this.axesConf);
+        this.scene.add(this.axes);
+
+        //CAMERA
+        var camSettings = this.cameraConf;
+        if (this.cameraConf.type == DataDoo.PERSPECTIVE) {
+            this.camera = new THREE.PerspectiveCamera(this.cameraConf.viewAngle, this.renderer.domElement.width / this.renderer.domElement.height, this.cameraConf.near, this.cameraConf.far);
+            this.camera.position.set(this.cameraConf.position.x, this.cameraConf.position.y, this.cameraConf.position.z);
+            this.camera.lookAt(this.scene.position);
+            this.scene.add(this.camera);
+        }
+        else {
+            throw new Error("DataDoo : unknown camera type");
+        }
+
+        //CAMERA CONTROLS
+        this.cameraControls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+
+    };
 
     DataDoo.prototype.id = "DD";
     DataDoo.prototype.priority = 5;
@@ -147,19 +170,18 @@ window.DataDoo = (function () {
             this.eventBus.subscribe(this, entity);
         }, this);
 
+        this.prepareScene();
+
         // start the render loop
         var self = this;
 
         function renderFrame() {
             requestAnimationFrame(renderFrame);
-
             // we clear the eventbus, to make sure all the components have run
             self.eventBus.execute();
-
             // render the frame
             self.renderer.render(self.scene, self.camera);
-
-            self.controls.update();
+            self.cameraControls.update();
         }
 
         requestAnimationFrame(renderFrame);
@@ -178,8 +200,8 @@ window.DataDoo = (function () {
         var primitives = _.chain(this.bucket).values().flatten().filter(function (item) {
             return item instanceof DataDoo.Node || item instanceof DataDoo.Relation;
         }).map(function (node) {
-            return node.primitives;
-        }).flatten();
+                return node.primitives;
+            }).flatten();
 
         var positions = primitives.map(function (primitive) {
             return primitive.getPositions();
@@ -194,36 +216,38 @@ window.DataDoo = (function () {
         });
     };
 
-    DataDoo.prototype._computeAxisValues = function(events) {
+    DataDoo.prototype._computeAxisValues = function (events) {
         var changedDs = [];
+
         function findChangedDs(events) {
-            _.each(events, function(event) {
-                if(event.eventName.substring(0, 4) == "DATA") {
+            _.each(events, function (event) {
+                if (event.eventName.substring(0, 4) == "DATA") {
                     changedDs.push(event.publisher.id);
                 }
                 findChangedDs(event.parentEvents);
             });
         }
+
         findChangedDs(events);
         changedDs = _.uniq(changedDs);
 
-        _.each(this.axesConf, function(axis, name) {
-            if(axis.type == DataDoo.COLUMNVALUE) {
+        _.each(this.axesConf, function (axis, name) {
+            if (axis.type == DataDoo.COLUMNVALUE) {
                 var split = axis.column.split(".");
                 var dsId = split[0];
                 var colName = split[1];
-                if(!_.contains(changedDs, dsId)) {
+                if (!_.contains(changedDs, dsId)) {
                     return;
                 }
                 var values = _.pluck(this.bucket[dsId].countBy(colName).toJSON(), colName);
-                if(!_.isUndefined(axis.sort)) {
+                if (!_.isUndefined(axis.sort)) {
                     values.sort();
-                    if(axis.sort == DataDoo.DESCENDING) {
+                    if (axis.sort == DataDoo.DESCENDING) {
                         values.reverse();
                     }
                 }
-                var posMap = _.chain(values).map(function(value, i) {
-                    return [value, (i+1)*axis.spacing];
+                var posMap = _.chain(values).map(function (value, i) {
+                    return [value, (i + 1) * axis.spacing];
                 }).object().value();
 
                 axis.values = values;
@@ -268,15 +292,15 @@ window.DataDoo = (function () {
         }, this);
     };
 
-    DataDoo.prototype._resolvePositions = function(positions) {
+    DataDoo.prototype._resolvePositions = function (positions) {
         // create dependency linked list
         var start = null;
         var end = null;
-        positions.each(function(position) {
-            if(!start) {
+        positions.each(function (position) {
+            if (!start) {
                 start = position;
             }
-            if(position._seen) {
+            if (position._seen) {
                 return;
             }
 
@@ -286,36 +310,38 @@ window.DataDoo = (function () {
             do {
                 pointer._seen = true;
                 pointer._next = pointer.relatedPos;
-                if(pointer.relatedPos) {
-                    if(pointer.relatedPos._seen) {
+                if (pointer.relatedPos) {
+                    if (pointer.relatedPos._seen) {
                         // insert current snippet into list if
                         // we reach an already seen node
                         position._prev = pointer.relatedPos._prev;
-                        if(pointer.relatedPos._prev) {
+                        if (pointer.relatedPos._prev) {
                             pointer.relatedPos._prev._next = position;
-                        } else {
+                        }
+                        else {
                             start = position;
                         }
                         pointer.relatedPos._prev = pointer;
                         break;
                     }
                     pointer.relatedPos._prev = pointer;
-                }else {
-                    if(end) {
+                }
+                else {
+                    if (end) {
                         end._next = pointer;
                     }
                     end = pointer;
                 }
                 pointer = pointer.relatedPos;
-            } while(pointer);
+            } while (pointer);
         });
 
         // resolve position by traversing the dependency linked list
         var pos = end;
-        while(pos) {
+        while (pos) {
             console.log("Resolving position type=" + pos.type + " (" + pos.x + "," + pos.y + "," + pos.z + ")");
 
-            switch(pos.type) {
+            switch (pos.type) {
                 case DataDoo.ABSOLUTE:
                     pos.resolvedX = pos.x;
                     pos.resolvedY = pos.y;
@@ -327,13 +353,13 @@ window.DataDoo = (function () {
                     pos.resolvedZ = pos.relatedPos.resolvedZ + pos.z;
                     break;
                 case DataDoo.COSY:
-                    for(var axisName in this.axesConf) {
+                    for (var axisName in this.axesConf) {
                         var axis = this.axesConf[axisName];
                         var resName = "resolved" + axisName.toUpperCase();
-                        if(axis.type == DataDoo.NUMBER) {
+                        if (axis.type == DataDoo.NUMBER) {
                             pos[resName] = pos[axisName];
                         }
-                        if(axis.type == DataDoo.COLUMNVALUE) {
+                        if (axis.type == DataDoo.COLUMNVALUE) {
                             pos[resName] = axis.posMap[pos[axisName]];
                         }
                     }
@@ -353,8 +379,8 @@ window.DataDoo = (function () {
         return _.chain(nodes).map(function (node) {
             return node.primitives;
         }).flatten().map(function (primitive) {
-            return primitive.objects;
-        }).flatten().value();
+                return primitive.objects;
+            }).flatten().value();
     };
 
     /**
@@ -1070,20 +1096,22 @@ window.DataDoo = (function () {
         if ( axisLabel === undefined ) axisLabel = "empty label";
         if ( axisLabelColor === undefined ) axisLabelColor = 0xffff00;
 
+        dir.normalize();
+
         this.position = origin;
 
         var lineGeometry = new THREE.Geometry();
         lineGeometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
         lineGeometry.vertices.push( new THREE.Vector3( 0, 1, 0 ) );
 
-        this.line = new THREE.Line( lineGeometry, new THREE.LineBasicMaterial( { color: axisLineColor } ) );
+        this.line = new THREE.Line( lineGeometry, new THREE.LineBasicMaterial( { color: axisLineColor, opacity : 0.5, linewidth : 2  } ) );
         this.line.matrixAutoUpdate = false;
         this.add( this.line );
 
         var coneGeometry = new THREE.CylinderGeometry( 0, 0.05, 0.15, 10, 10 );
         coneGeometry.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 0.875, 0 ) );
 
-        this.cone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: axisLineColor } ) );
+        this.cone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: axisLineColor, opacity : 0.5, linewidth : 2  } ) );
         this.cone.matrixAutoUpdate = false;
         this.add( this.cone );
 
@@ -1135,7 +1163,7 @@ window.DataDoo = (function () {
             parameters.fontface : "Arial";
 
         var fontsize = parameters.hasOwnProperty("fontsize") ?
-            parameters.fontsize : 40;
+            parameters.fontsize : 18;
 
         var textColor = parameters.hasOwnProperty("textColor") ?
             parameters.textColor : "rgba(0, 0, 0, 1.0)";
@@ -1153,7 +1181,7 @@ window.DataDoo = (function () {
 
         var canvas = document.createElement('canvas');
         var context = canvas.getContext('2d');
-        context.font = "Bold " + fontsize + "px " + fontface;
+        context.font = fontsize + "px " + fontface;
 
         // get size data (height depends only on font size)
         var metrics = context.measureText(message);
@@ -1170,8 +1198,9 @@ window.DataDoo = (function () {
 
         // text color
         var tColor = new THREE.Color(textColor);
-        console.log("rgba(" + tColor.r + "," + tColor.g + "," + tColor.b + "," + " 1.0)");
-        context.fillStyle = "rgba(" + tColor.r + "," + tColor.g + "," + tColor.b + "," + " 1.0)";
+
+        context.fillStyle = "rgba(" + tColor.r*255 + "," + tColor.g*255 + "," + tColor.b*255 + "," + " 1.0)";
+        //context.fillStyle = "rgba(0.99, 0,0, 1.0)";
 
         context.fillText(message, borderThickness, fontsize + borderThickness);
 
@@ -1210,13 +1239,13 @@ window.DataDoo = (function () {
         this.yObj = yObj || {};
         this.zObj = zObj || {};
 
-        this.xAxis = new DataDoo.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), this.xObj.length || 50, this.xObj.axisLineColor || 0xfc12340, this.xObj.axisLabel || "x axis", this.xObj.axisLabelColor || 0xfc12340 );
+        this.xAxis = new DataDoo.ArrowHelper(this.xObj.dir || new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), this.xObj.length || 50, this.xObj.axisLineColor || 0xfc12340, this.xObj.axisLabel || "x axis", this.xObj.axisLabelColor || 0xfc12340 );
         this.add(this.xAxis);
 
-        this.yAxis = new DataDoo.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), this.yObj.length || 50, this.yObj.axisLineColor || 0xfc12340, this.yObj.axisLabel || "y axis", this.yObj.axisLabelColor || 0xfc12340 );
+        this.yAxis = new DataDoo.ArrowHelper(this.yObj.dir || new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), this.yObj.length || 50, this.yObj.axisLineColor || 0xfc12340, this.yObj.axisLabel || "y axis", this.yObj.axisLabelColor || 0xfc12340 );
         this.add(this.yAxis);
 
-        this.zAxis = new DataDoo.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), this.zObj.length || 50, this.zObj.axisLineColor || 0xfc12340, this.zObj.axisLabel || "z axis", this.zObj.axisLabelColor || 0xfc12340 );
+        this.zAxis = new DataDoo.ArrowHelper(this.zObj.dir || new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), this.zObj.length || 50, this.zObj.axisLineColor || 0xfc12340, this.zObj.axisLabel || "z axis", this.zObj.axisLabelColor || 0xfc12340 );
         this.add(this.zAxis);
     }
 

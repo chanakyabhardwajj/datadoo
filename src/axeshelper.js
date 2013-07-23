@@ -27,20 +27,22 @@
         if ( axisLabel === undefined ) axisLabel = "empty label";
         if ( axisLabelColor === undefined ) axisLabelColor = 0xffff00;
 
+        dir.normalize();
+
         this.position = origin;
 
         var lineGeometry = new THREE.Geometry();
         lineGeometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
         lineGeometry.vertices.push( new THREE.Vector3( 0, 1, 0 ) );
 
-        this.line = new THREE.Line( lineGeometry, new THREE.LineBasicMaterial( { color: axisLineColor } ) );
+        this.line = new THREE.Line( lineGeometry, new THREE.LineBasicMaterial( { color: axisLineColor, opacity : 0.5, linewidth : 2  } ) );
         this.line.matrixAutoUpdate = false;
         this.add( this.line );
 
         var coneGeometry = new THREE.CylinderGeometry( 0, 0.05, 0.15, 10, 10 );
         coneGeometry.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 0.875, 0 ) );
 
-        this.cone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: axisLineColor } ) );
+        this.cone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: axisLineColor, opacity : 0.5, linewidth : 2  } ) );
         this.cone.matrixAutoUpdate = false;
         this.add( this.cone );
 
@@ -92,7 +94,7 @@
             parameters.fontface : "Arial";
 
         var fontsize = parameters.hasOwnProperty("fontsize") ?
-            parameters.fontsize : 40;
+            parameters.fontsize : 18;
 
         var textColor = parameters.hasOwnProperty("textColor") ?
             parameters.textColor : "rgba(0, 0, 0, 1.0)";
@@ -110,7 +112,7 @@
 
         var canvas = document.createElement('canvas');
         var context = canvas.getContext('2d');
-        context.font = "Bold " + fontsize + "px " + fontface;
+        context.font = fontsize + "px " + fontface;
 
         // get size data (height depends only on font size)
         var metrics = context.measureText(message);
@@ -127,8 +129,9 @@
 
         // text color
         var tColor = new THREE.Color(textColor);
-        console.log("rgba(" + tColor.r + "," + tColor.g + "," + tColor.b + "," + " 1.0)");
-        context.fillStyle = "rgba(" + tColor.r + "," + tColor.g + "," + tColor.b + "," + " 1.0)";
+
+        context.fillStyle = "rgba(" + tColor.r*255 + "," + tColor.g*255 + "," + tColor.b*255 + "," + " 1.0)";
+        //context.fillStyle = "rgba(0.99, 0,0, 1.0)";
 
         context.fillText(message, borderThickness, fontsize + borderThickness);
 
@@ -167,13 +170,13 @@
         this.yObj = yObj || {};
         this.zObj = zObj || {};
 
-        this.xAxis = new DataDoo.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), this.xObj.length || 50, this.xObj.axisLineColor || 0xfc12340, this.xObj.axisLabel || "x axis", this.xObj.axisLabelColor || 0xfc12340 );
+        this.xAxis = new DataDoo.ArrowHelper(this.xObj.dir || new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), this.xObj.length || 50, this.xObj.axisLineColor || 0xfc12340, this.xObj.axisLabel || "x axis", this.xObj.axisLabelColor || 0xfc12340 );
         this.add(this.xAxis);
 
-        this.yAxis = new DataDoo.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), this.yObj.length || 50, this.yObj.axisLineColor || 0xfc12340, this.yObj.axisLabel || "y axis", this.yObj.axisLabelColor || 0xfc12340 );
+        this.yAxis = new DataDoo.ArrowHelper(this.yObj.dir || new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), this.yObj.length || 50, this.yObj.axisLineColor || 0xfc12340, this.yObj.axisLabel || "y axis", this.yObj.axisLabelColor || 0xfc12340 );
         this.add(this.yAxis);
 
-        this.zAxis = new DataDoo.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), this.zObj.length || 50, this.zObj.axisLineColor || 0xfc12340, this.zObj.axisLabel || "z axis", this.zObj.axisLabelColor || 0xfc12340 );
+        this.zAxis = new DataDoo.ArrowHelper(this.zObj.dir || new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), this.zObj.length || 50, this.zObj.axisLineColor || 0xfc12340, this.zObj.axisLabel || "z axis", this.zObj.axisLabelColor || 0xfc12340 );
         this.add(this.zAxis);
     }
 
