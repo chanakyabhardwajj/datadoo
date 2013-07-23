@@ -174,9 +174,9 @@ window.DataDoo = (function () {
 
     DataDoo.prototype._computeAxisValues = function() {
         _.each(this.axes, function(name, axis) {
-            if(axis.type == DataDoo.COLUMNVALUE)
-        })
-    }
+            if(axis.type == DataDoo.COLUMNVALUE){}
+        });
+    };
 
     DataDoo.prototype._addOrRemoveSceneObjects = function (events) {
         _.each(events, function (event) {

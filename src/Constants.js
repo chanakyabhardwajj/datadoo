@@ -6,7 +6,7 @@
         // position types
         ABSOLUTE : 2,
         RELATIVE : 3,
-        COSY : 4
+        COSY : 4,
 
         // Axis types
         COLUMNVALUE: 5,
