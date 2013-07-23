@@ -180,7 +180,7 @@ window.DataDoo = (function () {
         var self = this;
 
         function renderFrame() {
-            requestAnimationFrame(renderFrame);
+            DataDoo.utils.requestAnimationFrame(renderFrame);
             // we clear the eventbus, to make sure all the components have run
             self.eventBus.execute();
             // render the frame
@@ -188,7 +188,7 @@ window.DataDoo = (function () {
             self.cameraControls.update();
         }
 
-        requestAnimationFrame(renderFrame);
+        DataDoo.utils.requestAnimationFrame(renderFrame);
     };
 
     DataDoo.prototype.handler = function (events) {
@@ -222,19 +222,11 @@ window.DataDoo = (function () {
 
 
     DataDoo.prototype._computeAxisValues = function (events) {
-        var changedDs = [];
-
-        function findChangedDs(events) {
-            _.each(events, function (event) {
-                if (event.eventName.substring(0, 4) == "DATA") {
-                    changedDs.push(event.publisher.id);
-                }
-                findChangedDs(event.parentEvents);
-            });
-        }
-
-        findChangedDs(events);
-        changedDs = _.uniq(changedDs);
+        var changedDs = _.chain(DataDoo.EventBus.flattenEvents(events)).filter(function(event) {
+            return event.eventName.substring(0, 4) == "DATA";
+        }).map(function(event) {
+            return event.publisher.id;
+        }).uniq().value();
 
         _.each(this.axesConf, function (axis, name) {
             if (axis.type == DataDoo.COLUMNVALUE) {
@@ -251,8 +243,9 @@ window.DataDoo = (function () {
                         values.reverse();
                     }
                 }
+                var spacing = axis.spacing || (axis.length/values.length);
                 var posMap = _.chain(values).map(function (value, i) {
-                    return [value, (i + 1) * axis.spacing];
+                    return [value, (i + 1) * spacing];
                 }).object().value();
 
                 axis.values = values;
