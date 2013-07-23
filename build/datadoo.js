@@ -144,32 +144,14 @@ window.DataDoo = (function () {
         var primitives = _.chain(this.bucket).values().flatten().filter(function (item) {
             return item instanceof DataDoo.Node || item instanceof DataDoo.Relation;
         }).map(function (node) {
-                return node.primitives;
-            }).flatten();
+            return node.primitives;
+        }).flatten();
 
         var positions = primitives.map(function (primitive) {
             return primitive.getPositions();
         }).flatten();
 
-        // resolve absolute positions
-        positions.filter(function (p) {
-            return p.type == DataDoo.ABSOLUTE;
-        }).each(function (p) {
-                p.resolvedX = p.x;
-                p.resolvedY = p.y;
-                p.resolvedZ = p.z;
-            });
-
-        //TODO: resolve CoSyPosition
-
-        // resolve relativePositions. TODO: dependency sorting
-        positions.filter(function (p) {
-            return p.type == DataDoo.RELATIVE;
-        }).each(function (p) {
-                p.resolvedX = p.relatedPos.resolvedX + p.x;
-                p.resolvedY = p.relatedPos.resolvedY + p.y;
-                p.resolvedZ = p.relatedPos.resolvedZ + p.z;
-            });
+        this._resolvePositions(positions);
 
         // call onResolve on all primitives so that
         // they can set positions for three.js primitives
@@ -213,6 +195,78 @@ window.DataDoo = (function () {
             this._addOrRemoveSceneObjects(event.parentEvents);
         }, this);
     };
+
+    DataDoo.prototype._resolvePositions = function(positions) {
+        // create dependency linked list
+        var start = null;
+        var end = null;
+        positions.each(function(position) {
+            if(!start) {
+                start = position;
+            }
+            if(position._seen) {
+                return;
+            }
+
+            var pointer = position;
+            position._prev = end;
+            // compute the current snippet
+            do {
+                pointer._seen = true;
+                pointer._next = pointer.relatedPos;
+                if(pointer.relatedPos) {
+                    if(pointer.relatedPos._seen) {
+                        // insert current snippet into list if
+                        // we reach an already seen node
+                        position._prev = pointer.relatedPos._prev;
+                        if(pointer.relatedPos._prev) {
+                            pointer.relatedPos._prev._next = position;
+                        } else {
+                            start = position;
+                        }
+                        pointer.relatedPos._prev = pointer;
+                        break;
+                    }
+                    pointer.relatedPos._prev = pointer;
+                }else {
+                    if(end) {
+                        end._next = pointer;
+                    }
+                    end = pointer;
+                }
+                pointer = pointer.relatedPos;
+            } while(pointer);
+        });
+
+        // resolve position by traversing the dependency linked list
+        var pos = end;
+        while(pos) {
+            console.log("Resolving position type=" + pos.type + " (" + pos.x + "," + pos.y + "," + pos.z + ")");
+
+            switch(pos.type) {
+                case DataDoo.ABSOLUTE:
+                    pos.resolvedX = pos.x;
+                    pos.resolvedY = pos.y;
+                    pos.resolvedZ = pos.z;
+                    break;
+                case DataDoo.RELATIVE:
+                    pos.resolvedX = pos.relatedPos.resolvedX + pos.x;
+                    pos.resolvedY = pos.relatedPos.resolvedY + pos.y;
+                    pos.resolvedZ = pos.relatedPos.resolvedZ + pos.z;
+                    break;
+                case DataDoo.COSY:
+                    throw new Error("CoSy position not implemented yet");
+            }
+
+            var oldPos = pos;
+            pos = pos._prev;
+            // clear out all the linked list data
+            oldPos._next = undefined;
+            oldPos._prev = undefined;
+            oldPos._seen = undefined;
+        }
+    };
+
     DataDoo.prototype._getObjects = function (nodes) {
         return _.chain(nodes).map(function (node) {
             return node.primitives;
