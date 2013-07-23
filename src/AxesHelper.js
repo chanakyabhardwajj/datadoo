@@ -14,6 +14,7 @@
         this.axisDir = configObj.axisDir || new THREE.Vector3(1, 0, 0);
         this.origin = configObj.origin || new THREE.Vector3(0, 0, 0);
         this.axisLength = configObj.axisLength || 50;
+        this.axisThickness = configObj.axisThickness || 1;
         this.axisDivisions = configObj.axisDivisions || 10;
         this.axisLabelStartingFrom  = configObj.axisLabelStartingFrom || 0;
 
@@ -29,14 +30,14 @@
         lineGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
         lineGeometry.vertices.push(new THREE.Vector3(0, this.axisLength, 0));
 
-        this.line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({ color : this.axisLineColor, opacity : 0.5, linewidth : 2  }));
+        this.line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({ color : this.axisLineColor, opacity : 0.5, linewidth : this.axisThickness  }));
         this.line.matrixAutoUpdate = false;
         this.add(this.line);
 
         var coneGeometry = new THREE.CylinderGeometry(0, 5, 10, 10, 10);
         //coneGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0.875, 0));
 
-        this.cone = new THREE.Mesh(coneGeometry, new THREE.MeshBasicMaterial({ color : this.axisLineColor, opacity : 0.5, linewidth : 2  }));
+        this.cone = new THREE.Mesh(coneGeometry, new THREE.MeshBasicMaterial({ color : this.axisLineColor, opacity : 0.5  }));
         this.cone.position.set(0, this.axisLength , 0);
         //this.cone.matrixAutoUpdate = false;
         this.add(this.cone);
@@ -50,8 +51,6 @@
 
         if(this.type === DataDoo.NUMBER){
             var num = parseInt(this.axisLength/this.axisDivisions, 10);
-            console.log("this.axisLength :", this.axisLength);
-            console.log("this.axisDivisions :", this.axisDivisions);
             var ptGeom = new THREE.SphereGeometry(0.01 * 100);
             var ptMat = new THREE.MeshBasicMaterial({color:0x000000});
             var labelNum = this.axisLabelStartingFrom;
@@ -67,12 +66,9 @@
                 this.line.add(pt);
                 pt.position.set(0, (x/num)*(this.axisLength), 0);
             }
-
         }
 
         this.setDirection(this.axisDir);
-//        this.setLength(this.axisLength);
-
     }
 
     AxisHelper.prototype = Object.create(THREE.Object3D.prototype);

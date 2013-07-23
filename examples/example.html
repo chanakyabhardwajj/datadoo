@@ -25,17 +25,33 @@
                 },
                 axes: {
                     x: {
-                        //type: DataDoo.COLUMNVALUE,
-                        //column: "ds2.one",
                         type: DataDoo.NUMBER,
                         axisDivisions: 5,
                         axisLabelStartingFrom : 0,
                         axisLabel : "countries",
-                        axisLineColor : 0xff0000,
-                        axisLabelColor : 0xff0000,
-                        axisDir : new THREE.Vector3(1,0,0),
                         axisLength : 25,
-                        axisWithCone : true
+                        axisWithCone : false,
+                        axisThickness : 0.3
+                    },
+
+                    y: {
+                        type: DataDoo.NUMBER,
+                        axisDivisions: 5,
+                        axisLabelStartingFrom : 10,
+                        axisLabel : "hahaha",
+                        axisLength : 125,
+                        axisWithCone : true,
+                        axisThickness : 0.3
+                    },
+
+                    z: {
+                        type: DataDoo.NUMBER,
+                        axisDivisions: 12,
+                        axisLabelStartingFrom : 20,
+                        axisLabel : "vever",
+                        axisLength : 125,
+                        axisWithCone : false,
+                        axisThickness : 0.3
                     }
                 }
             });
@@ -68,7 +84,7 @@
             var nodeAppFn2 = function($) {
                 var sphere = this.addSphere(10, 0xfc12340);
 
-                sphere.center.set(this.data.one,
+                sphere.center.set(this.data.two,
                                   this.data.two,
                                   this.data.three);
 

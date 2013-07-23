@@ -24,7 +24,9 @@ window.DataDoo = (function () {
                     axisLineColor : 0xff0000,
                     axisLabelColor : 0xff0000,
                     axisDir : new THREE.Vector3(1, 0, 0),
-                    axisLength : 50
+                    axisLength : 50,
+                    axisWithCone : false,
+                    axisThickness : 1
                 },
                 y : {
                     type : DataDoo.NUMBER,
@@ -32,7 +34,9 @@ window.DataDoo = (function () {
                     axisLineColor : 0x00ff00,
                     axisLabelColor : 0x00ff00,
                     axisDir : new THREE.Vector3(0, 1, 0),
-                    axisLength : 50
+                    axisLength : 50,
+                    axisWithCone : false,
+                    axisThickness : 1
                 },
                 z : {
                     type : DataDoo.NUMBER,
@@ -40,7 +44,9 @@ window.DataDoo = (function () {
                     axisLineColor : 0x0000ff,
                     axisLabelColor : 0x0000ff,
                     axisDir : new THREE.Vector3(0, 0, 1),
-                    axisLength : 50
+                    axisLength : 50,
+                    axisWithCone : false,
+                    axisThickness : 1
                 }
             },
 
