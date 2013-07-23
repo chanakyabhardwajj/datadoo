@@ -371,6 +371,9 @@ window.DataDoo = (function () {
                     break;
                 case DataDoo.COSY:
                     for (var axisName in this.axesConf) {
+                        if(!_.contains(["x", "y", "z"], axisName)) {
+                            continue;
+                        }
                         var axis = this.axesConf[axisName];
                         var resName = "resolved" + axisName.toUpperCase();
                         if (axis.type == DataDoo.NUMBER) {
@@ -381,6 +384,17 @@ window.DataDoo = (function () {
                         }
                     }
                     break;
+            }
+
+            // do spherical conversion
+            if(this.axesConf.type == DataDoo.SPHERICAL) {
+                var r = pos.resolvedX;
+                var theta = pos.resolvedY*Math.PI/180;
+                var phi = pos.resolvedZ*Math.PI/180;
+
+                pos.resolvedX = r * Math.sin(theta) * Math.cos(phi);
+                pos.resolvedY = r * Math.sin(theta) * Math.sin(phi);
+                pos.resolvedZ = r * Math.cos(phi);
             }
 
             var oldPos = pos;

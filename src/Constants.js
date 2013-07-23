@@ -14,6 +14,10 @@
 
         // sort order
         ASCENDING: 7,
-        DESCENDING: 8
+        DESCENDING: 8,
+
+        // coordinate system types
+        CARTESIAN: 9,
+        SPHERICAL: 10
     });
 })(window.DataDoo);
