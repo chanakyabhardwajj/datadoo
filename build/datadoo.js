@@ -141,7 +141,7 @@ window.DataDoo = (function () {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
 
         //AXES
-        this.axes = new DataDoo.AxesHelper(this.axesConf);
+        this.axes = new DataDoo.AxesHelper(this.axesConf.x, this.axesConf.y, this.axesConf.z);
         this.scene.add(this.axes);
 
         //CAMERA
@@ -497,11 +497,14 @@ window.DataDoo = (function () {
 (function(DataDoo) {
     DataDoo.utils = {
         rDefault: function(target, source) {
-            for(var prop in source) {
-                if(prop in target) {
-                    this.rDefault(target[prop], source[prop]);
-                } else {
-                    target[prop] = source[prop];
+            if (source !== null && typeof source === 'object') {
+                for (var prop in source) {
+                    if (prop in target) {
+                        this.rDefault(target[prop], source[prop]);
+                    }
+                    else {
+                        target[prop] = source[prop];
+                    }
                 }
             }
         },
