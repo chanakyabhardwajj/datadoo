@@ -14,6 +14,7 @@ module.exports = function(grunt) {
                 files: {
                     'build/datadoo.js': [
                         'src/DataDoo.js',
+                        'src/Utils.js',
                         'src/DataSet.js',
                         'src/DataFilter.js',
                         'src/Position.js',

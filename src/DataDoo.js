@@ -5,14 +5,24 @@ window.DataDoo = (function () {
      */
     function DataDoo(params) {
         params = params || {};
-        _.defaults(params, {
-            camera : {}
-        });
-        _.defaults(params.camera, {
-            type : DataDoo.PERSPECTIVE,
-            viewAngle : 45,
-            near : 0.1,
-            far : 20000
+        DataDoo.utils.rDefault(params, {
+            camera: {
+                type : DataDoo.PERSPECTIVE,
+                viewAngle : 45,
+                near : 0.1,
+                far : 20000
+            },
+            axes: {
+                x: {
+                    type: DataDoo.NUMBER
+                },
+                y: {
+                    type: DataDoo.NUMBER
+                },
+                z: {
+                    type: DataDoo.NUMBER
+                }
+            }
         });
 
         // initialize global eventbus and bucket
@@ -22,6 +32,8 @@ window.DataDoo = (function () {
         // create three.js stuff
         this.scene = new THREE.Scene();
         this.scene.fog = new THREE.Fog( 0xffffff, 1000, 10000 );
+
+        this.axes = params.axes;
 
         this.renderer = new THREE.WebGLRenderer({
             canvas : params.canvas,
@@ -152,6 +164,12 @@ window.DataDoo = (function () {
         });
     };
 
+    DataDoo.prototype._computeAxisValues = function() {
+        _.each(this.axes, function(name, axis) {
+            if(axis.type == DataDoo.COLUMNVALUE)
+        })
+    }
+
     DataDoo.prototype._addOrRemoveSceneObjects = function (events) {
         _.each(events, function (event) {
             switch (event.eventName) {
@@ -263,17 +281,9 @@ window.DataDoo = (function () {
         return _.chain(nodes).map(function (node) {
             return node.primitives;
         }).flatten().map(function (primitive) {
-                return primitive.objects;
-            }).flatten().value();
+            return primitive.objects;
+        }).flatten().value();
     };
-
-    /**
-     * DataDoo constants TODO: move to separate file
-     */
-    DataDoo.PERSPECTIVE = 1;
-    DataDoo.ABSOLUTE = 2;
-    DataDoo.RELATIVE = 3;
-    DataDoo.COSY = 4;
 
     /**
      * DataDoo's special priority event bus for propagating

@@ -20,6 +20,17 @@
                 canvas: document.getElementById("canvas"),
                 camera: {
                     type: DataDoo.PERSPECTIVE
+                },
+                coordinate: {
+                    x: {
+                        type: "number"
+                    },
+                    y: {
+                        type: DataDoo.COLUMNVALUE
+                        column: "ds1.blah",
+                        sort: true,
+                        spacing: 10
+                    }
                 }
             });
 
