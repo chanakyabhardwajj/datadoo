@@ -31,6 +31,14 @@ window.DataDoo = (function () {
             clearAlpha: 1
         });
 
+        /*this.renderer = new THREE.CanvasRenderer({
+            canvas : params.canvas,
+            antialias: true,
+            alpha: false,
+            //clearColor: 0xfafafa,
+            clearAlpha: 1
+        });*/
+
         this.renderer.setClearColor( this.scene.fog.color, 1 );
         this.renderer.setSize( window.innerWidth, window.innerHeight);
         this.renderer.gammaInput = true;
