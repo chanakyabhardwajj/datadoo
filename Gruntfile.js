@@ -22,7 +22,8 @@ module.exports = function(grunt) {
                         'src/Primitives.js',
                         'src/Relation.js',
                         'src/RelationGenerator.js',
-                        'src/NodeGenerator.js'
+                        'src/NodeGenerator.js',
+                        'src/AxesHelper.js'
 
                     ],
                     'build/vendor.js': [

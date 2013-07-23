@@ -85,7 +85,26 @@ window.DataDoo = (function () {
         this.hemiLight.position.y = 500;
         this.scene.add( this.hemiLight );
 
-        this.axes = new THREE.AxisHelper(100);
+        //this.axes = new THREE.AxisHelper(100);
+        this.axes = new DataDoo.AxesHelper({
+            axisLabel : "x-axis",
+            axisLineColor : 0xff0000,
+            axisLabelColor : 0xff0000,
+            dir : new THREE.Vector3(1,0,0),
+            length : 100
+        }, {
+            axisLabel : "y-axis",
+            axisLineColor : 0x00ff00,
+            axisLabelColor : 0x00ff00,
+            dir : new THREE.Vector3(0,1,0),
+            length : 40
+        }, {
+            axisLabel : "z-axis",
+            axisLineColor : 0x0000ff,
+            axisLabelColor : 0x0000ff,
+            dir : new THREE.Vector3(0,0,1),
+            length : 200
+        });
         this.scene.add(this.axes);
 
         var size = 500, step = 10;

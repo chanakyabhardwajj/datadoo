@@ -15,25 +15,25 @@
         <canvas id="canvas"></canvas>
 
         <script src="../build/vendor.js"></script>
-        <script src="http://mrdoob.github.com/three.js/examples/fonts/helvetiker_regular.typeface.js"></script>
+        <!--<script src="http://mrdoob.github.com/three.js/examples/fonts/helvetiker_regular.typeface.js"></script>-->
         <script src="../build/datadoo.js"></script>
         <script type="text/javascript">
             var dd = new DataDoo({
                 canvas: document.getElementById("canvas"),
                 camera: {
                     type: DataDoo.PERSPECTIVE
-                },
+                }/*,
                 coordinate: {
                     x: {
                         type: "number"
                     },
                     y: {
-                        type: DataDoo.COLUMNVALUE
+                        type: DataDoo.COLUMNVALUE,
                         column: "ds1.blah",
                         sort: true,
                         spacing: 10
                     }
-                }
+                }*/
             });
 
             var ds1 = new DataDoo.DataSet(dd, "ds1",{
@@ -113,8 +113,8 @@
             var ng2 = new DataDoo.NodeGenerator(dd, "ng2", ds2, nodeAppFn2);
 
             var rg1 = new DataDoo.RelationGenerator(dd, "rg1", [ng1, ng2], relnAppFn);
-            ds1.fetch();
-            ds2.fetch();
+            //ds1.fetch();
+            //ds2.fetch();
             dd.startVis(rg1);
         </script>
     </body>
