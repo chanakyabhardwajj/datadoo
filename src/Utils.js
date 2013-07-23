@@ -27,7 +27,7 @@
             return this._raf.call(window, callback);
         },
 
-        makeTextSprite : function (message, parameters) {
+        makeTextSprite : function(message, parameters) {
             if (parameters === undefined) parameters = {};
 
             var fontface = parameters.hasOwnProperty("fontface") ?
@@ -46,12 +46,12 @@
                 parameters.borderColor : { r : 0, g : 0, b : 0, a : 1.0 };
 
             var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?
-                parameters.backgroundColor : { r : 204, g : 204, b : 204, a : 0.6 };
+                parameters.backgroundColor : { r : 255, g : 255, b : 255, a : 1.0 };
 
             var spriteAlignment = THREE.SpriteAlignment.topLeft;
 
             var canvas = document.getElementById("helperCanvas");
-            if (!canvas) {
+            if(!canvas){
                 canvas = document.createElement('canvas');
             }
             canvas.setAttribute("id", "helperCanvas");
@@ -75,7 +75,7 @@
             // text color
             var tColor = new THREE.Color(textColor);
 
-            context.fillStyle = "rgba(" + tColor.r * 255 + "," + tColor.g * 255 + "," + tColor.b * 255 + "," + " 1.0)";
+            context.fillStyle = "rgba(" + tColor.r*255 + "," + tColor.g*255 + "," + tColor.b*255 + "," + " 1.0)";
             //context.fillStyle = "rgba(0.99, 0,0, 1.0)";
 
             context.fillText(message, borderThickness, fontsize + borderThickness);
@@ -91,7 +91,7 @@
             return sprite;
         },
 
-        makeRoundRect : function (ctx, x, y, w, h, r) {
+        makeRoundRect : function(ctx, x, y, w, h, r) {
             ctx.beginPath();
             ctx.moveTo(x + r, y);
             ctx.lineTo(x + w - r, y);
