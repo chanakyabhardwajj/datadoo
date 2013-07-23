@@ -6,7 +6,7 @@ window.DataDoo = (function () {
     function DataDoo(params) {
         params = params || {};
         // initialize global eventbus and bucket
-        this.eventBus = new EventBus();
+        this.eventBus = new DataDoo.EventBus();
 
         DataDoo.utils.rDefault(params, {
             grid : true,
