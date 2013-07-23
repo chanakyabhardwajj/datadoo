@@ -68,6 +68,10 @@ window.DataDoo = (function () {
                 }
             }
         });
+
+        // initialize global eventbus and bucket
+        this.eventBus = new DataDoo.EventBus();
+
         this.bucket = {};
 
         // create three.js stuff
@@ -216,6 +220,7 @@ window.DataDoo = (function () {
         });
     };
 
+
     DataDoo.prototype._computeAxisValues = function (events) {
         var changedDs = [];
 
@@ -257,7 +262,7 @@ window.DataDoo = (function () {
     };
 
     DataDoo.prototype._addOrRemoveSceneObjects = function (events) {
-        _.each(events, function (event) {
+        DataDoo.EventBus.flatEventsIter(events, function (event) {
             switch (event.eventName) {
                 case "NODE.ADD":
                     _.each(this._getObjects(event.data), function (object) {
@@ -288,7 +293,6 @@ window.DataDoo = (function () {
                     }, this);
                     break;
             }
-            this._addOrRemoveSceneObjects(event.parentEvents);
         }, this);
     };
 
@@ -383,6 +387,10 @@ window.DataDoo = (function () {
             }).flatten().value();
     };
 
+    return DataDoo;
+})();
+
+(function(DataDoo) {
     /**
      * DataDoo's special priority event bus for propagating
      * changes in the object hierarchy
@@ -392,7 +400,7 @@ window.DataDoo = (function () {
         this.subscribers = {}; // contains map between publishers and subscribers
         this._currentParentEvents = []; // maintains the parentEvents for the current execution
     }
-
+    DataDoo.EventBus = EventBus;
     EventBus.prototype.enqueue = function (publisher, eventName, data) {
         var subscribers = this.subscribers[publisher.id];
 
@@ -451,19 +459,20 @@ window.DataDoo = (function () {
         }
         this._currentParentEvents = [];
     };
+    
+    EventBus.flatEventsIter = function(events, callback, context) {
+        _.each(events, function(event) {
+            callback.call(context || window, event);
+            EventBus.flatEventsIter(event.parentEvents, callback, context);
+        });
+    };
 
-    // Request animationframe helper
-    var requestAnimationFrame = (
-        window.requestAnimationFrame ||
-            window.webkitRequestAnimationFrame ||
-            window.mozRequestAnimationFrame ||
-            function (callback) {
-                return window.setTimeout(callback, 1000 / 60);
-            }
-        );
-
-    return DataDoo;
-})();
+    EventBus.flattenEvents = function(events) {
+        var flat = [];
+        EventBus.flatEventsIter(events, function(event) { flat.push(event); });
+        return flat;
+    };
+})(window.DataDoo);
 
 (function(DataDoo) {
     _.extend(DataDoo, {
@@ -495,7 +504,17 @@ window.DataDoo = (function () {
                     target[prop] = source[prop];
                 }
             }
-        }
+        },
+
+        // Request animationframe helper
+        requestAnimationFrame : (
+            window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            function (callback) {
+                return window.setTimeout(callback, 1000 / 60);
+            }
+        )
     };
 })(window.DataDoo);
 
