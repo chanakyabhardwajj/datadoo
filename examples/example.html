@@ -25,14 +25,17 @@
                 },
                 axes: {
                     x: {
-                        type: DataDoo.COLUMNVALUE,
-                        column: "ds2.one",
-                        spacing: 30,
-                        axisLabel : "x-axis",
+                        //type: DataDoo.COLUMNVALUE,
+                        //column: "ds2.one",
+                        type: DataDoo.NUMBER,
+                        axisDivisions: 5,
+                        axisLabelStartingFrom : 0,
+                        axisLabel : "countries",
                         axisLineColor : 0xff0000,
                         axisLabelColor : 0xff0000,
-                        dir : new THREE.Vector3(1,0,0),
-                        length : 100
+                        axisDir : new THREE.Vector3(1,0,0),
+                        axisLength : 25,
+                        axisWithCone : true
                     }
                 }
             });

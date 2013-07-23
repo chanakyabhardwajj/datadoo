@@ -20,27 +20,27 @@ window.DataDoo = (function () {
             axes : {
                 x : {
                     type : DataDoo.NUMBER,
-                    axisLabel : "X",
+                    axisLabel : "x-axis",
                     axisLineColor : 0xff0000,
                     axisLabelColor : 0xff0000,
-                    dir : new THREE.Vector3(1, 0, 0),
-                    length : 50
+                    axisDir : new THREE.Vector3(1, 0, 0),
+                    axisLength : 50
                 },
                 y : {
                     type : DataDoo.NUMBER,
                     axisLabel : "y-axis",
                     axisLineColor : 0x00ff00,
                     axisLabelColor : 0x00ff00,
-                    dir : new THREE.Vector3(0, 1, 0),
-                    length : 50
+                    axisDir : new THREE.Vector3(0, 1, 0),
+                    axisLength : 50
                 },
                 z : {
                     type : DataDoo.NUMBER,
                     axisLabel : "z-axis",
                     axisLineColor : 0x0000ff,
                     axisLabelColor : 0x0000ff,
-                    dir : new THREE.Vector3(0, 0, 1),
-                    length : 50
+                    axisDir : new THREE.Vector3(0, 0, 1),
+                    axisLength : 50
                 }
             },
 

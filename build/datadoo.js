@@ -20,27 +20,27 @@ window.DataDoo = (function () {
             axes : {
                 x : {
                     type : DataDoo.NUMBER,
-                    axisLabel : "X",
+                    axisLabel : "x-axis",
                     axisLineColor : 0xff0000,
                     axisLabelColor : 0xff0000,
-                    dir : new THREE.Vector3(1, 0, 0),
-                    length : 50
+                    axisDir : new THREE.Vector3(1, 0, 0),
+                    axisLength : 50
                 },
                 y : {
                     type : DataDoo.NUMBER,
                     axisLabel : "y-axis",
                     axisLineColor : 0x00ff00,
                     axisLabelColor : 0x00ff00,
-                    dir : new THREE.Vector3(0, 1, 0),
-                    length : 50
+                    axisDir : new THREE.Vector3(0, 1, 0),
+                    axisLength : 50
                 },
                 z : {
                     type : DataDoo.NUMBER,
                     axisLabel : "z-axis",
                     axisLineColor : 0x0000ff,
                     axisLabelColor : 0x0000ff,
-                    dir : new THREE.Vector3(0, 0, 1),
-                    length : 50
+                    axisDir : new THREE.Vector3(0, 0, 1),
+                    axisLength : 50
                 }
             },
 
@@ -180,7 +180,7 @@ window.DataDoo = (function () {
         var self = this;
 
         function renderFrame() {
-            requestAnimationFrame(renderFrame);
+            DataDoo.utils.requestAnimationFrame(renderFrame);
             // we clear the eventbus, to make sure all the components have run
             self.eventBus.execute();
             // render the frame
@@ -188,7 +188,7 @@ window.DataDoo = (function () {
             self.cameraControls.update();
         }
 
-        requestAnimationFrame(renderFrame);
+        DataDoo.utils.requestAnimationFrame(renderFrame);
     };
 
     DataDoo.prototype.handler = function (events) {
@@ -222,19 +222,11 @@ window.DataDoo = (function () {
 
 
     DataDoo.prototype._computeAxisValues = function (events) {
-        var changedDs = [];
-
-        function findChangedDs(events) {
-            _.each(events, function (event) {
-                if (event.eventName.substring(0, 4) == "DATA") {
-                    changedDs.push(event.publisher.id);
-                }
-                findChangedDs(event.parentEvents);
-            });
-        }
-
-        findChangedDs(events);
-        changedDs = _.uniq(changedDs);
+        var changedDs = _.chain(DataDoo.EventBus.flattenEvents(events)).filter(function(event) {
+            return event.eventName.substring(0, 4) == "DATA";
+        }).map(function(event) {
+            return event.publisher.id;
+        }).uniq().value();
 
         _.each(this.axesConf, function (axis, name) {
             if (axis.type == DataDoo.COLUMNVALUE) {
@@ -251,8 +243,9 @@ window.DataDoo = (function () {
                         values.reverse();
                     }
                 }
+                var spacing = axis.spacing || (axis.length/values.length);
                 var posMap = _.chain(values).map(function (value, i) {
-                    return [value, (i + 1) * axis.spacing];
+                    return [value, (i + 1) * spacing];
                 }).object().value();
 
                 axis.values = values;
@@ -510,7 +503,7 @@ window.DataDoo = (function () {
         },
 
         // Request animationframe helper
-        requestAnimationFrame : (
+        _raf : (
             window.requestAnimationFrame ||
             window.webkitRequestAnimationFrame ||
             window.mozRequestAnimationFrame ||
@@ -518,6 +511,10 @@ window.DataDoo = (function () {
                 return window.setTimeout(callback, 1000 / 60);
             }
         ),
+
+        requestAnimationFrame: function(callback) {
+            return this._raf.call(window, callback);
+        },
 
         makeTextSprite : function(message, parameters) {
         if (parameters === undefined) parameters = {};
@@ -538,7 +535,7 @@ window.DataDoo = (function () {
             parameters.borderColor : { r : 0, g : 0, b : 0, a : 1.0 };
 
         var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?
-            parameters.backgroundColor : { r : 255, g : 255, b : 255, a : 1.0 };
+            parameters.backgroundColor : { r : 204, g : 204, b : 204, a : 0.6 };
 
         var spriteAlignment = THREE.SpriteAlignment.topLeft;
 
@@ -1177,101 +1174,126 @@ window.DataDoo = (function () {
      Did not want to make changes in threejs files because then they would be bound to the DataDoo repo.
      */
 
-    function ArrowHelper( dir, origin, length, axisLineColor, axisLabel, axisLabelColor ) {
+    function AxisHelper(configObj) {
+        /*dir, origin, length, axisLineColor, axisLabel, axisLabelColor*/
+        console.dir(configObj);
+        THREE.Object3D.call(this);
+        this.type = configObj.type;
+        this.axisWithCone = configObj.axisWithCone || false;
+        this.axisDir = configObj.axisDir || new THREE.Vector3(1, 0, 0);
+        this.origin = configObj.origin || new THREE.Vector3(0, 0, 0);
+        this.axisLength = configObj.axisLength || 50;
+        this.axisDivisions = configObj.axisDivisions || 10;
+        this.axisLabelStartingFrom  = configObj.axisLabelStartingFrom || 0;
 
-        // dir is assumed to be normalized
+        this.axisLineColor = configObj.axisLineColor || 0xffff00;
+        this.axisLabel = configObj.axisLabel || "empty label";
+        this.axisLabelColor = configObj.axisLabelColor || 0xffff00;
 
-        THREE.Object3D.call( this );
+        this.axisDir.normalize();
 
-        if ( dir === undefined ) dir = new THREE.Vector3(1,0,0);
-        if ( origin === undefined ) origin = new THREE.Vector3(0,0,0);
-        if ( length === undefined ) length = 1;
-        if ( axisLineColor === undefined ) axisLineColor = 0xffff00;
-        if ( axisLabel === undefined ) axisLabel = "empty label";
-        if ( axisLabelColor === undefined ) axisLabelColor = 0xffff00;
-
-        dir.normalize();
-
-        this.position = origin;
+        this.position = this.origin;
 
         var lineGeometry = new THREE.Geometry();
-        lineGeometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-        lineGeometry.vertices.push( new THREE.Vector3( 0, 1, 0 ) );
+        lineGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
+        lineGeometry.vertices.push(new THREE.Vector3(0, this.axisLength, 0));
 
-        this.line = new THREE.Line( lineGeometry, new THREE.LineBasicMaterial( { color: axisLineColor, opacity : 0.5, linewidth : 2  } ) );
+        this.line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({ color : this.axisLineColor, opacity : 0.5, linewidth : 2  }));
         this.line.matrixAutoUpdate = false;
-        this.add( this.line );
+        this.add(this.line);
 
-        var coneGeometry = new THREE.CylinderGeometry( 0, 0.05, 0.15, 10, 10 );
-        coneGeometry.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 0.875, 0 ) );
+        var coneGeometry = new THREE.CylinderGeometry(0, 5, 10, 10, 10);
+        //coneGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0.875, 0));
 
-        this.cone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: axisLineColor, opacity : 0.5, linewidth : 2  } ) );
-        this.cone.matrixAutoUpdate = false;
-        this.add( this.cone );
+        this.cone = new THREE.Mesh(coneGeometry, new THREE.MeshBasicMaterial({ color : this.axisLineColor, opacity : 0.5, linewidth : 2  }));
+        this.cone.position.set(0, this.axisLength , 0);
+        //this.cone.matrixAutoUpdate = false;
+        this.add(this.cone);
+        this.cone.visible = this.axisWithCone;
 
-        this.labelSprite = DataDoo.utils.makeTextSprite(axisLabel || "X Axis", {textColor:axisLabelColor});
+        this.labelSprite = DataDoo.utils.makeTextSprite(this.axisLabel || "X Axis", {textColor : this.axisLabelColor});
         this.add(this.labelSprite);
-        //this.labelSprite.setDirection(dir);
-        this.labelSprite.position.set(-0.1,1,0);
+        this.labelSprite.position.set(-0.1, this.axisLength, 0);
 
-        this.setDirection( dir );
 
-        this.setLength( length );
+
+        if(this.type === DataDoo.NUMBER){
+            var num = parseInt(this.axisLength/this.axisDivisions, 10);
+            console.log("this.axisLength :", this.axisLength);
+            console.log("this.axisDivisions :", this.axisDivisions);
+            var ptGeom = new THREE.SphereGeometry(0.01 * 100);
+            var ptMat = new THREE.MeshBasicMaterial({color:0x000000});
+            var labelNum = this.axisLabelStartingFrom;
+            var params = {
+                fontSize : 0.1 * 100,
+                textColor : 0x000000
+            };
+
+            for(var x = 0; x < num; x++){
+                var pt = new THREE.Mesh(ptGeom, ptMat);
+                var label = DataDoo.utils.makeTextSprite(labelNum + x, params);
+                pt.add(label);
+                this.line.add(pt);
+                pt.position.set(0, (x/num)*(this.axisLength), 0);
+            }
+
+        }
+
+        this.setDirection(this.axisDir);
+//        this.setLength(this.axisLength);
+
     }
 
-    ArrowHelper.prototype = Object.create( THREE.Object3D.prototype );
+    AxisHelper.prototype = Object.create(THREE.Object3D.prototype);
 
-    ArrowHelper.prototype.setDirection = function () {
+    AxisHelper.prototype.setDirection = function () {
         var axis = new THREE.Vector3();
         var radians;
 
-        return function ( dir ) {
+        return function (dir) {
             // dir is assumed to be normalized
-            if ( dir.y > 0.99999 ) {
-                this.quaternion.set( 0, 0, 0, 1 );
+            if (dir.y > 0.99999) {
+                this.quaternion.set(0, 0, 0, 1);
             }
-            else if ( dir.y < - 0.99999 ) {
-                this.quaternion.set( 1, 0, 0, 0 );
+            else if (dir.y < -0.99999) {
+                this.quaternion.set(1, 0, 0, 0);
             }
             else {
-                axis.set( dir.z, 0, - dir.x ).normalize();
-                radians = Math.acos( dir.y );
-                this.quaternion.setFromAxisAngle( axis, radians );
+                axis.set(dir.z, 0, -dir.x).normalize();
+                radians = Math.acos(dir.y);
+                this.quaternion.setFromAxisAngle(axis, radians);
             }
         };
     }();
 
-    ArrowHelper.prototype.setLength = function ( length ) {
-        this.scale.set( length, length, length );
+    AxisHelper.prototype.setLength = function (length) {
+        this.scale.set(length, length, length);
     };
 
-    ArrowHelper.prototype.setColor = function ( hex ) {
-        this.line.material.color.setHex( hex );
-        this.cone.material.color.setHex( hex );
+    AxisHelper.prototype.setColor = function (hex) {
+        this.line.material.color.setHex(hex);
+        this.cone.material.color.setHex(hex);
     };
-
-
 
     function AxesHelper(xObj, yObj, zObj) {
-        THREE.Object3D.call( this );
+        THREE.Object3D.call(this);
 
         this.xObj = xObj || {};
         this.yObj = yObj || {};
         this.zObj = zObj || {};
 
-        this.xAxis = new DataDoo.ArrowHelper(this.xObj.dir || new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), this.xObj.length || 50, this.xObj.axisLineColor || 0xfc12340, this.xObj.axisLabel || "x axis", this.xObj.axisLabelColor || 0xfc12340 );
+        this.xAxis = new DataDoo.AxisHelper(this.xObj);
         this.add(this.xAxis);
 
-        this.yAxis = new DataDoo.ArrowHelper(this.yObj.dir || new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), this.yObj.length || 50, this.yObj.axisLineColor || 0xfc12340, this.yObj.axisLabel || "y axis", this.yObj.axisLabelColor || 0xfc12340 );
+        this.yAxis = new DataDoo.AxisHelper(this.yObj);
         this.add(this.yAxis);
 
-        this.zAxis = new DataDoo.ArrowHelper(this.zObj.dir || new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), this.zObj.length || 50, this.zObj.axisLineColor || 0xfc12340, this.zObj.axisLabel || "z axis", this.zObj.axisLabelColor || 0xfc12340 );
+        this.zAxis = new DataDoo.AxisHelper(this.zObj);
         this.add(this.zAxis);
     }
 
-    AxesHelper.prototype = Object.create( THREE.Object3D.prototype );
+    AxesHelper.prototype = Object.create(THREE.Object3D.prototype);
 
-
-    DataDoo.ArrowHelper = ArrowHelper;
+    DataDoo.AxisHelper = AxisHelper;
     DataDoo.AxesHelper = AxesHelper;
 })(window.DataDoo);

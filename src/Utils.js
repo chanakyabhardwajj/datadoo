@@ -46,7 +46,7 @@
             parameters.borderColor : { r : 0, g : 0, b : 0, a : 1.0 };
 
         var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?
-            parameters.backgroundColor : { r : 255, g : 255, b : 255, a : 1.0 };
+            parameters.backgroundColor : { r : 204, g : 204, b : 204, a : 0.6 };
 
         var spriteAlignment = THREE.SpriteAlignment.topLeft;
 
