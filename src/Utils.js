@@ -11,7 +11,7 @@
         },
 
         // Request animationframe helper
-        requestAnimationFrame : (
+        _raf : (
             window.requestAnimationFrame ||
             window.webkitRequestAnimationFrame ||
             window.mozRequestAnimationFrame ||
@@ -19,6 +19,10 @@
                 return window.setTimeout(callback, 1000 / 60);
             }
         ),
+
+        requestAnimationFrame: function(callback) {
+            return this._raf.call(window, callback);
+        },
 
         makeTextSprite : function(message, parameters) {
         if (parameters === undefined) parameters = {};

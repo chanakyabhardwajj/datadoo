@@ -222,11 +222,11 @@ window.DataDoo = (function () {
 
 
     DataDoo.prototype._computeAxisValues = function (events) {
-        var changedDs = _chain(DataDoo.EventBus.flattenEvents(events)).filter(function(event) {
+        var changedDs = _.chain(DataDoo.EventBus.flattenEvents(events)).filter(function(event) {
             return event.eventName.substring(0, 4) == "DATA";
         }).map(function(event) {
             return event.publisher.id;
-        }).uniq();
+        }).uniq().value();
 
         _.each(this.axesConf, function (axis, name) {
             if (axis.type == DataDoo.COLUMNVALUE) {
