@@ -5,6 +5,9 @@ window.DataDoo = (function () {
      */
     function DataDoo(params) {
         params = params || {};
+        // initialize an array for maintaining all the labels
+        this.labelsArray = [];
+
         // initialize global eventbus and bucket
         this.eventBus = new DataDoo.EventBus();
 
@@ -148,7 +151,7 @@ window.DataDoo = (function () {
 
         //AXES
         this.axes = new DataDoo.AxesHelper(this.axesConf.x, this.axesConf.y, this.axesConf.z);
-        this.scene.add(this.axes);
+        //this.scene.add(this.axes);
 
         //CAMERA
         var camSettings = this.cameraConf;
@@ -164,6 +167,9 @@ window.DataDoo = (function () {
 
         //CAMERA CONTROLS
         this.cameraControls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+
+        //Projector
+        this.projector = new THREE.Projector();
 
     };
 
@@ -192,6 +198,7 @@ window.DataDoo = (function () {
             // render the frame
             self.renderer.render(self.scene, self.camera);
             self.cameraControls.update();
+            self.putLabelsToScreen();
         }
 
         DataDoo.utils.requestAnimationFrame(renderFrame);
@@ -212,6 +219,13 @@ window.DataDoo = (function () {
         }).map(function (node) {
                 return node.primitives;
             }).flatten();
+
+        var primCopy = primitives;
+
+        // Find all the label objects and stuff them into the array
+        this.labelsArray = primCopy.filter(function(pr){
+            return pr instanceof DataDoo.Label;
+        }).value();
 
         var positions = primitives.map(function (primitive) {
             return primitive.getPositions();
@@ -376,6 +390,18 @@ window.DataDoo = (function () {
             oldPos._prev = undefined;
             oldPos._seen = undefined;
         }
+    };
+
+    DataDoo.prototype.putLabelsToScreen = function(){
+        var self = this;
+        self.camera.updateMatrixWorld();
+        _.each(self.labelsArray, function(label){
+            var vector = self.projector.projectVector(label.position.toVector(), self.camera);
+            //var vector = self.projector.projectVector(new THREE.Vector3(20,20,20), self.camera);
+            vector.x = (vector.x + 1)/2 * self.renderer.domElement.width;
+            vector.y = -(vector.y - 1)/2 * self.renderer.domElement.height;
+            label.updateElemPos(vector.y, vector.x);
+        });
     };
 
     DataDoo.prototype._getObjects = function (nodes) {

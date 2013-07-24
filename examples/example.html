@@ -9,6 +9,10 @@
                 font-family:georgia;
                 text-align:center;
             }
+
+            .datadoo-label{
+                color: #767676;
+            }
         </style>
     </head>
     <body>
@@ -101,6 +105,26 @@
 
                 var line = this.addDashedLine(sphere3.center, sphere2.center);
                 var line = this.addDashedLine(sphere3.center, sphere.center);
+
+                var label1 = this.addLabel(this.data.one, sphere.center, {x : 00, y : 00});
+
+                var line = this.addLine(sphere.center, sphere.center.relative(20, 20, 20), 100, new THREE.Vector3(1,0,1), 0xfc12340, 2, 0.6);
+
+                var cone = this.addCone(20, 3, 10, sphere.center.relative(20, 20, 20), new THREE.Vector3(0,1,0), 0xffcc00, 0.3);
+
+                /*var arrow = this.addArrow({
+                    from : new DataDoo.Position(20, 20, 20),
+                    to : new DataDoo.Position(-20, -20, -20), //if "to" is provided, the lineLength and lineDirection params are ignored
+
+                    lineLength : 100,
+                    lineDirection : new THREE.Vector3(1,0,0), //assumed normalized
+                    lineDivisions : 10,
+                    lineColor : 0x000000,
+                    lineThickness : 1,
+                    lineOpacity : 1,
+                    fromCone : true,
+                    toCone : true
+                })*/
 
             };
 

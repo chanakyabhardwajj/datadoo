@@ -5,6 +5,9 @@ window.DataDoo = (function () {
      */
     function DataDoo(params) {
         params = params || {};
+        // initialize an array for maintaining all the labels
+        this.labelsArray = [];
+
         // initialize global eventbus and bucket
         this.eventBus = new DataDoo.EventBus();
 
@@ -148,7 +151,7 @@ window.DataDoo = (function () {
 
         //AXES
         this.axes = new DataDoo.AxesHelper(this.axesConf.x, this.axesConf.y, this.axesConf.z);
-        this.scene.add(this.axes);
+        //this.scene.add(this.axes);
 
         //CAMERA
         var camSettings = this.cameraConf;
@@ -164,6 +167,9 @@ window.DataDoo = (function () {
 
         //CAMERA CONTROLS
         this.cameraControls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+
+        //Projector
+        this.projector = new THREE.Projector();
 
     };
 
@@ -192,6 +198,7 @@ window.DataDoo = (function () {
             // render the frame
             self.renderer.render(self.scene, self.camera);
             self.cameraControls.update();
+            self.putLabelsToScreen();
         }
 
         DataDoo.utils.requestAnimationFrame(renderFrame);
@@ -212,6 +219,13 @@ window.DataDoo = (function () {
         }).map(function (node) {
                 return node.primitives;
             }).flatten();
+
+        var primCopy = primitives;
+
+        // Find all the label objects and stuff them into the array
+        this.labelsArray = primCopy.filter(function(pr){
+            return pr instanceof DataDoo.Label;
+        }).value();
 
         var positions = primitives.map(function (primitive) {
             return primitive.getPositions();
@@ -378,6 +392,18 @@ window.DataDoo = (function () {
         }
     };
 
+    DataDoo.prototype.putLabelsToScreen = function(){
+        var self = this;
+        self.camera.updateMatrixWorld();
+        _.each(self.labelsArray, function(label){
+            var vector = self.projector.projectVector(label.position.toVector(), self.camera);
+            //var vector = self.projector.projectVector(new THREE.Vector3(20,20,20), self.camera);
+            vector.x = (vector.x + 1)/2 * self.renderer.domElement.width;
+            vector.y = -(vector.y - 1)/2 * self.renderer.domElement.height;
+            label.updateElemPos(vector.y, vector.x);
+        });
+    };
+
     DataDoo.prototype._getObjects = function (nodes) {
         return _.chain(nodes).map(function (node) {
             return node.primitives;
@@ -493,9 +519,9 @@ window.DataDoo = (function () {
     });
 })(window.DataDoo);
 
-(function(DataDoo) {
+(function (DataDoo) {
     DataDoo.utils = {
-        rDefault: function(target, source) {
+        rDefault : function (target, source) {
             if (source !== null && typeof source === 'object') {
                 for (var prop in source) {
                     if (prop in target) {
@@ -511,98 +537,98 @@ window.DataDoo = (function () {
         // Request animationframe helper
         _raf : (
             window.requestAnimationFrame ||
-            window.webkitRequestAnimationFrame ||
-            window.mozRequestAnimationFrame ||
-            function (callback) {
-                return window.setTimeout(callback, 1000 / 60);
-            }
-        ),
+                window.webkitRequestAnimationFrame ||
+                window.mozRequestAnimationFrame ||
+                function (callback) {
+                    return window.setTimeout(callback, 1000 / 60);
+                }
+            ),
 
-        requestAnimationFrame: function(callback) {
+        requestAnimationFrame : function (callback) {
             return this._raf.call(window, callback);
         },
 
-        makeTextSprite : function(message, parameters) {
-        if (parameters === undefined) parameters = {};
+        makeTextSprite : function (message, parameters) {
+            if (parameters === undefined) parameters = {};
 
-        var fontface = parameters.hasOwnProperty("fontface") ?
-            parameters.fontface : "Arial";
+            var fontface = parameters.hasOwnProperty("fontface") ?
+                parameters.fontface : "Arial";
 
-        var fontsize = parameters.hasOwnProperty("fontsize") ?
-            parameters.fontsize : 18;
+            var fontsize = parameters.hasOwnProperty("fontsize") ?
+                parameters.fontsize : 18;
 
-        var textColor = parameters.hasOwnProperty("textColor") ?
-            parameters.textColor : "rgba(0, 0, 0, 1.0)";
+            var textColor = parameters.hasOwnProperty("textColor") ?
+                parameters.textColor : "rgba(0, 0, 0, 1.0)";
 
-        var borderThickness = parameters.hasOwnProperty("borderThickness") ?
-            parameters.borderThickness : 0;
+            var borderThickness = parameters.hasOwnProperty("borderThickness") ?
+                parameters.borderThickness : 0;
 
-        var borderColor = parameters.hasOwnProperty("borderColor") ?
-            parameters.borderColor : { r : 0, g : 0, b : 0, a : 1.0 };
+            var borderColor = parameters.hasOwnProperty("borderColor") ?
+                parameters.borderColor : { r : 0, g : 0, b : 0, a : 1.0 };
 
-        var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?
-            parameters.backgroundColor : { r : 204, g : 204, b : 204, a : 0.6 };
+            var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?
+                parameters.backgroundColor : { r : 204, g : 204, b : 204, a : 0.6 };
 
-        var spriteAlignment = THREE.SpriteAlignment.topLeft;
+            var spriteAlignment = THREE.SpriteAlignment.topLeft;
 
-        var canvas = document.getElementById("helperCanvas");
-        if(!canvas){
-            canvas = document.createElement('canvas');
+            var canvas = document.getElementById("helperCanvas");
+            if (!canvas) {
+                canvas = document.createElement('canvas');
+            }
+            canvas.setAttribute("id", "helperCanvas");
+            var context = canvas.getContext('2d');
+            context.clearRect();
+            context.font = fontsize + "px " + fontface;
+
+            // get size data (height depends only on font size)
+            var metrics = context.measureText(message);
+            var textWidth = metrics.width;
+
+            // background color
+            context.fillStyle = "rgba(" + backgroundColor.r + "," + backgroundColor.g + "," + backgroundColor.b + "," + backgroundColor.a + ")";
+            // border color
+            context.strokeStyle = "rgba(" + borderColor.r + "," + borderColor.g + "," + borderColor.b + "," + borderColor.a + ")";
+
+            context.lineWidth = borderThickness;
+            //DataDoo.utils.makeRoundRect(context, borderThickness / 2, borderThickness / 2, textWidth + borderThickness, fontsize * 1.4 + borderThickness, 6);
+            // 1.4 is extra height factor for text below baseline: g,j,p,q.
+
+            // text color
+            var tColor = new THREE.Color(textColor);
+
+            context.fillStyle = "rgba(" + tColor.r * 255 + "," + tColor.g * 255 + "," + tColor.b * 255 + "," + " 1.0)";
+            //context.fillStyle = "rgba(0.99, 0,0, 1.0)";
+
+            context.fillText(message, borderThickness, fontsize + borderThickness);
+
+            // canvas contents will be used for a texture
+            var texture = new THREE.Texture(canvas);
+            texture.needsUpdate = true;
+
+            var spriteMaterial = new THREE.SpriteMaterial(
+                { map : texture, useScreenCoordinates : false, alignment : spriteAlignment });
+            var sprite = new THREE.Sprite(spriteMaterial);
+            sprite.scale.set(100, 50, 1.0);
+            return sprite;
+        },
+
+        makeRoundRect : function (ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
         }
-        canvas.setAttribute("id", "helperCanvas");
-        var context = canvas.getContext('2d');
-        context.clearRect();
-        context.font = fontsize + "px " + fontface;
 
-        // get size data (height depends only on font size)
-        var metrics = context.measureText(message);
-        var textWidth = metrics.width;
-
-        // background color
-        context.fillStyle = "rgba(" + backgroundColor.r + "," + backgroundColor.g + "," + backgroundColor.b + "," + backgroundColor.a + ")";
-        // border color
-        context.strokeStyle = "rgba(" + borderColor.r + "," + borderColor.g + "," + borderColor.b + "," + borderColor.a + ")";
-
-        context.lineWidth = borderThickness;
-        //DataDoo.utils.makeRoundRect(context, borderThickness / 2, borderThickness / 2, textWidth + borderThickness, fontsize * 1.4 + borderThickness, 6);
-        // 1.4 is extra height factor for text below baseline: g,j,p,q.
-
-        // text color
-        var tColor = new THREE.Color(textColor);
-
-        context.fillStyle = "rgba(" + tColor.r*255 + "," + tColor.g*255 + "," + tColor.b*255 + "," + " 1.0)";
-        //context.fillStyle = "rgba(0.99, 0,0, 1.0)";
-
-        context.fillText(message, borderThickness, fontsize + borderThickness);
-
-        // canvas contents will be used for a texture
-        var texture = new THREE.Texture(canvas);
-        texture.needsUpdate = true;
-
-        var spriteMaterial = new THREE.SpriteMaterial(
-            { map : texture, useScreenCoordinates : false, alignment : spriteAlignment });
-        var sprite = new THREE.Sprite(spriteMaterial);
-        sprite.scale.set(100, 50, 1.0);
-        return sprite;
-    },
-
-    makeRoundRect : function(ctx, x, y, w, h, r) {
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.lineTo(x + w - r, y);
-        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-        ctx.lineTo(x + w, y + h - r);
-        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-        ctx.lineTo(x + r, y + h);
-        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-        ctx.lineTo(x, y + r);
-        ctx.quadraticCurveTo(x, y, x + r, y);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-    }
-
-};
+    };
 })(window.DataDoo);
 
 //This module serves the purpose of creating and connecting data-streams to datadoo.
@@ -870,6 +896,27 @@ window.DataDoo = (function () {
     Primitive.prototype.onResolve = function() {
         throw new Error("Primitive : onResolve not implemented");
     };
+
+    //This is a helper function to align any object in a direction
+    Primitive.prototype.setDirection = function (obj) {
+        var axis = new THREE.Vector3();
+        var radians;
+
+        return function (dir, obj) {
+            // dir is assumed to be normalized
+            if (dir.y > 0.99999) {
+                obj.quaternion.set(0, 0, 0, 1);
+            }
+            else if (dir.y < -0.99999) {
+                obj.quaternion.set(1, 0, 0, 0);
+            }
+            else {
+                axis.set(dir.z, 0, -dir.x).normalize();
+                radians = Math.acos(dir.y);
+                obj.quaternion.setFromAxisAngle(axis, radians);
+            }
+        };
+    }();
     DataDoo.Primitive = Primitive;
 
     /**
@@ -901,6 +948,186 @@ window.DataDoo = (function () {
         this.center.applyToVector(this.mesh.position);
     };
     DataDoo.Sphere = Sphere;
+
+    /**
+     *  Line primitive
+     */
+    function Line(startPos, endPos, lineLength, dir, color, thickness, opacity) {
+        THREE.Object3D.call(this);
+
+        this.thickness = thickness || 1;
+        this.opacity = opacity || 1;
+        this.color = color || 0xcccccc;
+        this.startPos = startPos || new DataDoo.Position(0,0,0);
+        this.direction = dir || new THREE.Vector3(1,0,0);
+        this.lineLength = lineLength || 50;
+        this.direction.normalize();
+
+        if(endPos){
+            this.endPos = endPos;
+        }
+        else{
+            var endPosX = this.startPos.x + (this.lineLength*this.direction.x);
+            var endPosY = this.startPos.y + (this.lineLength*this.direction.y);
+            var endPosZ = this.startPos.z + (this.lineLength*this.direction.z);
+
+            this.endPos = new DataDoo.Position(endPosX, endPosY, endPosZ);
+        }
+
+        this.lineGeometry = new THREE.Geometry();
+        this.lineGeometry.vertices.push(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0));
+        this.lineMaterial = new THREE.LineBasicMaterial( { color: this.color, linewidth: this.thickness, opacity: this.opacity } );
+        this.line = new THREE.Line( this.lineGeometry, this.lineMaterial );
+
+        this.objects = [this.line];
+    }
+    Line.prototype = Object.create(Primitive.prototype);
+    Line.prototype.getPositions = function() {
+        return [this.startPos, this.endPos];
+    };
+    Line.prototype.onResolve = function() {
+        this.startPos.applyToVector(this.lineGeometry.vertices[0]);
+        this.endPos.applyToVector(this.lineGeometry.vertices[1]);
+        this.lineGeometry.computeLineDistances();
+    };
+    DataDoo.Line = Line;
+
+
+    /**
+     *  Cone primitive
+     */
+    function Cone(height, topRadius, baseRadius, position, dir, color, opacity) {
+        THREE.Object3D.call(this);
+
+        this.position = position || new DataDoo.Position(0,0,0);
+        this.height = height || 5;
+        this.topRadius = topRadius || 0;
+        this.baseRadius = baseRadius || 5;
+        this.opacity = opacity || 1;
+        this.color = color || 0xcccccc;
+        this.direction = dir || new THREE.Vector3(0,1,0);
+
+
+        var coneGeometry = new THREE.CylinderGeometry(this.topRadius, this.baseRadius, this.height, 10, 10);
+        var coneMat = new THREE.MeshLambertMaterial({ color : this.color, opacity : this.opacity  });
+        this.cone = new THREE.Mesh(coneGeometry, coneMat);
+        this.setDirection(this.direction, this.cone);
+
+        this.objects = [this.cone];
+    }
+    Cone.prototype = Object.create(Primitive.prototype);
+    Cone.prototype.getPositions = function() {
+        return [this.position];
+    };
+    Cone.prototype.onResolve = function() {
+        this.position.applyToVector(this.cone.position);
+    };
+    DataDoo.Cone = Cone;
+
+    /**
+     *  Arrow primitive
+     */
+    function Arrow(configObj) {
+        configObj = configObj || {};
+
+        /*configObj = {
+            from : new DataDoo.Position(),
+            to : new DataDoo.Position(), //if "to" is provided, the lineLength and lineDirection params are ignored
+
+            lineLength : 100,
+            lineDirection : new THREE.Vector3(1,0,0), //assumed normalized
+            lineDivisions : 10,
+            lineColor : 0x000000,
+            lineThickness : 1,
+            lineOpacity : 1,
+
+            fromCone : true,
+            fromConeHeight : 10,
+            fromConeTopRadius : 5,
+            fromConeBaseRadius : 5,
+            fromConeColor : 0x000000,
+            fromConeOpacity : 1,
+
+            toCone : true,
+            toConeHeight : 10,
+            toConeBaseRadius : 5,
+            toConeColor : 0x000000,
+            toConeOpacity : 1
+        }*/
+
+        THREE.Object3D.call(this);
+        this.type = configObj.type;
+
+        this.fromPosition = configObj.from || new DataDoo.Position(0,0,0);
+
+
+        this.arrowLineDirection = configObj.lineDirection || new THREE.Vector3(1, 0, 0);
+        this.arrowLineLength = configObj.lineLength || 50;
+        this.arrowLineOpacity = configObj.lineOpacity || 1;
+        this.arrowLineThickness = configObj.lineThickness || 1;
+        this.arrowLineDivisions = configObj.lineDivisions || 0;
+        this.arrowLineColor = configObj.lineColor || 0x000000;
+
+        this.fromCone = configObj.fromCone;
+        this.fromConeHeight = configObj.fromConeHeight;
+        this.fromConeTopRadius = configObj.fromConeTopRadius;
+        this.fromConeBaseRadius = configObj.fromConeBaseRadius;
+        this.fromConeColor = configObj.fromConeColor;
+        this.fromConeOpacity = configObj.fromConeOpacity;
+
+        this.toCone = configObj.toCone;
+        this.toConeHeight = configObj.toConeHeight;
+        this.toConeTopRadius = configObj.toConeBaseRadius;
+        this.toConeBaseRadius = configObj.toConeBaseRadius;
+        this.toConeColor = configObj.toConeColor;
+        this.toConeOpacity = configObj.toConeOpacity;
+
+        if(configObj.to){
+            this.toPosition = configObj.to;
+        }
+        else{
+            var toPosX = this.fromPosition.x + (this.arrowLineLength*this.arrowLineDirection.x);
+            var toPosY = this.fromPosition.y + (this.arrowLineLength*this.arrowLineDirection.y);
+            var toPosZ = this.fromPosition.z + (this.arrowLineLength*this.arrowLineDirection.z);
+
+            this.toPosition = new DataDoo.Position(toPosX, toPosY, toPosZ);
+        }
+        this.arrow = new THREE.Object3D();
+
+        this.line = new DataDoo.Line(this.fromPosition, this.toPosition, this.arrowLineLength, this.arrowLineDirection, this.arrowLineColor, this.arrowLineThickness, this.arrowLineOpacity);
+        this.arrow.add(this.line);
+
+        if(this.fromCone){
+            this.fromCone = new DataDoo.Cone(this.fromConeHeight, this.fromConeTopRadius, this.fromConeBaseRadius, this.fromPosition, this.arrowLineDirection.clone().negate(), this.fromConeColor, this.fromConeOpacity);
+            this.arrow.add(this.fromCone);
+        }
+
+        if(this.toCone){
+            this.toCone = new DataDoo.Cone(this.toConeHeight, this.toConeTopRadius, this.toConeBaseRadius, this.toPosition, this.arrowLineDirection, this.toConeColor, this.toConeOpacity);
+            this.arrow.add(this.toCone);
+        }
+
+        this.objects = [this.arrow];
+
+    }
+    Arrow.prototype = Object.create(Primitive.prototype);
+    Arrow.prototype.getPositions = function() {
+        return [this.fromPosition, this.toPosition];
+    };
+    Arrow.prototype.onResolve = function() {
+        //ToDo : Fix this area!!
+
+        /*this.fromPosition.applyToVector(this.line.geometry.vertices[0]);
+        this.toPosition.applyToVector(this.line.geometry.vertices[1]);*/
+        this.line.onResolve();
+        if(this.fromCone){
+            this.fromPosition.applyToVector(this.fromCone.position);
+        }
+        if(this.toCone){
+            this.toPosition.applyToVector(this.toCone.position);
+        }
+    };
+    DataDoo.Arrow = Arrow;
 
     /**
      *  DashedLine primitive
@@ -982,7 +1209,6 @@ window.DataDoo = (function () {
         this.sprite.scale.x = this.sprite.scale.y = this.sprite.scale.z = this.scale;
         this.objects = [this.sprite];
     }
-
     Sprite.prototype = Object.create(Primitive.prototype);
     Sprite.prototype.getPositions = function() {
         return [this.position];
@@ -992,6 +1218,56 @@ window.DataDoo = (function () {
         //this.sprite.position.multiplyScalar(this.radius);
     };
     DataDoo.Sprite = Sprite;
+
+
+    /**
+     *  Label primitive
+     */
+    function Label(message, position, offset){
+        THREE.Object3D.call(this);
+
+        //Trick borrowed from MathBox!
+        var element = document.createElement('div');
+        var inner = document.createElement('div');
+        element.appendChild(inner);
+
+        // Position at anchor point
+        element.className = 'datadoo-label';
+        inner.className = 'datadoo-wrap';
+        inner.style.position = 'relative';
+        inner.style.display = 'inline-block';
+        inner.style.left = '-50%';
+        inner.style.top = '-.5em';
+
+        this.message = message;
+        this.position = position;
+        this.element = element;
+        this.distanceX = offset.x || 10;
+        this.distanceY = offset.y || 10;
+        this.width = 0;
+        this.height = 0;
+        this.visible = true;
+        this.content = this.message;
+
+        element.style.position = 'absolute';
+        element.style.left = 0;
+        element.style.top = 0;
+        //element.style.opacity = 0;
+        inner.appendChild(document.createTextNode(this.message));
+
+        this.objects = [this.element];
+        document.body.appendChild(element);
+    }
+    Label.prototype = Object.create(Primitive.prototype);
+    Label.prototype.getPositions = function() {
+        return [this.position];
+    };
+    Label.prototype.onResolve = function() {};
+    Label.prototype.updateElemPos = function(top, left) {
+        this.element.style.top = top + this.distanceY + "px";
+        this.element.style.left = left + this.distanceX + "px";
+    };
+    DataDoo.Label = Label;
 
 })(window.DataDoo);
 
@@ -1157,8 +1433,21 @@ window.DataDoo = (function () {
         this.primitives.push(sphere);
         return sphere;
     };
+
+    Node.prototype.addLabel = function(msg, pos, offset) {
+        var label = new DataDoo.Label(msg, pos, offset);
+        this.primitives.push(label);
+        return label;
+    };
+
     Node.prototype.addDashedLine = function(startPos, endPos, color, dashSize, gapSize, radius) {
         var line = new DataDoo.DashedLine(startPos, endPos, color, dashSize, gapSize, radius);
+        this.primitives.push(line);
+        return line;
+    };
+
+    Node.prototype.addLine = function(startPos, endPos, lineLength, dir, color, thickness, opacity) {
+        var line = new DataDoo.Line(startPos, endPos, lineLength, dir, color, thickness, opacity);
         this.primitives.push(line);
         return line;
     };
@@ -1167,6 +1456,18 @@ window.DataDoo = (function () {
         var sprite = new DataDoo.Sprite(url, position, scale);
         this.primitives.push(sprite);
         return sprite;
+    };
+
+    Node.prototype.addCone = function(height, topRadius, baseRadius, position, dir, color, opacity) {
+        var cone = new DataDoo.Cone(height, topRadius, baseRadius, position, dir, color, opacity);
+        this.primitives.push(cone);
+        return cone;
+    };
+
+    Node.prototype.addArrow = function(obj) {
+        var arrow = new DataDoo.Arrow(obj);
+        this.primitives.push(arrow);
+        return arrow;
     };
     DataDoo.Node = Node;
 
