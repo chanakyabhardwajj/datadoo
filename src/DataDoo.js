@@ -216,7 +216,7 @@ window.DataDoo = (function () {
             if(child instanceof DataDoo.DDObject3D) {
                 child.resolve(this.axesConf);
             }
-        });
+        }, this);
 
         // Find all the label objects and stuff them into the array
         this.labelsArray = [];
@@ -283,11 +283,11 @@ window.DataDoo = (function () {
                     break;
 
                 case "RELATION.UPDATE":
-                    _.each(this._getObjects(event.data.added), function (object) {
+                    _.each(event.data.added, function (object) {
                         this.scene.add(object);
                     }, this);
 
-                    _.each(this._getObjects(event.data.removed), function (object) {
+                    _.each(event.data.removed, function (object) {
                         this.scene.remove(object);
                     }, this);
                     break;
@@ -299,7 +299,7 @@ window.DataDoo = (function () {
         var self = this;
         self.camera.updateMatrixWorld();
         _.each(self.labelsArray, function(label){
-            var vector = self.projector.projectVector(label.position.toVector(), self.camera);
+            var vector = self.projector.projectVector(label.position, self.camera);
             vector.x = (vector.x + 1)/2 * self.renderer.domElement.width;
             vector.y = -(vector.y - 1)/2 * self.renderer.domElement.height;
             label.updateElemPos(vector.y, vector.x);

@@ -17,6 +17,7 @@ module.exports = function(grunt) {
                         'src/Eventbus.js',
                         'src/Constants.js',
                         'src/Utils.js',
+                        'src/DDObject3D.js',
                         'src/DataSet.js',
                         'src/DataFilter.js',
                         'src/Position.js',

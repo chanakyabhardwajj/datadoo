@@ -84,7 +84,7 @@
         this.position = new DataDoo.RVector3();
     }
     Node.prototype = Object.create(DataDoo.DDObject3D.prototype);
-    _.extend(DataDoo.prototype, DataDoo.PrimitiveHelpers);
+    _.extend(Node.prototype, DataDoo.PrimitiveHelpers);
     DataDoo.Node = Node;
 
 })(window.DataDoo);

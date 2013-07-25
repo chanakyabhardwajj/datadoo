@@ -16,7 +16,7 @@
         traverseObject3D: function(object, iter, context) {
             _.each(object.children, function(child) {
                 iter.call(context, child);
-                this.thistraverseObject3D(child, iter, context);
+                this.traverseObject3D(child, iter, context);
             }, this);
         },
 

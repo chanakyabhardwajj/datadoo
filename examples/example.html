@@ -83,37 +83,33 @@
                 //var sprite = this.addSprite("http://upload.wikimedia.org/wikipedia/commons/1/1b/Sunny_Leone_2012.jpg", new DataDoo.Position(this.data.Population,this.data.Population,this.data.Population), 10);
 
                 var sphere = this.addSphere(10, 0xffcc00);
-                sphere.center.set(this.data.Population,this.data.Population,this.data.Population);
+                this.position.set(this.data.Population,this.data.Population,this.data.Population);
             };
 
             var nodeAppFn2 = function($) {
-                var sphere = this.addSphere(10, 0xfc12340);
-
-                sphere.center.set(this.data.two,
+                this.position.set(this.data.two,
                                   this.data.two,
-                                  this.data.three);
+                                  this.data.three)
 
+                var sphere = this.addSphere(10, 0xfc12340);
                 var sphere2 = this.addSphere(5, 0x11cc88);
-                sphere2.center = sphere.center.relative(-20, -20, -20);
+                sphere2.position.set(-20, -20, -20);
 
-
-                var line = this.addDashedLine(sphere.center.relative(),sphere2.center.relative());
+                var line = this.addDashedLine(sphere, sphere2);
 
                 var sphere3 = this.addSphere(2, 0x11cc88);
-                sphere3.center = sphere2.center.relative(-20, -20, 20);
+                sphere3.position.set(-20, -20, 20);
 
-                var line = this.addDashedLine(sphere.center,sphere2.center);
+                this.addDashedLine(sphere, sphere2);
+                this.addDashedLine(sphere3, sphere2);
 
-                var line = this.addDashedLine(sphere3.center, sphere2.center);
-                var line = this.addDashedLine(sphere3.center, sphere.center);
+                var label = this.addLabel(this.data.one);
 
-                var label1 = this.addLabel(this.data.one, sphere.center, {x : 00, y : 00});
-
-                var line = this.addLine(sphere.center, sphere.center.relative(20, 20, 20), 100, new THREE.Vector3(1,0,1), 0xfc12340, 2, 0.6);
+                /*this.addLine(sphere, sphere(20, 20, 20), 100, new THREE.Vector3(1,0,1), 0xfc12340, 2, 0.6);
 
                 var cone = this.addCone(20, 3, 10, sphere.center.relative(20, 20, 20), new THREE.Vector3(0,1,0), 0xffcc00, 0.3);
 
-                /*var arrow = this.addArrow({
+                var arrow = this.addArrow({
                     from : new DataDoo.Position(20, 20, 20),
                     to : new DataDoo.Position(-20, -20, -20), //if "to" is provided, the lineLength and lineDirection params are ignored
 
@@ -136,11 +132,11 @@
 
                 if (src && dst) {
                     var rel = new DataDoo.Relation();
-                    rel.addDashedLine(src.primitives[0].center, dst.primitives[0].center);
+                    rel.addDashedLine(src, dst);
                     arr.push(rel);
                 }
 
-                if ($.ng1.length>0 && $.ng2.length>0) {
+                /*if ($.ng1.length>0 && $.ng2.length>0) {
                     var ns = [];
                     ns.push($.ng1[$.ng1.length - 1].primitives[0].center);
                     ns.push($.ng2[$.ng2.length - 1].primitives[0].center);
@@ -149,7 +145,7 @@
                     var rel2 = new DataDoo.Relation();
                     arr.push(rel2);
                     rel2.addSpline(ns, 0xff0000, 8);
-                }
+                }*/
 
                 return arr;
             };

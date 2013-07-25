@@ -5,6 +5,9 @@ window.DataDoo = (function () {
      */
     function DataDoo(params) {
         params = params || {};
+        // initialize an array for maintaining all the labels
+        this.labelsArray = [];
+
         // initialize global eventbus and bucket
         this.eventBus = new DataDoo.EventBus();
 
@@ -20,27 +23,33 @@ window.DataDoo = (function () {
             axes : {
                 x : {
                     type : DataDoo.NUMBER,
-                    axisLabel : "X",
+                    axisLabel : "x-axis",
                     axisLineColor : 0xff0000,
                     axisLabelColor : 0xff0000,
-                    dir : new THREE.Vector3(1, 0, 0),
-                    length : 50
+                    axisDir : new THREE.Vector3(1, 0, 0),
+                    axisLength : 50,
+                    axisWithCone : false,
+                    axisThickness : 1
                 },
                 y : {
                     type : DataDoo.NUMBER,
                     axisLabel : "y-axis",
                     axisLineColor : 0x00ff00,
                     axisLabelColor : 0x00ff00,
-                    dir : new THREE.Vector3(0, 1, 0),
-                    length : 50
+                    axisDir : new THREE.Vector3(0, 1, 0),
+                    axisLength : 50,
+                    axisWithCone : false,
+                    axisThickness : 1
                 },
                 z : {
                     type : DataDoo.NUMBER,
                     axisLabel : "z-axis",
                     axisLineColor : 0x0000ff,
                     axisLabelColor : 0x0000ff,
-                    dir : new THREE.Vector3(0, 0, 1),
-                    length : 50
+                    axisDir : new THREE.Vector3(0, 0, 1),
+                    axisLength : 50,
+                    axisWithCone : false,
+                    axisThickness : 1
                 }
             },
 
@@ -142,7 +151,7 @@ window.DataDoo = (function () {
 
         //AXES
         this.axes = new DataDoo.AxesHelper(this.axesConf.x, this.axesConf.y, this.axesConf.z);
-        this.scene.add(this.axes);
+        //this.scene.add(this.axes);
 
         //CAMERA
         var camSettings = this.cameraConf;
@@ -158,6 +167,9 @@ window.DataDoo = (function () {
 
         //CAMERA CONTROLS
         this.cameraControls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+
+        //Projector
+        this.projector = new THREE.Projector();
 
     };
 
@@ -186,6 +198,7 @@ window.DataDoo = (function () {
             // render the frame
             self.renderer.render(self.scene, self.camera);
             self.cameraControls.update();
+            self.putLabelsToScreen();
         }
 
         DataDoo.utils.requestAnimationFrame(renderFrame);
@@ -198,28 +211,21 @@ window.DataDoo = (function () {
         // compute axis values
         this._computeAxisValues(events);
 
-        // Resolve primitive positions
+        // resolve positions of all objects
+        DataDoo.utils.traverseObject3D(this.scene, function(child) {
+            if(child instanceof DataDoo.DDObject3D) {
+                child.resolve(this.axesConf);
+            }
+        }, this);
 
-        // TODO: resolve only dirty nodes/relations
-        var primitives = _.chain(this.bucket).values().flatten().filter(function (item) {
-            return item instanceof DataDoo.Node || item instanceof DataDoo.Relation;
-        }).map(function (node) {
-                return node.primitives;
-            }).flatten();
-
-        var positions = primitives.map(function (primitive) {
-            return primitive.getPositions();
-        }).flatten();
-
-        this._resolvePositions(positions);
-
-        // call onResolve on all primitives so that
-        // they can set positions for three.js primitives
-        primitives.each(function (primitive) {
-            primitive.onResolve();
-        });
+        // Find all the label objects and stuff them into the array
+        this.labelsArray = [];
+        DataDoo.utils.traverseObject3D(this.scene, function(object){
+            if(object instanceof DataDoo.Label) {
+                this.labelsArray.push(object);
+            }
+        }, this);
     };
-
 
     DataDoo.prototype._computeAxisValues = function (events) {
         var changedDs = _.chain(DataDoo.EventBus.flattenEvents(events)).filter(function(event) {
@@ -258,140 +264,46 @@ window.DataDoo = (function () {
         DataDoo.EventBus.flatEventsIter(events, function (event) {
             switch (event.eventName) {
                 case "NODE.ADD":
-                    _.each(this._getObjects(event.data), function (object) {
+                    _.each(event.data, function (object) {
                         this.scene.add(object);
                     }, this);
                     break;
                 case "NODE.DELETE":
-                    _.each(this._getObjects(event.data), function (object) {
+                    _.each(event.data, function (object) {
                         this.scene.remove(object);
                     }, this);
                     break;
                 case "NODE.UPDATE":
-                    _.each(this._getObjects(event.data.updatedNodes), function (object) {
+                    _.each(event.data.added, function (object) {
                         this.scene.add(object);
                     }, this);
-                    _.each(this._getObjects(event.data.oldNodes), function (object) {
+                    _.each(event.data.removed, function (object) {
                         this.scene.remove(object);
                     }, this);
                     break;
 
                 case "RELATION.UPDATE":
-                    console.log("relation updates");
-                    console.dir(event);
-                    // Remove old relation primitives and add new ones here
-
-                    _.each(this._getObjects(event.data), function (object) {
+                    _.each(event.data.added, function (object) {
                         this.scene.add(object);
+                    }, this);
+
+                    _.each(event.data.removed, function (object) {
+                        this.scene.remove(object);
                     }, this);
                     break;
             }
         }, this);
     };
 
-    DataDoo.prototype._resolvePositions = function (positions) {
-        // create dependency linked list
-        var start = null;
-        var end = null;
-        positions.each(function (position) {
-            if (!start) {
-                start = position;
-            }
-            if (position._seen) {
-                return;
-            }
-
-            var pointer = position;
-            position._prev = end;
-            // compute the current snippet
-            do {
-                pointer._seen = true;
-                pointer._next = pointer.relatedPos;
-                if (pointer.relatedPos) {
-                    if (pointer.relatedPos._seen) {
-                        // insert current snippet into list if
-                        // we reach an already seen node
-                        position._prev = pointer.relatedPos._prev;
-                        if (pointer.relatedPos._prev) {
-                            pointer.relatedPos._prev._next = position;
-                        }
-                        else {
-                            start = position;
-                        }
-                        pointer.relatedPos._prev = pointer;
-                        break;
-                    }
-                    pointer.relatedPos._prev = pointer;
-                }
-                else {
-                    if (end) {
-                        end._next = pointer;
-                    }
-                    end = pointer;
-                }
-                pointer = pointer.relatedPos;
-            } while (pointer);
+    DataDoo.prototype.putLabelsToScreen = function(){
+        var self = this;
+        self.camera.updateMatrixWorld();
+        _.each(self.labelsArray, function(label){
+            var vector = self.projector.projectVector(label.position, self.camera);
+            vector.x = (vector.x + 1)/2 * self.renderer.domElement.width;
+            vector.y = -(vector.y - 1)/2 * self.renderer.domElement.height;
+            label.updateElemPos(vector.y, vector.x);
         });
-
-        // resolve position by traversing the dependency linked list
-        var pos = end;
-        while (pos) {
-            console.log("Resolving position type=" + pos.type + " (" + pos.x + "," + pos.y + "," + pos.z + ")");
-
-            switch (pos.type) {
-                case DataDoo.ABSOLUTE:
-                    pos.resolvedX = pos.x;
-                    pos.resolvedY = pos.y;
-                    pos.resolvedZ = pos.z;
-                    break;
-                case DataDoo.RELATIVE:
-                    pos.resolvedX = pos.relatedPos.resolvedX + pos.x;
-                    pos.resolvedY = pos.relatedPos.resolvedY + pos.y;
-                    pos.resolvedZ = pos.relatedPos.resolvedZ + pos.z;
-                    break;
-                case DataDoo.COSY:
-                    for (var axisName in this.axesConf) {
-                        if(!_.contains(["x", "y", "z"], axisName)) {
-                            continue;
-                        }
-                        var axis = this.axesConf[axisName];
-                        var resName = "resolved" + axisName.toUpperCase();
-                        if (axis.type == DataDoo.NUMBER) {
-                            pos[resName] = pos[axisName];
-                        }
-                        if (axis.type == DataDoo.COLUMNVALUE) {
-                            pos[resName] = axis.posMap[pos[axisName]];
-                        }
-                    }
-                    break;
-            }
-
-            // do spherical conversion
-            if(this.axesConf.type == DataDoo.SPHERICAL) {
-                var r = pos.resolvedX;
-                var theta = pos.resolvedY*Math.PI/180;
-                var phi = pos.resolvedZ*Math.PI/180;
-
-                pos.resolvedX = r * Math.sin(phi) * Math.cos(theta);
-                pos.resolvedY = r * Math.sin(phi) * Math.sin(theta);
-                pos.resolvedZ = r * Math.cos(phi);
-            }
-
-            var oldPos = pos;
-            pos = pos._prev;
-            // clear out all the linked list data
-            oldPos._next = undefined;
-            oldPos._prev = undefined;
-            oldPos._seen = undefined;
-        }
-    };
-
-    DataDoo.prototype._getObjects = function (nodes) {
-        return _.chain(nodes).map(function (node) {
-            return node.primitives;
-        }).flatten().map(function (primitive) {
-                return primitive.objects;
-            }).flatten().value();
     };
 
     return DataDoo;
@@ -505,9 +417,9 @@ window.DataDoo = (function () {
     });
 })(window.DataDoo);
 
-(function(DataDoo) {
+(function (DataDoo) {
     DataDoo.utils = {
-        rDefault: function(target, source) {
+        rDefault : function (target, source) {
             if (source !== null && typeof source === 'object') {
                 for (var prop in source) {
                     if (prop in target) {
@@ -520,17 +432,24 @@ window.DataDoo = (function () {
             }
         },
 
+        traverseObject3D: function(object, iter, context) {
+            _.each(object.children, function(child) {
+                iter.call(context, child);
+                this.traverseObject3D(child, iter, context);
+            }, this);
+        },
+
         // Request animationframe helper
         _raf : (
             window.requestAnimationFrame ||
-            window.webkitRequestAnimationFrame ||
-            window.mozRequestAnimationFrame ||
-            function (callback) {
-                return window.setTimeout(callback, 1000 / 60);
-            }
-        ),
+                window.webkitRequestAnimationFrame ||
+                window.mozRequestAnimationFrame ||
+                function (callback) {
+                    return window.setTimeout(callback, 1000 / 60);
+                }
+            ),
 
-        requestAnimationFrame: function(callback) {
+        requestAnimationFrame : function (callback) {
             return this._raf.call(window, callback);
         },
 
@@ -615,6 +534,68 @@ window.DataDoo = (function () {
         }
 
     };
+})(window.DataDoo);
+
+(function(DataDoo) {
+    /**
+     * Parent Object for DataDoo scene items
+     */
+    function DDObject3D() {
+        THREE.Object3D.apply(this);
+    }
+    DDObject3D.prototype = Object.create(THREE.Object3D.prototype);
+    DataDoo.DDObject3D = DDObject3D;
+
+    /**
+     * Resolves the position of this object
+     */
+    DDObject3D.prototype.resolve = function(axesConf) {
+        // resolve position if its instance of RVector3
+        if(this.position instanceof DataDoo.RVector3) {
+            _.each(["x", "y", "z"], function(axis) {
+                var axisConf = axesConf[axis];
+                if(axis.type == DataDoo.NUMBER) {
+                    this.position["r"+axis] = this.position[axis];
+                }
+                if(axis.type == DataDoo.COLUMNVALUE) {
+                    this.position["r"+axis] = this.position[axisConf.posMap[axis]];
+                }
+            });
+        }
+
+        // fire callbacks if any
+        if(this._onResolveCallbacks) {
+            _.each(this._onResolveCallbacks, function(cb) {
+                cb.call(this);
+            }, this);
+        }
+    };
+
+    /**
+     * Binds a callback that will be called when this object's
+     * position is resolved.
+     */
+    DDObject3D.prototype.bindOnResolve = function(callback) {
+        if(!this._onResolveCallbacks) {
+            this._onResolveCallbacks = [];
+        }
+        this._onResolveCallbacks.push(callback);
+    };
+
+    /**
+     * Helper function that returns either a vector
+     * or an anchor to another DDObject3D, depending
+     * on the parameter type
+     */
+    DDObject3D.prototype.vectorOrAnchor = function(vec) {
+        if(vec instanceof DDObject3D) {
+            return new DataDoo.AnchoredVector3(this, vec);
+        } else {
+            return vec;
+        }
+    };
+
+
 })(window.DataDoo);
 
 //This module serves the purpose of creating and connecting data-streams to datadoo.
@@ -822,51 +803,77 @@ window.DataDoo = (function () {
 
 (function(DataDoo) {
     /**
-     * Position Base Class
+     * DataDoo Resolvable vector
      */
-    function Position(x, y, z, type, relatedPos) {
-        this.resolvedX = 0;
-        this.resolvedY = 0;
-        this.resolvedZ = 0;
-        this.x = x || 0;
-        this.y = y || 0;
-        this.z = z || 0;
-        this.type = type || DataDoo.ABSOLUTE;
-        this.relatedPos = (type == DataDoo.RELATIVE?relatedPos:null);
+    function RVector3(rx, ry, rz) {
+        THREE.Vector3.call(this);
+        this.rx = rx || 0;
+        this.ry = ry || 0;
+        this.rz = rz || 0;
     }
-    Position.prototype.setType = function(type) {
-        this.type = type;
-    };
-    Position.prototype.set = function(x, y, z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+    RVector3.prototype = Object.create(THREE.Vector3.prototype);
+    DataDoo.RVector3 = RVector3;
 
-        // if any one of the coordinate values are non numeric
-        // then set the type to COSY
-        if(!_.isNumber(this.x)  || !_.isNumber(this.y) || !_.isNumber(this.z)) {
-            this.type = DataDoo.COSY;
+    /**
+     * Anchored vector.
+     * These are vectors that can be anchored to
+     * another DDObject3D. The position will
+     * always resolve to the correct position irrespective
+     * of the object hierarchy
+     * parent - The parent DDObject3D. The final position will be
+     *          relative to this object.
+     * srcParent - The DDObject3D to which the position should be
+     *             anchored. The source vector is relative to this
+     *             object.
+     * srcVector - The vector to be translated, this vector is 
+     *             relative to srcParent. Defaults to srcParent's
+     *             position.
+     */
+    function AnchoredVector3(parent, srcParent, srcVector) {
+        THREE.Vector3.call(this);
+        this.srcVector = srcVector || srcParent.position;
+        this.parent = parent;
+        this.srcParent = srcParent;
+
+        var parentResolved = false;
+        var srcParentResolved = false;
+        var self = this;
+        srcParent.bindOnResolve(function() {
+            srcParentResolved = true;
+            if(srcParentResolved && parentResolved) {
+                self._resolve();
+                srcParentResolved = false;
+                parentResolved = false;
+            }
+        });
+        parent.bindOnResolve(function() {
+            parentResolved = true;
+            if(srcParentResolved && parentResolved) {
+                self._resolve();
+                srcParentResolved = false;
+                parentResolved = false;
+            }
+        });
+    }
+    DataDoo.AnchoredVector3 = AnchoredVector3;
+    AnchoredVector3.prototype = Object.create(THREE.Vector3.prototype);
+    AnchoredVector3.prototype._resolve = function() {
+        var obj;
+
+        this.copy(this.srcVector);
+
+        obj = this.srcParent;
+        while(obj) {
+            this.add(obj.position);
+            obj = obj.parent;
+        }
+
+        obj = this.parent;
+        while(obj) {
+            this.sub(obj.position);
+            obj = obj.parent;
         }
     };
-    Position.prototype.setX = function(x) {
-        this.x = x;
-    };
-    Position.prototype.setY = function(y) {
-        this.x = y;
-    };
-    Position.prototype.setZ = function(z) {
-        this.x = z;
-    };
-    Position.prototype.relative = function(x, y, z) {
-        return new Position(x, y, z, DataDoo.RELATIVE, this);
-    };
-    Position.prototype.applyToVector = function(vec) {
-        vec.set(this.resolvedX, this.resolvedY, this.resolvedZ);
-    };
-    Position.prototype.toVector = function() {
-        return new THREE.Vector3(this.resolvedX, this.resolvedY, this.resolvedZ);
-    };
-    DataDoo.Position = Position;
 })(window.DataDoo);
 
 (function(DataDoo) {
@@ -874,30 +881,47 @@ window.DataDoo = (function () {
      *  Primitive base class
      */
     function Primitive() {
-        this.objects = [];
+        DataDoo.DDObject3D.call(this);
     }
-    Primitive.prototype.getPositions = function() {
-        return [];
-    };
-    Primitive.prototype.onResolve = function() {
-        throw new Error("Primitive : onResolve not implemented");
-    };
+    Primitive.prototype = Object.create(DataDoo.DDObject3D.prototype);
     DataDoo.Primitive = Primitive;
+
+    //This is a helper function to align any object in a direction
+    Primitive.prototype.setDirection = function (obj) {
+        var axis = new THREE.Vector3();
+        var radians;
+
+        return function (dir, obj) {
+            // dir is assumed to be normalized
+            if (dir.y > 0.99999) {
+                obj.quaternion.set(0, 0, 0, 1);
+            }
+            else if (dir.y < -0.99999) {
+                obj.quaternion.set(1, 0, 0, 0);
+            }
+            else {
+                axis.set(dir.z, 0, -dir.x).normalize();
+                radians = Math.acos(dir.y);
+                obj.quaternion.setFromAxisAngle(axis, radians);
+            }
+        };
+    }();
 
     /**
      *  Sphere primitive
      */
-    function Sphere(radius, color, center) {
+    function Sphere(radius, color) {
+        Primitive.call(this);
         this.radius = radius || 10;
         this.color = color || 0x8888ff;
-        this.center = center || new DataDoo.Position(0,0,0);
 
         this.material = new THREE.MeshLambertMaterial({color: this.color});
         this.geometry = new THREE.SphereGeometry(this.radius,20,20);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
-        this.objects = [this.mesh];
+        this.add(this.mesh);
     }
     Sphere.prototype = Object.create(Primitive.prototype);
+    DataDoo.Sphere = Sphere;
     /**
      * Sets the radius of the sphere
      */
@@ -906,24 +930,163 @@ window.DataDoo = (function () {
         this.geometry = new THREE.SphereGeometry(this.radius);
         this.mesh.setGeometry(this.geometry);
     };
-    Sphere.prototype.getPositions = function() {
-        return [this.center];
-    };
-    Sphere.prototype.onResolve = function() {
-        this.center.applyToVector(this.mesh.position);
-    };
-    DataDoo.Sphere = Sphere;
+
+    /**
+     *  Line primitive
+     */
+    function Line(startPos, endPos, lineLength, dir, color, thickness, opacity) {
+        Primitive.call(this);
+
+        this.thickness = thickness || 1;
+        this.opacity = opacity || 1;
+        this.color = color || 0xcccccc;
+        this.startPos = startPos || new THREE.Vector3(0,0,0);
+        this.direction = dir || new THREE.Vector3(1,0,0);
+        this.lineLength = lineLength || 50;
+        this.direction.normalize();
+
+        if(endPos){
+            this.endPos = endPos;
+        }
+        else{
+            var endPosX = this.startPos.x + (this.lineLength*this.direction.x);
+            var endPosY = this.startPos.y + (this.lineLength*this.direction.y);
+            var endPosZ = this.startPos.z + (this.lineLength*this.direction.z);
+
+            this.endPos = new DataDoo.Position(endPosX, endPosY, endPosZ);
+        }
+
+        this.lineGeometry = new THREE.Geometry();
+        this.lineGeometry.vertices.push(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0));
+        this.lineMaterial = new THREE.LineBasicMaterial( { color: this.color, linewidth: this.thickness, opacity: this.opacity } );
+        this.line = new THREE.Line( this.lineGeometry, this.lineMaterial );
+
+        this.add(line);
+    }
+    Line.prototype = Object.create(Primitive.prototype);
+    DataDoo.Line = Line;
+
+    /**
+     *  Cone primitive
+     */
+    function Cone(height, topRadius, baseRadius, position, dir, color, opacity) {
+        Primitive.call(this);
+
+        this.position = position || new DataDoo.Position(0,0,0);
+        this.height = height || 5;
+        this.topRadius = topRadius || 0;
+        this.baseRadius = baseRadius || 5;
+        this.opacity = opacity || 1;
+        this.color = color || 0xcccccc;
+        this.direction = dir || new THREE.Vector3(0,1,0);
+
+
+        var coneGeometry = new THREE.CylinderGeometry(this.topRadius, this.baseRadius, this.height, 10, 10);
+        var coneMat = new THREE.MeshLambertMaterial({ color : this.color, opacity : this.opacity  });
+        this.cone = new THREE.Mesh(coneGeometry, coneMat);
+        this.setDirection(this.direction, this.cone);
+
+        this.add(cone);
+    }
+    Cone.prototype = Object.create(Primitive.prototype);
+    DataDoo.Cone = Cone;
+
+    /**
+     *  Arrow primitive
+     */
+    function Arrow(configObj) {
+        Primitive.call(this);
+        configObj = configObj || {};
+
+        /*configObj = {
+            from : new DataDoo.Position(),
+            to : new DataDoo.Position(), //if "to" is provided, the lineLength and lineDirection params are ignored
+
+            lineLength : 100,
+            lineDirection : new THREE.Vector3(1,0,0), //assumed normalized
+            lineDivisions : 10,
+            lineColor : 0x000000,
+            lineThickness : 1,
+            lineOpacity : 1,
+
+            fromCone : true,
+            fromConeHeight : 10,
+            fromConeTopRadius : 5,
+            fromConeBaseRadius : 5,
+            fromConeColor : 0x000000,
+            fromConeOpacity : 1,
+
+            toCone : true,
+            toConeHeight : 10,
+            toConeBaseRadius : 5,
+            toConeColor : 0x000000,
+            toConeOpacity : 1
+        }*/
+
+        this.type = configObj.type;
+
+        this.fromPosition = configObj.from || new DataDoo.Position(0,0,0);
+
+
+        this.arrowLineDirection = configObj.lineDirection || new THREE.Vector3(1, 0, 0);
+        this.arrowLineLength = configObj.lineLength || 50;
+        this.arrowLineOpacity = configObj.lineOpacity || 1;
+        this.arrowLineThickness = configObj.lineThickness || 1;
+        this.arrowLineDivisions = configObj.lineDivisions || 0;
+        this.arrowLineColor = configObj.lineColor || 0x000000;
+
+        this.fromCone = configObj.fromCone;
+        this.fromConeHeight = configObj.fromConeHeight;
+        this.fromConeTopRadius = configObj.fromConeTopRadius;
+        this.fromConeBaseRadius = configObj.fromConeBaseRadius;
+        this.fromConeColor = configObj.fromConeColor;
+        this.fromConeOpacity = configObj.fromConeOpacity;
+
+        this.toCone = configObj.toCone;
+        this.toConeHeight = configObj.toConeHeight;
+        this.toConeTopRadius = configObj.toConeBaseRadius;
+        this.toConeBaseRadius = configObj.toConeBaseRadius;
+        this.toConeColor = configObj.toConeColor;
+        this.toConeOpacity = configObj.toConeOpacity;
+
+        if(configObj.to){
+            this.toPosition = configObj.to;
+        }
+        else{
+            var toPosX = this.fromPosition.x + (this.arrowLineLength*this.arrowLineDirection.x);
+            var toPosY = this.fromPosition.y + (this.arrowLineLength*this.arrowLineDirection.y);
+            var toPosZ = this.fromPosition.z + (this.arrowLineLength*this.arrowLineDirection.z);
+
+            this.toPosition = new DataDoo.Position(toPosX, toPosY, toPosZ);
+        }
+
+        this.line = new DataDoo.Line(this.fromPosition, this.toPosition, this.arrowLineLength, this.arrowLineDirection, this.arrowLineColor, this.arrowLineThickness, this.arrowLineOpacity);
+        this.add(this.line);
+
+        if(this.fromCone){
+            this.fromCone = new DataDoo.Cone(this.fromConeHeight, this.fromConeTopRadius, this.fromConeBaseRadius, this.fromPosition, this.arrowLineDirection.clone().negate(), this.fromConeColor, this.fromConeOpacity);
+            this.add(this.fromCone);
+        }
+
+        if(this.toCone){
+            this.toCone = new DataDoo.Cone(this.toConeHeight, this.toConeTopRadius, this.toConeBaseRadius, this.toPosition, this.arrowLineDirection, this.toConeColor, this.toConeOpacity);
+            this.add(this.toCone);
+        }
+    }
+    Arrow.prototype = Object.create(Primitive.prototype);
+    DataDoo.Arrow = Arrow;
 
     /**
      *  DashedLine primitive
      */
     function DashedLine(startPos, endPos, color, dashSize, gapSize, radius) {
+        Primitive.call(this);
         this.dashSize = dashSize || 4;
         this.gapSize = gapSize || 2;
         this.color = color || 0x8888ff;
         this.radius = radius || 3;
-        this.startPos = startPos;
-        this.endPos = endPos;
+        this.startPos = this.vectorOrAnchor(startPos);
+        this.endPos = this.vectorOrAnchor(endPos);
 
         this.sphereMaterial = new THREE.MeshLambertMaterial({color: this.color});
         this.sphereGeometry = new THREE.SphereGeometry(this.radius);
@@ -932,36 +1095,24 @@ window.DataDoo = (function () {
 
 
         this.lineGeometry = new THREE.Geometry();
-        this.lineGeometry.vertices.push(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0));
+        this.lineGeometry.vertices.push(startPos, endPos);
         this.lineMaterial = new THREE.LineDashedMaterial( { color: this.color, dashSize: this.dashSize, gapSize: this.gapSize } );
         this.line = new THREE.Line( this.lineGeometry, this.lineMaterial );
-
-        this.objects = [this.sphere1, this.sphere2, this.line];
+        this.add(this.line);
     }
     DashedLine.prototype = Object.create(Primitive.prototype);
-    DashedLine.prototype.getPositions = function() {
-        return [this.startPos, this.endPos];
-    };
-    DashedLine.prototype.onResolve = function() {
-        this.startPos.applyToVector(this.lineGeometry.vertices[0]);
-        this.endPos.applyToVector(this.lineGeometry.vertices[1]);
-        this.lineGeometry.computeLineDistances();
-
-        this.startPos.applyToVector(this.sphere1.position);
-        this.endPos.applyToVector(this.sphere2.position);
-    };
     DataDoo.DashedLine = DashedLine;
 
     /**
      *  Spline primitive
      */
     function Spline(points, color, subdivisions){
+        Primitive.call(this);
         this.points = points;
         this.color = color || 0xfc12340;
         this.subdivisions = subdivisions || 6;
         this.spline = new THREE.Spline( points );
         this.geometrySpline = new THREE.Geometry();
-        this.position = new DataDoo.Position(0,0,0);
 
         for ( var i = 0; i < this.points.length * this.subdivisions; i ++ ) {
             var index = i / ( this.points.length * this.subdivisions );
@@ -971,39 +1122,99 @@ window.DataDoo = (function () {
         this.geometrySpline.computeLineDistances();
 
         this.mesh = new THREE.Line( this.geometrySpline, new THREE.LineDashedMaterial( { color: this.color, dashSize: 4, gapSize: 2, linewidth : 3 } ), THREE.LineStrip );
-        this.objects = [this.mesh];
+        this.add(this.mesh);
     }
     Spline.prototype = Object.create(Primitive.prototype);
-    Spline.prototype.getPositions = function() {
-        return [this.position];
-    };
-    Spline.prototype.onResolve = function() {
-        this.position.applyToVector(this.mesh.position);
-    };
     DataDoo.Spline = Spline;
 
     /**
      *  Sprite primitive
      */
-    function Sprite(url, datadooPosition, scale){
+    function Sprite(url, scale){
+        Primitive.call(this);
         this.map = THREE.ImageUtils.loadTexture(url);
         this.scale = scale;
         this.material = new THREE.SpriteMaterial( { map: this.map, useScreenCoordinates: false, color: 0xffffff, fog: true } );
-        this.position = datadooPosition || new DataDoo.Position(0,0,0);
         this.sprite = new THREE.Sprite( this.material );
         this.sprite.scale.x = this.sprite.scale.y = this.sprite.scale.z = this.scale;
-        this.objects = [this.sprite];
+        this.add(this.sprite);
     }
-
     Sprite.prototype = Object.create(Primitive.prototype);
-    Sprite.prototype.getPositions = function() {
-        return [this.position];
-    };
-    Sprite.prototype.onResolve = function() {
-        this.position.applyToVector(this.sprite.position);
-        //this.sprite.position.multiplyScalar(this.radius);
-    };
     DataDoo.Sprite = Sprite;
+
+
+    /**
+     *  Label primitive
+     */
+    function Label(message){
+        Primitive.call(this);
+
+        //Trick borrowed from MathBox!
+        var element = document.createElement('div');
+        var inner = document.createElement('div');
+        element.appendChild(inner);
+
+        // Position at anchor point
+        element.className = 'datadoo-label';
+        inner.className = 'datadoo-wrap';
+        inner.style.position = 'relative';
+        inner.style.display = 'inline-block';
+        inner.style.left = '-50%';
+        inner.style.top = '-.5em';
+
+        this.message = message;
+        this.element = element;
+        this.width = 0;
+        this.height = 0;
+        this.visible = true;
+        this.content = this.message;
+
+        element.style.position = 'absolute';
+        element.style.left = 0;
+        element.style.top = 0;
+        //element.style.opacity = 0;
+        inner.appendChild(document.createTextNode(this.message));
+
+        this.position.set(10,10,10);
+
+        document.body.appendChild(element);
+    }
+    Label.prototype = Object.create(Primitive.prototype);
+    DataDoo.Label = Label;
+    Label.prototype.updateElemPos = function(top, left) {
+        this.element.style.top = top + "px";
+        this.element.style.left = left + "px";
+    };
+
+    /**
+     * Primitive constructor helper mixin
+     */
+    var PrimitiveHelpers = {
+        addSphere : function(radius, color) {
+            var sphere = new Sphere(radius, color);
+            this.add(sphere);
+            return sphere;
+        },
+
+        addDashedLine : function(startPos, endPos, dashSize, gapSize, endRadius) {
+            var line = new DashedLine(startPos, endPos, dashSize, gapSize, endRadius);
+            this.add(line);
+            return line;
+        },
+
+        addSprite : function(url, position, scale) {
+            var sprite = new Sprite(url, position, scale);
+            this.add(sprite);
+            return sprite;
+        },
+
+        addLabel: function(message) {
+            var label = new Label(message);
+            this.add(label);
+            return label;
+        }
+    };
+    DataDoo.PrimitiveHelpers = PrimitiveHelpers;
 
 })(window.DataDoo);
 
@@ -1014,28 +1225,12 @@ window.DataDoo = (function () {
      * It contains a set of graphics primitives that represent itself.
      */
     function Relation(data) {
-        this.primitives = [];
+        DataDoo.DDObject3D.call(this);
         this.data = data || {};
+        this.position = new DataDoo.RVector3();
     }
-
-    Relation.prototype.addSpline= function(points, color, subdivisions) {
-        var spline = new DataDoo.Spline(points, color, subdivisions);
-        this.primitives.push(spline);
-        return spline;
-    };
-
-    Relation.prototype.addDashedLine = function(startPos, endPos, color, dashSize, gapSize, radius) {
-        var line = new DataDoo.DashedLine(startPos, endPos, color, dashSize, gapSize, radius);
-        this.primitives.push(line);
-        return line;
-    };
-
-    Relation.prototype.addSprite = function(url, position, scale) {
-        var sprite = new DataDoo.Sprite(url, position, scale);
-        this.primitives.push(sprite);
-        return sprite;
-    };
-
+    Relation.prototype = Object.create(DataDoo.DDObject3D.prototype);
+    _.extend(Relation.prototype, DataDoo.PrimitiveHelpers);
     DataDoo.Relation = Relation;
 })(window.DataDoo);
 
@@ -1069,8 +1264,9 @@ window.DataDoo = (function () {
     RelationGenerator.prototype.priority = 3;
     RelationGenerator.prototype.handler = function(/*array*/ events) {
         console.log("RelationGenerator" + this.id +": Received An Event");
+        var oldRelations = this.relations;
         this.generateRelations();
-        this.dd.eventBus.enqueue(this, "RELATION.UPDATE", this.relations);
+        this.dd.eventBus.enqueue(this, "RELATION.UPDATE", {removed: oldRelations, added: this.relations});
     };
 
     RelationGenerator.prototype.generateRelations = function() {
@@ -1101,6 +1297,7 @@ window.DataDoo = (function () {
 
         dd.eventBus.subscribe(this, dataSet);
     }
+    DataDoo.NodeGenerator = NodeGenerator;
     NodeGenerator.prototype.collapseEvents = false;
     NodeGenerator.prototype.priority = 2;
     NodeGenerator.prototype.handler = function(event) {
@@ -1142,7 +1339,7 @@ window.DataDoo = (function () {
                         }
                     }
                 }, this);
-                this.dd.eventBus.enqueue(this, "NODE.UPDATE", {updated: updatedNodes, oldNodes: oldNodes});
+                this.dd.eventBus.enqueue(this, "NODE.UPDATE", {added: updatedNodes, removed: oldNodes});
                 break;
             default:
                 throw new Error("NodeGenerator "+ this.id + ": Unknown event "+event.eventName+" fired");
@@ -1161,28 +1358,14 @@ window.DataDoo = (function () {
      * its visual
      */
     function Node(data) {
-        this.primitives = [];
-        this.data = data;
+        DataDoo.DDObject3D.call(this);
+        this.data = data || {};
+        this.position = new DataDoo.RVector3();
     }
-    Node.prototype.addSphere = function(radius, color) {
-        var sphere = new DataDoo.Sphere(radius, color);
-        this.primitives.push(sphere);
-        return sphere;
-    };
-    Node.prototype.addDashedLine = function(startPos, endPos, color, dashSize, gapSize, radius) {
-        var line = new DataDoo.DashedLine(startPos, endPos, color, dashSize, gapSize, radius);
-        this.primitives.push(line);
-        return line;
-    };
-
-    Node.prototype.addSprite = function(url, position, scale) {
-        var sprite = new DataDoo.Sprite(url, position, scale);
-        this.primitives.push(sprite);
-        return sprite;
-    };
+    Node.prototype = Object.create(DataDoo.DDObject3D.prototype);
+    _.extend(Node.prototype, DataDoo.PrimitiveHelpers);
     DataDoo.Node = Node;
 
-    DataDoo.NodeGenerator = NodeGenerator;
 })(window.DataDoo);
 
 (function (DataDoo) {
@@ -1192,101 +1375,122 @@ window.DataDoo = (function () {
      Did not want to make changes in threejs files because then they would be bound to the DataDoo repo.
      */
 
-    function ArrowHelper( dir, origin, length, axisLineColor, axisLabel, axisLabelColor ) {
+    function AxisHelper(configObj) {
+        /*dir, origin, length, axisLineColor, axisLabel, axisLabelColor*/
+        console.dir(configObj);
+        THREE.Object3D.call(this);
+        this.type = configObj.type;
+        this.axisWithCone = configObj.axisWithCone || false;
+        this.axisDir = configObj.axisDir || new THREE.Vector3(1, 0, 0);
+        this.origin = configObj.origin || new THREE.Vector3(0, 0, 0);
+        this.axisLength = configObj.axisLength || 50;
+        this.axisThickness = configObj.axisThickness || 1;
+        this.axisDivisions = configObj.axisDivisions || 10;
+        this.axisLabelStartingFrom  = configObj.axisLabelStartingFrom || 0;
 
-        // dir is assumed to be normalized
+        this.axisLineColor = configObj.axisLineColor || 0xffff00;
+        this.axisLabel = configObj.axisLabel || "empty label";
+        this.axisLabelColor = configObj.axisLabelColor || 0xffff00;
 
-        THREE.Object3D.call( this );
+        this.axisDir.normalize();
 
-        if ( dir === undefined ) dir = new THREE.Vector3(1,0,0);
-        if ( origin === undefined ) origin = new THREE.Vector3(0,0,0);
-        if ( length === undefined ) length = 1;
-        if ( axisLineColor === undefined ) axisLineColor = 0xffff00;
-        if ( axisLabel === undefined ) axisLabel = "empty label";
-        if ( axisLabelColor === undefined ) axisLabelColor = 0xffff00;
-
-        dir.normalize();
-
-        this.position = origin;
+        this.position = this.origin;
 
         var lineGeometry = new THREE.Geometry();
-        lineGeometry.vertices.push( new THREE.Vector3( 0, 0, 0 ) );
-        lineGeometry.vertices.push( new THREE.Vector3( 0, 1, 0 ) );
+        lineGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
+        lineGeometry.vertices.push(new THREE.Vector3(0, this.axisLength, 0));
 
-        this.line = new THREE.Line( lineGeometry, new THREE.LineBasicMaterial( { color: axisLineColor, opacity : 0.5, linewidth : 2  } ) );
+        this.line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({ color : this.axisLineColor, opacity : 0.5, linewidth : this.axisThickness  }));
         this.line.matrixAutoUpdate = false;
-        this.add( this.line );
+        this.add(this.line);
 
-        var coneGeometry = new THREE.CylinderGeometry( 0, 0.05, 0.15, 10, 10 );
-        coneGeometry.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 0.875, 0 ) );
+        var coneGeometry = new THREE.CylinderGeometry(0, 5, 10, 10, 10);
+        //coneGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0.875, 0));
 
-        this.cone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: axisLineColor, opacity : 0.5, linewidth : 2  } ) );
-        this.cone.matrixAutoUpdate = false;
-        this.add( this.cone );
+        this.cone = new THREE.Mesh(coneGeometry, new THREE.MeshBasicMaterial({ color : this.axisLineColor, opacity : 0.5  }));
+        this.cone.position.set(0, this.axisLength , 0);
+        //this.cone.matrixAutoUpdate = false;
+        this.add(this.cone);
+        this.cone.visible = this.axisWithCone;
 
-        this.labelSprite = DataDoo.utils.makeTextSprite(axisLabel || "X Axis", {textColor:axisLabelColor});
+        this.labelSprite = DataDoo.utils.makeTextSprite(this.axisLabel || "X Axis", {textColor : this.axisLabelColor});
         this.add(this.labelSprite);
-        //this.labelSprite.setDirection(dir);
-        this.labelSprite.position.set(-0.1,1,0);
+        this.labelSprite.position.set(-0.1, this.axisLength, 0);
 
-        this.setDirection( dir );
 
-        this.setLength( length );
+
+        if(this.type === DataDoo.NUMBER){
+            var num = parseInt(this.axisLength/this.axisDivisions, 10);
+            var ptGeom = new THREE.SphereGeometry(0.01 * 100);
+            var ptMat = new THREE.MeshBasicMaterial({color:0x000000});
+            var labelNum = this.axisLabelStartingFrom;
+            var params = {
+                fontSize : 0.1 * 100,
+                textColor : 0x000000
+            };
+
+            for(var x = 0; x < num; x++){
+                var pt = new THREE.Mesh(ptGeom, ptMat);
+                var label = DataDoo.utils.makeTextSprite(labelNum + x, params);
+                pt.add(label);
+                this.line.add(pt);
+                pt.position.set(0, (x/num)*(this.axisLength), 0);
+            }
+        }
+
+        this.setDirection(this.axisDir);
     }
 
-    ArrowHelper.prototype = Object.create( THREE.Object3D.prototype );
+    AxisHelper.prototype = Object.create(THREE.Object3D.prototype);
 
-    ArrowHelper.prototype.setDirection = function () {
+    AxisHelper.prototype.setDirection = function () {
         var axis = new THREE.Vector3();
         var radians;
 
-        return function ( dir ) {
+        return function (dir) {
             // dir is assumed to be normalized
-            if ( dir.y > 0.99999 ) {
-                this.quaternion.set( 0, 0, 0, 1 );
+            if (dir.y > 0.99999) {
+                this.quaternion.set(0, 0, 0, 1);
             }
-            else if ( dir.y < - 0.99999 ) {
-                this.quaternion.set( 1, 0, 0, 0 );
+            else if (dir.y < -0.99999) {
+                this.quaternion.set(1, 0, 0, 0);
             }
             else {
-                axis.set( dir.z, 0, - dir.x ).normalize();
-                radians = Math.acos( dir.y );
-                this.quaternion.setFromAxisAngle( axis, radians );
+                axis.set(dir.z, 0, -dir.x).normalize();
+                radians = Math.acos(dir.y);
+                this.quaternion.setFromAxisAngle(axis, radians);
             }
         };
     }();
 
-    ArrowHelper.prototype.setLength = function ( length ) {
-        this.scale.set( length, length, length );
+    AxisHelper.prototype.setLength = function (length) {
+        this.scale.set(length, length, length);
     };
 
-    ArrowHelper.prototype.setColor = function ( hex ) {
-        this.line.material.color.setHex( hex );
-        this.cone.material.color.setHex( hex );
+    AxisHelper.prototype.setColor = function (hex) {
+        this.line.material.color.setHex(hex);
+        this.cone.material.color.setHex(hex);
     };
-
-
 
     function AxesHelper(xObj, yObj, zObj) {
-        THREE.Object3D.call( this );
+        THREE.Object3D.call(this);
 
         this.xObj = xObj || {};
         this.yObj = yObj || {};
         this.zObj = zObj || {};
 
-        this.xAxis = new DataDoo.ArrowHelper(this.xObj.dir || new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), this.xObj.length || 50, this.xObj.axisLineColor || 0xfc12340, this.xObj.axisLabel || "x axis", this.xObj.axisLabelColor || 0xfc12340 );
+        this.xAxis = new DataDoo.AxisHelper(this.xObj);
         this.add(this.xAxis);
 
-        this.yAxis = new DataDoo.ArrowHelper(this.yObj.dir || new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), this.yObj.length || 50, this.yObj.axisLineColor || 0xfc12340, this.yObj.axisLabel || "y axis", this.yObj.axisLabelColor || 0xfc12340 );
+        this.yAxis = new DataDoo.AxisHelper(this.yObj);
         this.add(this.yAxis);
 
-        this.zAxis = new DataDoo.ArrowHelper(this.zObj.dir || new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), this.zObj.length || 50, this.zObj.axisLineColor || 0xfc12340, this.zObj.axisLabel || "z axis", this.zObj.axisLabelColor || 0xfc12340 );
+        this.zAxis = new DataDoo.AxisHelper(this.zObj);
         this.add(this.zAxis);
     }
 
-    AxesHelper.prototype = Object.create( THREE.Object3D.prototype );
+    AxesHelper.prototype = Object.create(THREE.Object3D.prototype);
 
-
-    DataDoo.ArrowHelper = ArrowHelper;
+    DataDoo.AxisHelper = AxisHelper;
     DataDoo.AxesHelper = AxesHelper;
 })(window.DataDoo);

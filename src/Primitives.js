@@ -5,7 +5,7 @@
     function Primitive() {
         DataDoo.DDObject3D.call(this);
     }
-    Primitive.prototype = Object.create(DataDoo.DDObject3D);
+    Primitive.prototype = Object.create(DataDoo.DDObject3D.prototype);
     DataDoo.Primitive = Primitive;
 
     //This is a helper function to align any object in a direction
@@ -40,7 +40,7 @@
         this.material = new THREE.MeshLambertMaterial({color: this.color});
         this.geometry = new THREE.SphereGeometry(this.radius,20,20);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
-        this.add(this.mesh)
+        this.add(this.mesh);
     }
     Sphere.prototype = Object.create(Primitive.prototype);
     DataDoo.Sphere = Sphere;
@@ -92,7 +92,7 @@
      *  Cone primitive
      */
     function Cone(height, topRadius, baseRadius, position, dir, color, opacity) {
-        Primitive.call(this)
+        Primitive.call(this);
 
         this.position = position || new DataDoo.Position(0,0,0);
         this.height = height || 5;
@@ -217,10 +217,10 @@
 
 
         this.lineGeometry = new THREE.Geometry();
-        this.lineGeometry.vertices.push(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0));
+        this.lineGeometry.vertices.push(startPos, endPos);
         this.lineMaterial = new THREE.LineDashedMaterial( { color: this.color, dashSize: this.dashSize, gapSize: this.gapSize } );
         this.line = new THREE.Line( this.lineGeometry, this.lineMaterial );
-        this.add(line);
+        this.add(this.line);
     }
     DashedLine.prototype = Object.create(Primitive.prototype);
     DataDoo.DashedLine = DashedLine;
@@ -268,7 +268,7 @@
     /**
      *  Label primitive
      */
-    function Label(message, offset){
+    function Label(message){
         Primitive.call(this);
 
         //Trick borrowed from MathBox!
@@ -286,8 +286,6 @@
 
         this.message = message;
         this.element = element;
-        this.distanceX = offset.x || 10;
-        this.distanceY = offset.y || 10;
         this.width = 0;
         this.height = 0;
         this.visible = true;
@@ -299,13 +297,15 @@
         //element.style.opacity = 0;
         inner.appendChild(document.createTextNode(this.message));
 
+        this.position.set(10,10,10);
+
         document.body.appendChild(element);
     }
     Label.prototype = Object.create(Primitive.prototype);
     DataDoo.Label = Label;
     Label.prototype.updateElemPos = function(top, left) {
-        this.element.style.top = top + this.distanceY + "px";
-        this.element.style.left = left + this.distanceX + "px";
+        this.element.style.top = top + "px";
+        this.element.style.left = left + "px";
     };
 
     /**
@@ -313,21 +313,27 @@
      */
     var PrimitiveHelpers = {
         addSphere : function(radius, color) {
-            var sphere = new DataDoo.Sphere(radius, color);
+            var sphere = new Sphere(radius, color);
             this.add(sphere);
             return sphere;
         },
 
         addDashedLine : function(startPos, endPos, dashSize, gapSize, endRadius) {
-            var line = new DataDoo.DashedLine(startPos, endPos, dashSize, gapSize, endRadius);
+            var line = new DashedLine(startPos, endPos, dashSize, gapSize, endRadius);
             this.add(line);
             return line;
         },
 
         addSprite : function(url, position, scale) {
-            var sprite = new DataDoo.Sprite(url, position, scale);
+            var sprite = new Sprite(url, position, scale);
             this.add(sprite);
             return sprite;
+        },
+
+        addLabel: function(message) {
+            var label = new Label(message);
+            this.add(label);
+            return label;
         }
     };
     DataDoo.PrimitiveHelpers = PrimitiveHelpers;

@@ -10,7 +10,7 @@
         this.position = new DataDoo.RVector3();
     }
     Relation.prototype = Object.create(DataDoo.DDObject3D.prototype);
-    _.extend(DataDoo.prototype, DataDoo.PrimitiveHelpers);
+    _.extend(Relation.prototype, DataDoo.PrimitiveHelpers);
     DataDoo.Relation = Relation;
 })(window.DataDoo);
 
