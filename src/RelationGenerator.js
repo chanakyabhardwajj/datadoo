@@ -6,7 +6,7 @@
         this.dd = dd;
         this.id = id;
         this.ngs = ngs;
-        this.relations = [];
+        this.relations = new DataDoo.RelationSet();
         this.appFn = appFn;
 
         // put the relations array
@@ -32,8 +32,9 @@
     };
 
     RelationGenerator.prototype.generateRelations = function() {
-        this.relations = this.appFn(this.dd.bucket);
+        this.relations = new DataDoo.RelationSet();
         this.dd.bucket[this.id] = this.relations;
+        this.appFn.call(this.relations, this.dd.bucket);
     };
 
     DataDoo.RelationGenerator = RelationGenerator;

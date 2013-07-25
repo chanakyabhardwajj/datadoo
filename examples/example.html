@@ -111,19 +111,16 @@
             };
 
             var relAppFn = function($) {
-                var arr = [];
                 var n1 = $.ng1[$.ng1.length-2];
                 var n2 = $.ng2[$.ng2.length-2];
 
-                console.dir(n1);
-                console.dir(n2);
 
-                var r = new DataDoo.Relation();
-                //r.addDashedLine(n1, n2);
 
+                var r = this.addRelation();
+                r.addDashedLine(n1, n2);
                 r.addSpline([new THREE.Vector3(0,0,0), new THREE.Vector3(10,20,40), new THREE.Vector3(-40,30,44), new THREE.Vector3(-60,60,-60)], 0x8fe3aa, 12);
 
-                return arr;
+
             };
 
 

@@ -12,6 +12,18 @@
     Relation.prototype = Object.create(DataDoo.DDObject3D.prototype);
     _.extend(Relation.prototype, DataDoo.PrimitiveHelpers);
     DataDoo.Relation = Relation;
+
+
+    function RelationSet() {
+        Array.call(this);
+    }
+    RelationSet.prototype = Object.create(Array.prototype);
+    DataDoo.RelationSet = RelationSet;
+    RelationSet.prototype.addRelation = function() {
+        var relation = new Relation();
+        this.push(relation);
+        return relation;
+    };
 })(window.DataDoo);
 
 
