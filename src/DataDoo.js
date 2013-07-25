@@ -88,13 +88,14 @@ window.DataDoo = (function () {
             antialias : true,
             alpha : false,
             clearAlpha : 1,
-            clearColor : 0xfafafa,
+            //clearColor : "0xffaa00",
             gammaInput : true,
             gammaOutput : true,
             physicallyBasedShading : true,
             shadowMapEnabled : true,
             shadowMapSoft : true
         });
+        this.renderer.setClearColorHex(0xffffff, 1);
 
         this.axesConf = params.axes;
         this.cameraConf = params.camera;
@@ -144,7 +145,7 @@ window.DataDoo = (function () {
 
         //SCENE
         this.scene.fog = new THREE.Fog(this.sceneConf.fog.color, this.sceneConf.fog.near, this.sceneConf.fog.far);
-        this.renderer.setClearColor(this.scene.fog.color, 1);
+        //this.renderer.setClearColor(this.scene.fog.color, 1);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
 
         //AXES

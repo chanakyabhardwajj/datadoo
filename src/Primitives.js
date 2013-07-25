@@ -41,8 +41,8 @@
         this.opacity = opacity || 1;
         this.wireframe = wireframe || false;
 
-        this.material = new THREE.MeshLambertMaterial({color : this.color, opacity : this.opacity, wireframe : this.wireframe});
-        this.geometry = new THREE.SphereGeometry(this.radius, 20, 20);
+        this.material = new THREE.MeshLambertMaterial({color : this.color, opacity : this.opacity, wireframe : this.wireframe, transparent:true});
+        this.geometry = new THREE.SphereGeometry(this.radius, 50, 50);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         this.add(this.mesh);
     }
@@ -70,7 +70,7 @@
 
         this.lineGeometry = new THREE.Geometry();
         this.lineGeometry.vertices.push(this.startPos, this.endPos);
-        this.lineMaterial = new THREE.LineBasicMaterial({ color : this.color, linewidth : this.thickness, opacity : this.opacity });
+        this.lineMaterial = new THREE.LineBasicMaterial({ color : this.color, linewidth : this.thickness, opacity : this.opacity, transparent:true });
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
 
         this.add(this.line);
@@ -97,7 +97,7 @@
         this.lineGeometry.vertices.push(this.startPos, this.endPos);
         //this.lineGeometry.verticesNeedUpdate = true;
         //this.lineGeometry.computeLineDistances();
-        this.lineMaterial = new THREE.LineDashedMaterial({color : this.color, opacity:this.opacity, linewidth:this.thickness, dashSize:this.dashSize, gapSize:this.gapSize});
+        this.lineMaterial = new THREE.LineDashedMaterial({color : this.color, opacity:this.opacity, linewidth:this.thickness, dashSize:this.dashSize, gapSize:this.gapSize, transparent:true});
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
         this.add(this.line);
     }
@@ -118,11 +118,11 @@
         this.topRadius = topRadius || 0;
         this.baseRadius = baseRadius || 5;
         this.opacity = opacity || 1;
-        this.color = color || 0xff0000;
+        this.color = color || 0x767676;
 
 
-        var coneGeometry = new THREE.CylinderGeometry(this.topRadius, this.baseRadius, this.height, 10, 10);
-        var coneMat = new THREE.MeshLambertMaterial({ color : this.color, opacity : this.opacity  });
+        var coneGeometry = new THREE.CylinderGeometry(this.topRadius, this.baseRadius, this.height, 20, 20);
+        var coneMat = new THREE.MeshLambertMaterial({ color : this.color, opacity : this.opacity, transparent:true});
         this.cone = new THREE.Mesh(coneGeometry, coneMat);
 
 
@@ -292,7 +292,7 @@
         }
         //this.geometrySpline.computeLineDistances();
 
-        this.mesh = new THREE.Line(this.geometrySpline, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 3 }), THREE.LineStrip);
+        this.mesh = new THREE.Line(this.geometrySpline, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 3 , transparent:true}), THREE.LineStrip);
         this.add(this.mesh);
     }
 

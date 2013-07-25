@@ -88,13 +88,14 @@ window.DataDoo = (function () {
             antialias : true,
             alpha : false,
             clearAlpha : 1,
-            clearColor : 0xfafafa,
+            //clearColor : "0xffaa00",
             gammaInput : true,
             gammaOutput : true,
             physicallyBasedShading : true,
             shadowMapEnabled : true,
             shadowMapSoft : true
         });
+        this.renderer.setClearColorHex(0xffffff, 1);
 
         this.axesConf = params.axes;
         this.cameraConf = params.camera;
@@ -144,7 +145,7 @@ window.DataDoo = (function () {
 
         //SCENE
         this.scene.fog = new THREE.Fog(this.sceneConf.fog.color, this.sceneConf.fog.near, this.sceneConf.fog.far);
-        this.renderer.setClearColor(this.scene.fog.color, 1);
+        //this.renderer.setClearColor(this.scene.fog.color, 1);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
 
         //AXES
@@ -1095,8 +1096,8 @@ window.DataDoo = (function () {
         this.opacity = opacity || 1;
         this.wireframe = wireframe || false;
 
-        this.material = new THREE.MeshLambertMaterial({color : this.color, opacity : this.opacity, wireframe : this.wireframe});
-        this.geometry = new THREE.SphereGeometry(this.radius, 20, 20);
+        this.material = new THREE.MeshLambertMaterial({color : this.color, opacity : this.opacity, wireframe : this.wireframe, transparent:true});
+        this.geometry = new THREE.SphereGeometry(this.radius, 50, 50);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         this.add(this.mesh);
     }
@@ -1124,7 +1125,7 @@ window.DataDoo = (function () {
 
         this.lineGeometry = new THREE.Geometry();
         this.lineGeometry.vertices.push(this.startPos, this.endPos);
-        this.lineMaterial = new THREE.LineBasicMaterial({ color : this.color, linewidth : this.thickness, opacity : this.opacity });
+        this.lineMaterial = new THREE.LineBasicMaterial({ color : this.color, linewidth : this.thickness, opacity : this.opacity, transparent:true });
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
 
         this.add(this.line);
@@ -1151,7 +1152,7 @@ window.DataDoo = (function () {
         this.lineGeometry.vertices.push(this.startPos, this.endPos);
         //this.lineGeometry.verticesNeedUpdate = true;
         //this.lineGeometry.computeLineDistances();
-        this.lineMaterial = new THREE.LineDashedMaterial({color : this.color, opacity:this.opacity, linewidth:this.thickness, dashSize:this.dashSize, gapSize:this.gapSize});
+        this.lineMaterial = new THREE.LineDashedMaterial({color : this.color, opacity:this.opacity, linewidth:this.thickness, dashSize:this.dashSize, gapSize:this.gapSize, transparent:true});
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
         this.add(this.line);
     }
@@ -1172,11 +1173,11 @@ window.DataDoo = (function () {
         this.topRadius = topRadius || 0;
         this.baseRadius = baseRadius || 5;
         this.opacity = opacity || 1;
-        this.color = color || 0xff0000;
+        this.color = color || 0x767676;
 
 
-        var coneGeometry = new THREE.CylinderGeometry(this.topRadius, this.baseRadius, this.height, 10, 10);
-        var coneMat = new THREE.MeshLambertMaterial({ color : this.color, opacity : this.opacity  });
+        var coneGeometry = new THREE.CylinderGeometry(this.topRadius, this.baseRadius, this.height, 20, 20);
+        var coneMat = new THREE.MeshLambertMaterial({ color : this.color, opacity : this.opacity, transparent:true});
         this.cone = new THREE.Mesh(coneGeometry, coneMat);
 
 
@@ -1346,7 +1347,7 @@ window.DataDoo = (function () {
         }
         //this.geometrySpline.computeLineDistances();
 
-        this.mesh = new THREE.Line(this.geometrySpline, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 3 }), THREE.LineStrip);
+        this.mesh = new THREE.Line(this.geometrySpline, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 3 , transparent:true}), THREE.LineStrip);
         this.add(this.mesh);
     }
 
