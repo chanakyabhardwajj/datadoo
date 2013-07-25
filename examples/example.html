@@ -12,6 +12,7 @@
 
             .datadoo-label{
                 color: #767676;
+                border:1px solid black;
             }
         </style>
     </head>
@@ -77,43 +78,47 @@
                     { one : "Japan", two : 30, three : 30 },
                     { one : "Sweden", two : 40, three : 40 }
                 ]
-            })
+            });
 
             var nodeAppFn1 = function($) {
                 //var sprite = this.addSprite("http://upload.wikimedia.org/wikipedia/commons/1/1b/Sunny_Leone_2012.jpg", new DataDoo.Position(this.data.Population,this.data.Population,this.data.Population), 10);
 
-                var sphere = this.addSphere(10, 0xffcc00);
-                var sphere2 = this.addSphere(2, 0xff0000);
-                sphere2.position.set(10,20,10);
+                //var sphere = this.addSphere(10, 0xffcc00, 0.3, true);
+                //var sphere2 = this.addSphere(6, 0xff0000, 0.7, false);
+                //sphere2.position.set(10,20,10);
                 //sphere.position.set(-10,-20,-10);
+
+                //var label = this.addLabel(this.data.one);
+                //label.position.set(this.data.two,this.data.two,this.data.two);
 
                 this.position.set(this.data.two,this.data.two,this.data.two);
             };
 
-           /* var nodeAppFn2 = function($) {
-                *//*this.position.set(this.data.two,
-                                  this.data.two,
-                                  this.data.three)
+            var nodeAppFn2 = function($) {
+                console.log(this.data)
+                this.position.set(this.data.GDP,this.data.GDP,this.data.GDP);
+               // var sphere = this.addSphere(this.data.GDP/10, 0xfc12340);
+                var sphere2 = this.addSphere(this.data.Population/10, 0x11cc88);
+                sphere2.position.set(this.data.GDP*10, this.data.GDP, this.data.GDP);
+               // sphere.position.set(this.data.Population, -this.data.Population/10, this.data.Population/10);
 
-                var sphere = this.addSphere(10, 0xfc12340);
-                var sphere2 = this.addSphere(5, 0x11cc88);
-                sphere2.position.set(-20, -20, -20);
+                //var dashedLine = this.addDashedLine(sphere.position, sphere2.position);
+             //   var line = this.addLine(sphere.position, sphere2.position);
 
-                var line = this.addDashedLine(sphere, sphere2);
 
-                var sphere3 = this.addSphere(2, 0x11cc88);
-                sphere3.position.set(-20, -20, 20);
+             //   var cone = this.addCone(50, 3, 10, sphere2.position, new THREE.Vector3(0,1,0), 0xffcc00, 0.3);
 
-                this.addDashedLine(sphere, sphere2);
-                this.addDashedLine(sphere3, sphere2);
+                //this.addDashedLine(sphere, sphere2);
+                //this.addDashedLine(sphere3, sphere2);
 
-                var label = this.addLabel(this.data.one);
+                var label = this.addLabel(this.data.Population)
+                        label.position=sphere2.position;
 
-                this.addLine(sphere, new THREE.Vector3(200,202,20), 100, new THREE.Vector3(1,0,1), 0xfc12340, 12, 0.6);
+                //this.addLine(sphere, new THREE.Vector3(200,202,20), 100, new THREE.Vector3(1,0,1), 0xfc12340, 12, 0.6);
 
-                var cone = this.addCone(20, 3, 10, new THREE.Vector3(120,202,20), new THREE.Vector3(0,1,0), 0xffcc00, 0.3);*//*
+                //
 
-                *//*var arrow = this.addArrow({
+                /*var arrow = this.addArrow({
                     from : new DataDoo.Position(20, 20, 20),
                     to : new DataDoo.Position(-20, -20, -20), //if "to" is provided, the lineLength and lineDirection params are ignored
 
@@ -125,12 +130,12 @@
                     lineOpacity : 1,
                     fromCone : true,
                     toCone : true
-                })*//*
+                })*/
 
-            };*/
+            };
 
-           /* var relnAppFn = function($){
-                var arr=[];
+            var relnAppFn = function($){
+                /*var arr=[];
                 var src = $.ng1[$.ng1.length-1];
                 var dst = $.ng2[$.ng2.length-1];
 
@@ -140,7 +145,7 @@
                     arr.push(rel);
                 }
 
-                *//*if ($.ng1.length>0 && $.ng2.length>0) {
+                if ($.ng1.length>0 && $.ng2.length>0) {
                     var ns = [];
                     ns.push($.ng1[$.ng1.length - 1].primitives[0].center);
                     ns.push($.ng2[$.ng2.length - 1].primitives[0].center);
@@ -149,18 +154,18 @@
                     var rel2 = new DataDoo.Relation();
                     arr.push(rel2);
                     rel2.addSpline(ns, 0xff0000, 8);
-                }*//*
+                }
 
-                return arr;
-            };*/
+                return arr;*/
+            };
 
             var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, nodeAppFn1);
-           // var ng2 = new DataDoo.NodeGenerator(dd, "ng2", ds2, nodeAppFn2);
+            var ng2 = new DataDoo.NodeGenerator(dd, "ng2", ds2, nodeAppFn2);
 
-            //var rg1 = new DataDoo.RelationGenerator(dd, "rg1", [ng1/*, ng2*/], relnAppFn);
+            var rg1 = new DataDoo.RelationGenerator(dd, "rg1", [ng1, ng2], relnAppFn);
             ds1.fetch();
-            //ds2.fetch();
-            dd.startVis(ng1);
+            ds2.fetch();
+            dd.startVis(rg1);
         </script>
     </body>
 </html>

@@ -228,7 +228,7 @@ window.DataDoo = (function () {
             }
         }, this);
     };
-    
+
 
     DataDoo.prototype._computeAxisValues = function (events) {
         var changedDs = _.chain(DataDoo.EventBus.flattenEvents(events)).filter(function(event) {
@@ -300,12 +300,14 @@ window.DataDoo = (function () {
 
     DataDoo.prototype.putLabelsToScreen = function(){
         var self = this;
+        var vector = new THREE.Vector3();
         self.camera.updateMatrixWorld();
         _.each(self.labelsArray, function(label){
-            var vector = self.projector.projectVector(label.position, self.camera);
-            vector.x = (vector.x + 1)/2 * self.renderer.domElement.width;
-            vector.y = -(vector.y - 1)/2 * self.renderer.domElement.height;
-            label.updateElemPos(vector.y, vector.x);
+            vector.getPositionFromMatrix( label.matrixWorld );
+            var vector2 = self.projector.projectVector(vector.clone(), self.camera);
+            vector2.x = (vector2.x + 1)/2 * self.renderer.domElement.width;
+            vector2.y = -(vector2.y - 1)/2 * self.renderer.domElement.height;
+            label.updateElemPos(vector2.y, vector2.x);
         });
     };
 
