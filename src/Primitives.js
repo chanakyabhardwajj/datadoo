@@ -309,46 +309,26 @@
         this.element.style.left = left + "px";
     };
 
+
     /**
      * Primitive constructor helper mixin
      */
-    var PrimitiveHelpers = {
-        addSphere : function (radius, color, opacity, wireframe) {
-            var sphere = new Sphere(radius, color, opacity, wireframe);
-            this.add(sphere);
-            return sphere;
-        },
-
-        addDashedLine : function (startPos, endPos, color, dashSize, gapSize, thickness, opacity) {
-            var dashedLine = new DashedLine(startPos, endPos, color, dashSize, gapSize, thickness, opacity);
-            this.add(dashedLine);
-            return dashedLine;
-        },
-
-        addSprite : function (url, position, scale) {
-            var sprite = new Sprite(url, position, scale);
-            this.add(sprite);
-            return sprite;
-        },
-
-        addLine : function (startPos, endPos, lineLength, dir, color, thickness, opacity) {
-            var line = new Line(startPos, endPos, lineLength, dir, color, thickness, opacity);
-            this.add(line);
-            return line;
-        },
-
-        addCone : function (height, topRadius, baseRadius, position, dir, color, opacity) {
-            var cone = new Cone(height, topRadius, baseRadius, position, dir, color, opacity);
-            this.add(cone);
-            return cone;
-        },
-
-        addLabel : function (message) {
-            var label = new Label(message);
-            this.add(label);
-            return label;
-        }
-    };
-    DataDoo.PrimitiveHelpers = PrimitiveHelpers;
+    DataDoo.PrimitiveHelpers = _.chain(DataDoo).pairs().filter(function(pair) {
+        // filter out Primitive constructor classes from DataDoo
+        return _.isFunction(pair[1]) && ("setDirection" in pair[1].prototype) && (pair[0] != "Primitive");
+    }).map(function(pair) {
+        var className = pair[0];
+        var primClass = pair[1];
+        return ["add" + className, function() {
+            var args = arguments;
+            function F() {
+                return primClass.apply(this, args);
+            }
+            F.prototype = primClass.prototype;
+            var primitive = new F();
+            this.add(primitive);
+            return primitive;
+        }];
+    }).object().value();
 
 })(window.DataDoo);
