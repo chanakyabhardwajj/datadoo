@@ -96,11 +96,21 @@
 
         this.lineGeometry = new THREE.Geometry();
         this.lineGeometry.vertices.push(this.startPos, this.endPos);
+        //this.lineGeometry.verticesNeedUpdate = true;
+        //this.lineGeometry.computeLineDistances();
         this.lineMaterial = new THREE.LineDashedMaterial({color : this.color, opacity:this.opacity, linewidth:this.thickness, dashSize:this.dashSize, gapSize:this.gapSize});
-        this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
+        //this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
+        this.line = new THREE.Line(this.lineGeometry, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 3 }), THREE.LineStrip);
+
+
+
         this.add(this.line);
     }
     DashedLine.prototype = Object.create(Primitive.prototype);
+    DashedLine.prototype.resolve = function(){
+        Primitive.prototype.resolve.apply(this, arguments);
+        this.lineGeometry.computeLineDistances();
+    };
     DataDoo.DashedLine = DashedLine;
 
     /**
@@ -227,7 +237,7 @@
         for (var i = 0; i < this.points.length * this.subdivisions; i++) {
             var index = i / ( this.points.length * this.subdivisions );
             var position = this.spline.getPoint(index);
-            this.geometrySpline.vertices[ i ] = position;
+            this.geometrySpline.vertices[ i ] = new THREE.Vector3(position.x,position.y,position.z);
         }
         this.geometrySpline.computeLineDistances();
 
@@ -236,6 +246,10 @@
     }
 
     Spline.prototype = Object.create(Primitive.prototype);
+    Spline.prototype.resolve = function(){
+        Primitive.prototype.resolve.apply(this, arguments);
+        this.geometrySpline.computeLineDistances();
+    };
     DataDoo.Spline = Spline;
 
     /**

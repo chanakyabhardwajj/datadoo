@@ -83,14 +83,20 @@
                 //var sprite = this.addSprite("http://upload.wikimedia.org/wikipedia/commons/1/1b/Sunny_Leone_2012.jpg", new DataDoo.Position(this.data.Population,this.data.Population,this.data.Population), 10);
 
                 this.sphere = this.addSphere(5, 0xffcc00);
-                this.sphere.position.set(10,10,10);
+                this.sphere.position.set(this.data.two,this.data.two,this.data.two);
 
                 this.label = this.addLabel(this.data.one);
-                //this.label.position.set(this.data.two,this.data.two,this.data.two);
+                this.label.position.set(this.data.two - 90,this.data.two + 30,this.data.two + 60);
                 //this.label.position.set(20,20,20);
 
                 this.addDashedLine(this.sphere, this.label);
-                this.position.set(this.data.two,this.data.two,this.data.two);
+
+
+                this.addDashedLine(new THREE.Vector3(-300,-300,-300), new THREE.Vector3(-70,-70,-70));
+
+                //this.position.set(this.data.two*5,this.data.two*5,this.data.two*5);
+
+
 
             };
 
@@ -113,7 +119,10 @@
                 console.dir(n2);
 
                 var r = new DataDoo.Relation();
-                r.addDashedLine(n1, n2);
+                //r.addDashedLine(n1, n2);
+
+                r.addSpline([new THREE.Vector3(0,0,0), new THREE.Vector3(10,20,40), new THREE.Vector3(-40,30,44), new THREE.Vector3(-60,60,-60)], 0x8fe3aa, 12);
+
                 return arr;
             };
 
