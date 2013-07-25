@@ -35,32 +35,12 @@
     function AnchoredVector3(parent, srcParent, srcVector) {
         THREE.Vector3.call(this);
         this.parent = parent;
-        if(!srcVector) {
-            this.srcVector = srcParent.position;
-            this.srcParent = srcParent.parent;
-        } else {
-            this.srcVector = srcVector;
-            this.srcParent = srcParent;
-        }
+        this.srcVector = srcVector;
+        this.srcParent = srcParent;
 
-        var parentResolved = false;
-        var srcParentResolved = false;
         var self = this;
-        srcParent.bindOnResolve(function() {
-            srcParentResolved = true;
-            if(srcParentResolved && parentResolved) {
-                self._resolve();
-                srcParentResolved = false;
-                parentResolved = false;
-            }
-        });
-        parent.bindOnResolve(function() {
-            parentResolved = true;
-            if(srcParentResolved && parentResolved) {
-                self._resolve();
-                srcParentResolved = false;
-                parentResolved = false;
-            }
+        DataDoo.utils.onResolveAll(this.parent, this.srcParent, function() {
+            self._resolve();
         });
     }
     DataDoo.AnchoredVector3 = AnchoredVector3;
@@ -68,9 +48,14 @@
     AnchoredVector3.prototype._resolve = function() {
         var obj;
 
-        this.copy(this.srcVector);
+        if(this.srcVector) {
+            this.copy(this.srcVector);
+            obj = this.srcParent;
+        } else {
+            this.copy(this.srcParent.position);
+            obj = this.srcParent.parent;
+        }
 
-        obj = this.srcParent;
         while(obj) {
             this.add(obj.position);
             obj = obj.parent;
