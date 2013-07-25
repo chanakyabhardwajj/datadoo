@@ -20,6 +20,34 @@
             }, this);
         },
 
+        onResolveAll: (function() {
+            function clear(array) {
+                for(var i = 0;i < array.length;i++) {
+                    array[i] = false;
+                }
+            }
+
+            function makeCallback(i, array, finalCallback) {
+                return function() {
+                    array[i] = true;
+                    if(_.every(array)) {
+                        finalCallback();
+                        clear(array);
+                    }
+                };
+            }
+
+            return function() {
+                var finalCallback = _.last(arguments);
+                var objects = _.first(arguments, arguments.length-1);
+                var resolved = new Array(objects.length);
+                clear(resolved);
+                _.each(objects, function(object, i) {
+                    object.bindOnResolve(makeCallback(i, resolved, finalCallback));
+                });
+            };
+        })(),
+
         // Request animationframe helper
         _raf : (
             window.requestAnimationFrame ||

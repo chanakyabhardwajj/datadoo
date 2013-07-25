@@ -252,7 +252,7 @@ window.DataDoo = (function () {
                         values.reverse();
                     }
                 }
-                var spacing = axis.spacing || (axis.length/values.length);
+                var spacing = axis.spacing || (axis.axisLength/values.length);
                 var posMap = _.chain(values).map(function (value, i) {
                     return [value, (i + 1) * spacing];
                 }).object().value();

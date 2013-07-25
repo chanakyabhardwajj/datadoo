@@ -2,16 +2,15 @@
     /**
      * DataDoo Resolvable vector
      */
-    function RVector3(rx, ry, rz) {
-        THREE.Vector3.call(this);
-        this.rx = rx || 0;
-        this.ry = ry || 0;
-        this.rz = rz || 0;
+    function RVector3(x, y, z) {
+        THREE.Vector3.apply(this, arguments);
+        this.resolvable = false;
     }
 
     RVector3.prototype = Object.create(THREE.Vector3.prototype);
 
-    RVector3.prototype.set = function(rx, ry, rz){
+    RVector3.prototype.setOnAxes = function(rx, ry, rz){
+        this.resolvable = true;
         this.rx = rx;
         this.ry = ry;
         this.rz = rz;
@@ -35,28 +34,13 @@
      */
     function AnchoredVector3(parent, srcParent, srcVector) {
         THREE.Vector3.call(this);
-        this.srcVector = srcVector || srcParent.position;
         this.parent = parent;
+        this.srcVector = srcVector;
         this.srcParent = srcParent;
 
-        var parentResolved = false;
-        var srcParentResolved = false;
         var self = this;
-        srcParent.bindOnResolve(function() {
-            srcParentResolved = true;
-            if(srcParentResolved && parentResolved) {
-                self._resolve();
-                srcParentResolved = false;
-                parentResolved = false;
-            }
-        });
-        parent.bindOnResolve(function() {
-            parentResolved = true;
-            if(srcParentResolved && parentResolved) {
-                self._resolve();
-                srcParentResolved = false;
-                parentResolved = false;
-            }
+        DataDoo.utils.onResolveAll(this.parent, this.srcParent, function() {
+            self._resolve();
         });
     }
     DataDoo.AnchoredVector3 = AnchoredVector3;
@@ -64,9 +48,14 @@
     AnchoredVector3.prototype._resolve = function() {
         var obj;
 
-        this.copy(this.srcVector);
+        if(this.srcVector) {
+            this.copy(this.srcVector);
+            obj = this.srcParent;
+        } else {
+            this.copy(this.srcParent.position);
+            obj = this.srcParent.parent;
+        }
 
-        obj = this.srcParent;
         while(obj) {
             this.add(obj.position);
             obj = obj.parent;

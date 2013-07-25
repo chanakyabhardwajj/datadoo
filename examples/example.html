@@ -29,9 +29,9 @@
                     type: DataDoo.PERSPECTIVE
                 },
                 axes: {
-                    type: DataDoo.SPHERICAL,
                     x: {
-                        type: DataDoo.NUMBER,
+                        type: DataDoo.COLUMNVALUE,
+                        column: "ds1.one",
                         axisDivisions: 5,
                         axisLabelStartingFrom : 0,
                         axisLabel : "countries",
@@ -83,10 +83,14 @@
             var nodeAppFn1 = function($) {
                 //var sprite = this.addSprite("http://upload.wikimedia.org/wikipedia/commons/1/1b/Sunny_Leone_2012.jpg", new DataDoo.Position(this.data.Population,this.data.Population,this.data.Population), 10);
 
-                //var sphere = this.addSphere(10, 0xffcc00, 0.3, true);
-                //var sphere2 = this.addSphere(6, 0xff0000, 0.7, false);
-                //sphere2.position.set(10,20,10);
+
+                this.sphere = this.addSphere(5, 0xffcc00);
+                this.sphere2 = this.addSphere(2, 0xff0000);
+                this.sphere.position.set(10,10,30);
+
                 //sphere.position.set(-10,-20,-10);
+                //this.addDashedLine(this.sphere, this.sphere2);
+
 
                 //var label = this.addLabel(this.data.one);
                 //label.position.set(this.data.two,this.data.two,this.data.two);
@@ -102,37 +106,21 @@
                 sphere2.position.set(this.data.GDP*10, this.data.GDP, this.data.GDP);
                // sphere.position.set(this.data.Population, -this.data.Population/10, this.data.Population/10);
 
-                //var dashedLine = this.addDashedLine(sphere.position, sphere2.position);
-             //   var line = this.addLine(sphere.position, sphere2.position);
-
-
-             //   var cone = this.addCone(50, 3, 10, sphere2.position, new THREE.Vector3(0,1,0), 0xffcc00, 0.3);
-
-                //this.addDashedLine(sphere, sphere2);
-                //this.addDashedLine(sphere3, sphere2);
-
-                var label = this.addLabel(this.data.Population)
-                        label.position=sphere2.position;
-
-                //this.addLine(sphere, new THREE.Vector3(200,202,20), 100, new THREE.Vector3(1,0,1), 0xfc12340, 12, 0.6);
-
-                //
-
-                /*var arrow = this.addArrow({
-                    from : new DataDoo.Position(20, 20, 20),
-                    to : new DataDoo.Position(-20, -20, -20), //if "to" is provided, the lineLength and lineDirection params are ignored
-
-                    lineLength : 100,
-                    lineDirection : new THREE.Vector3(1,0,0), //assumed normalized
-                    lineDivisions : 10,
-                    lineColor : 0x000000,
-                    lineThickness : 1,
-                    lineOpacity : 1,
-                    fromCone : true,
-                    toCone : true
-                })*/
-
+                this.position.setOnAxes(this.data.one,this.data.two,this.data.two);
             };
+
+            var relAppFn = function($) {
+                var arr = [];
+                for(var i = 0;i < $.ng1.length-1;i++) {
+                    var rel = new DataDoo.Relation();
+                    var node = $.ng1[i];
+                    var nextNode = $.ng1[i+1];
+                    rel.addDashedLine(node, nextNode, 0xff0000 + i*100);
+                    rel.addDashedLine(node.sphere, nextNode.sphere, 0xff0000 + i*100);
+                    arr.push(rel);
+                }
+                return arr;
+            }
 
             var relnAppFn = function($){
                 /*var arr=[];
@@ -162,9 +150,11 @@
             var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, nodeAppFn1);
             var ng2 = new DataDoo.NodeGenerator(dd, "ng2", ds2, nodeAppFn2);
 
+
             var rg1 = new DataDoo.RelationGenerator(dd, "rg1", [ng1, ng2], relnAppFn);
             ds1.fetch();
             ds2.fetch();
+
             dd.startVis(rg1);
         </script>
     </body>
