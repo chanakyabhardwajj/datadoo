@@ -83,12 +83,13 @@
                 //var sprite = this.addSprite("http://upload.wikimedia.org/wikipedia/commons/1/1b/Sunny_Leone_2012.jpg", new DataDoo.Position(this.data.Population,this.data.Population,this.data.Population), 10);
 
                 this.sphere = this.addSphere(5, 0xffcc00);
-                this.sphere.position.set(0,0,0);
+                this.sphere.position.set(10,10,10);
 
                 this.label = this.addLabel(this.data.one);
                 //this.label.position.set(this.data.two,this.data.two,this.data.two);
-                this.label.position.set(20,20,20);
+                //this.label.position.set(20,20,20);
 
+                this.addDashedLine(this.sphere, this.label);
                 this.position.set(this.data.two,this.data.two,this.data.two);
 
             };
@@ -96,8 +97,8 @@
             var nodeAppFn2 = function($) {
                 console.log(this.data);
 
-                //var sphere2 = this.addSphere(this.data.Population/2, 0x0000ff);
-                //sphere2.position.set(this.data.GDP*10, this.data.GDP, this.data.GDP);
+                var sphere2 = this.addSphere(this.data.Population/10, 0x0000ff);
+                sphere2.position.set(this.data.GDP*10, this.data.GDP, this.data.GDP);
 
 
                 //this.position.setOnAxes(this.data.GDP,this.data.Population,this.data.GDP);
@@ -105,16 +106,16 @@
 
             var relAppFn = function($) {
                 var arr = [];
-                for(var i = 0;i < $.ng1.length-1;i++) {
-                    var rel = new DataDoo.Relation();
-                    var node = $.ng1[i];
-                    var nextNode = $.ng1[i+1];
-                    rel.addDashedLine(node, nextNode, 0xff0000 + i*100);
-                    rel.addDashedLine(node.sphere, nextNode.sphere, 0xff0000 + i*100);
-                    arr.push(rel);
-                }
-                //return arr;
-            }
+                var n1 = $.ng1[$.ng1.length-2];
+                var n2 = $.ng2[$.ng2.length-2];
+
+                console.dir(n1);
+                console.dir(n2);
+
+                var r = new DataDoo.Relation();
+                r.addDashedLine(n1, n2);
+                return arr;
+            };
 
 
             var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, nodeAppFn1);

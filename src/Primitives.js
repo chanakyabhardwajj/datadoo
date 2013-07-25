@@ -33,6 +33,7 @@
     /**
      *  Sphere primitive
      */
+    //ToDo : Opacity is not working!!
     function Sphere(radius, color, opacity, wireframe) {
         Primitive.call(this);
         this.radius = radius || 10;
@@ -58,30 +59,17 @@
     /**
      *  Line primitive
      */
-    function Line(startPos, endPos, lineLength, dir, color, thickness, opacity) {
+    function Line(startPos, endPos, color, thickness, opacity) {
         Primitive.call(this);
 
         this.thickness = thickness || 1;
         this.opacity = opacity || 1;
         this.color = color || 0xffaa00;
-        this.startPos = startPos || new THREE.Vector3(0, 0, 0);
-        this.direction = dir || new THREE.Vector3(1, 0, 0);
-        this.lineLength = lineLength || 50;
-        this.direction.normalize();
-
-        if (endPos) {
-            this.endPos = endPos;
-        }
-        else {
-            var endPosX = this.startPos.x + (this.lineLength * this.direction.x);
-            var endPosY = this.startPos.y + (this.lineLength * this.direction.y);
-            var endPosZ = this.startPos.z + (this.lineLength * this.direction.z);
-
-            this.endPos = new DataDoo.Position(endPosX, endPosY, endPosZ);
-        }
+        this.startPos = this.vectorOrAnchor(startPos);
+        this.endPos = this.vectorOrAnchor(endPos);
 
         this.lineGeometry = new THREE.Geometry();
-        this.lineGeometry.vertices.push(startPos, endPos);
+        this.lineGeometry.vertices.push(this.startPos, this.endPos);
         this.lineMaterial = new THREE.LineBasicMaterial({ color : this.color, linewidth : this.thickness, opacity : this.opacity });
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
 
@@ -93,6 +81,7 @@
     /**
      *  DashedLine primitive
      */
+    //ToDo : Something wrong with material here. Dashes are showing up!!
     function DashedLine(startPos, endPos, color, dashSize, gapSize, thickness, opacity) {
         Primitive.call(this);
 
@@ -106,7 +95,7 @@
         this.endPos = this.vectorOrAnchor(endPos);
 
         this.lineGeometry = new THREE.Geometry();
-        this.lineGeometry.vertices.push(startPos, endPos);
+        this.lineGeometry.vertices.push(this.startPos, this.endPos);
         this.lineMaterial = new THREE.LineDashedMaterial({color : this.color, opacity:this.opacity, linewidth:this.thickness, dashSize:this.dashSize, gapSize:this.gapSize});
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
         this.add(this.line);
@@ -238,7 +227,7 @@
         for (var i = 0; i < this.points.length * this.subdivisions; i++) {
             var index = i / ( this.points.length * this.subdivisions );
             var position = this.spline.getPoint(index);
-            this.geometrySpline.vertices[ i ] = new THREE.Vector3(position.x, position.y, position.z);
+            this.geometrySpline.vertices[ i ] = position;
         }
         this.geometrySpline.computeLineDistances();
 
@@ -268,6 +257,7 @@
     /**
      *  Label primitive
      */
+    //ToDo : Fix label toscreen coords for objects that are behind the camera!!
     function Label(message, labelPos) {
         Primitive.call(this);
 
