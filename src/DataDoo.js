@@ -126,6 +126,7 @@ window.DataDoo = (function () {
             }
 
             this.grid = new THREE.Line(geometry, material, THREE.LinePieces);
+            this.grid.position.y = -0.5;
             this.scene.add(this.grid);
         }
 

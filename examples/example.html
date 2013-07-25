@@ -30,7 +30,9 @@
                 },
                 axes: {
                     x: {
-                        type: DataDoo.NUMBER,
+                        type: DataDoo.COLUMNVALUE,
+                        column : "ds1.one",
+                        spacing : 30,
                         axisDivisions: 5,
                         axisLabelStartingFrom : 0,
                         axisLabel : "countries",
@@ -64,7 +66,7 @@
             var ds1 = new DataDoo.DataSet(dd, "ds1", {
                 data: [
                     { one : "India", two : 10, three : 10 },
-                    { one : "Germany", two : 20, three : 20 },
+                    { one : "Germany", two : 20, three :20 },
                     { one : "Japan", two : 30, three : 30 },
                     { one : "Sweden", two : 40, three : 40 }
                 ]
@@ -83,18 +85,51 @@
                 //var sprite = this.addSprite("http://upload.wikimedia.org/wikipedia/commons/1/1b/Sunny_Leone_2012.jpg", new DataDoo.Position(this.data.Population,this.data.Population,this.data.Population), 10);
 
                 this.sphere = this.addSphere(5, 0xffcc00);
-                this.sphere.position.set(this.data.two,this.data.two,this.data.two);
+                //this.sphere.position.set(this.data.two,this.data.two,this.data.two);
+
+                //this.cone = this.addCone(20,3,30);
+                //this.cone.position.set(this.data.two,this.data.two,this.data.two);
+                //this.cone.rotation.set(this.data.two,this.data.two,this.data.two);
+                //this.addLine(this.cone, this.sphere);
 
                 this.label = this.addLabel(this.data.one);
                 this.label.position.set(this.data.two - 90,this.data.two + 30,this.data.two + 60);
-                //this.label.position.set(20,20,20);
+                //this.label.rotation.set(this.data.two - 90,this.data.two + 30,this.data.two + 60);
+                this.label.position.set(20,20,20);
 
-                this.addDashedLine(this.sphere, this.label);
+                //this.addDashedLine(this.sphere, this.label);
 
 
-                this.addDashedLine(new THREE.Vector3(-300,-300,-300), new THREE.Vector3(-70,-70,-70));
+                //this.addDashedLine(new THREE.Vector3(-300,-300,-300), new THREE.Vector3(-70,-70,-70));
 
-                //this.position.set(this.data.two*5,this.data.two*5,this.data.two*5);
+                //this.position.setOnAxes(this.data.one,this.data.two,this.data.three);
+
+                //X Axis
+                this.addArrow({
+                    from : new THREE.Vector3(0,0,0),
+                    to : new THREE.Vector3(150,0,0),
+                    lineDivisions : 10,
+                    fromCone : false,
+                    toCone : true
+                });
+
+                //Y Axis
+                this.addArrow({
+                    from : new THREE.Vector3(0,0,0),
+                    to : new THREE.Vector3(0,150,0),
+                    lineDivisions : 10,
+                    fromCone : false,
+                    toCone : true
+                });
+
+                //Z Axis
+                this.addArrow({
+                    from : new THREE.Vector3(0,0,0),
+                    to : new THREE.Vector3(0,0,150),
+                    lineDivisions : 10,
+                    fromCone : false,
+                    toCone : true
+                });
 
 
 
@@ -114,11 +149,17 @@
                 var n1 = $.ng1[$.ng1.length-2];
                 var n2 = $.ng2[$.ng2.length-2];
 
+                var ns = [];
+                _.each($.ng1, function(n){
+                    ns.push(n.sphere.position);
+                })
+
 
 
                 var r = this.addRelation();
-                r.addDashedLine(n1, n2);
-                r.addSpline([new THREE.Vector3(0,0,0), new THREE.Vector3(10,20,40), new THREE.Vector3(-40,30,44), new THREE.Vector3(-60,60,-60)], 0x8fe3aa, 12);
+                //if(n1 && n2){r.addDashedLine(n1, n2);}
+
+                r.addSpline(ns, 0x8fe3aa, 12);
 
 
             };

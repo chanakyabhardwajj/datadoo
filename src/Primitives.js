@@ -64,7 +64,7 @@
 
         this.thickness = thickness || 1;
         this.opacity = opacity || 1;
-        this.color = color || 0xffaa00;
+        this.color = color || 0x000000;
         this.startPos = this.vectorOrAnchor(startPos);
         this.endPos = this.vectorOrAnchor(endPos);
 
@@ -84,7 +84,6 @@
     //ToDo : Something wrong with material here. Dashes are showing up!!
     function DashedLine(startPos, endPos, color, dashSize, gapSize, thickness, opacity) {
         Primitive.call(this);
-
         this.dashSize = dashSize || 4;
         this.gapSize = gapSize || 2;
         this.color = color || 0xffaa00;
@@ -99,11 +98,7 @@
         //this.lineGeometry.verticesNeedUpdate = true;
         //this.lineGeometry.computeLineDistances();
         this.lineMaterial = new THREE.LineDashedMaterial({color : this.color, opacity:this.opacity, linewidth:this.thickness, dashSize:this.dashSize, gapSize:this.gapSize});
-        //this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
-        this.line = new THREE.Line(this.lineGeometry, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 3 }), THREE.LineStrip);
-
-
-
+        this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
         this.add(this.line);
     }
     DashedLine.prototype = Object.create(Primitive.prototype);
@@ -116,110 +111,108 @@
     /**
      *  Cone primitive
      */
-    function Cone(height, topRadius, baseRadius, position, dir, color, opacity) {
+    function Cone(height, topRadius, baseRadius, color, opacity) {
         Primitive.call(this);
 
-        this.position = position || new DataDoo.Position(0, 0, 0);
         this.height = height || 5;
         this.topRadius = topRadius || 0;
         this.baseRadius = baseRadius || 5;
         this.opacity = opacity || 1;
-        this.color = color || 0xcccccc;
-        this.direction = dir || new THREE.Vector3(0, 1, 0);
+        this.color = color || 0xff0000;
+
 
         var coneGeometry = new THREE.CylinderGeometry(this.topRadius, this.baseRadius, this.height, 10, 10);
         var coneMat = new THREE.MeshLambertMaterial({ color : this.color, opacity : this.opacity  });
         this.cone = new THREE.Mesh(coneGeometry, coneMat);
-        this.setDirection(this.direction, this.cone);
+
 
         this.add(this.cone);
     }
     Cone.prototype = Object.create(Primitive.prototype);
+    Cone.prototype.setDirection = function(dir){
+        this.setDirection(dir, this.cone);
+    };
     DataDoo.Cone = Cone;
 
     /**
      *  Arrow primitive
      */
     function Arrow(configObj) {
-        Primitive.call(this);
-        configObj = configObj || {};
+        /*
+        * from : new THREE.Vector3(0,0,0),
+         to : new THREE.Vector3(0,100,0),
 
-        /*configObj = {
-         from : new DataDoo.Position(),
-         to : new DataDoo.Position(), //if "to" is provided, the lineLength and lineDirection params are ignored
-
-         lineLength : 100,
-         lineDirection : new THREE.Vector3(1,0,0), //assumed normalized
          lineDivisions : 10,
-         lineColor : 0x000000,
+         lineColor : "0x000000",
          lineThickness : 1,
          lineOpacity : 1,
 
-         fromCone : true,
+         fromCone : false,
          fromConeHeight : 10,
-         fromConeTopRadius : 5,
+         fromConeTopRadius : 1,
          fromConeBaseRadius : 5,
-         fromConeColor : 0x000000,
+         fromConeColor : "0xff0000",
          fromConeOpacity : 1,
 
          toCone : true,
-         toConeHeight : 10,
-         toConeBaseRadius : 5,
-         toConeColor : 0x000000,
-         toConeOpacity : 1
-         }*/
+         toConeHeight : 5,
+         toConeTopRadius : 0,
+         toConeBaseRadius : 3,
+         toConeColor : "0x000000",
+         toConeOpacity : 0.5*/
 
-        this.type = configObj.type;
 
-        this.fromPosition = configObj.from || new DataDoo.Position(0, 0, 0);
+        Primitive.call(this);
+        configObj = configObj || {};
 
-        this.arrowLineDirection = configObj.lineDirection || new THREE.Vector3(1, 0, 0);
-        this.arrowLineLength = configObj.lineLength || 50;
+        this.fromPosition = this.vectorOrAnchor(configObj.from);
+        this.toPosition = this.vectorOrAnchor(configObj.to);
+
+        //this.arrowLineDirection = this.toPosition.clone().sub(this.fromPosition).normalize();
+
         this.arrowLineOpacity = configObj.lineOpacity || 1;
         this.arrowLineThickness = configObj.lineThickness || 1;
         this.arrowLineDivisions = configObj.lineDivisions || 0;
-        this.arrowLineColor = configObj.lineColor || 0x000000;
+        this.arrowLineColor = configObj.lineColor || "0x000000";
 
-        this.fromCone = configObj.fromCone;
-        this.fromConeHeight = configObj.fromConeHeight;
-        this.fromConeTopRadius = configObj.fromConeTopRadius;
-        this.fromConeBaseRadius = configObj.fromConeBaseRadius;
-        this.fromConeColor = configObj.fromConeColor;
-        this.fromConeOpacity = configObj.fromConeOpacity;
 
-        this.toCone = configObj.toCone;
-        this.toConeHeight = configObj.toConeHeight;
-        this.toConeTopRadius = configObj.toConeBaseRadius;
-        this.toConeBaseRadius = configObj.toConeBaseRadius;
-        this.toConeColor = configObj.toConeColor;
-        this.toConeOpacity = configObj.toConeOpacity;
+        this.fromCone = configObj.fromCone || false;
+        this.fromConeHeight = configObj.fromConeHeight || 5;
+        this.fromConeTopRadius = configObj.fromConeTopRadius || 0;
+        this.fromConeBaseRadius = configObj.fromConeBaseRadius || 3;
+        this.fromConeColor = configObj.fromConeColor || "0x000000";
+        this.fromConeOpacity = configObj.fromConeOpacity || 1;
 
-        if (configObj.to) {
-            this.toPosition = configObj.to;
-        }
-        else {
-            var toPosX = this.fromPosition.x + (this.arrowLineLength * this.arrowLineDirection.x);
-            var toPosY = this.fromPosition.y + (this.arrowLineLength * this.arrowLineDirection.y);
-            var toPosZ = this.fromPosition.z + (this.arrowLineLength * this.arrowLineDirection.z);
+        this.toCone = configObj.toCone || false;
+        this.toConeHeight = configObj.toConeHeight || 5;
+        this.toConeTopRadius = configObj.toConeTopRadius || 0;
+        this.toConeBaseRadius = configObj.toConeBaseRadius || 3;
+        this.toConeColor = configObj.toConeColor || "0x000000";
+        this.toConeOpacity = configObj.toConeOpacity || 1;
 
-            this.toPosition = new DataDoo.Position(toPosX, toPosY, toPosZ);
-        }
-
-        this.line = new DataDoo.Line(this.fromPosition, this.toPosition, this.arrowLineLength, this.arrowLineDirection, this.arrowLineColor, this.arrowLineThickness, this.arrowLineOpacity);
+        this.line = new DataDoo.Line(this.fromPosition, this.toPosition, this.arrowLineColor, this.arrowLineThickness, this.arrowLineOpacity);
         this.add(this.line);
 
         if (this.fromCone) {
-            this.fromCone = new DataDoo.Cone(this.fromConeHeight, this.fromConeTopRadius, this.fromConeBaseRadius, this.fromPosition, this.arrowLineDirection.clone().negate(), this.fromConeColor, this.fromConeOpacity);
+            this.fromCone = new DataDoo.Cone(this.fromConeHeight, this.fromConeTopRadius, this.fromConeBaseRadius, this.fromConeColor, this.fromConeOpacity);
             this.add(this.fromCone);
+            this.fromCone.position = this.fromPosition;
         }
 
         if (this.toCone) {
-            this.toCone = new DataDoo.Cone(this.toConeHeight, this.toConeTopRadius, this.toConeBaseRadius, this.toPosition, this.arrowLineDirection, this.toConeColor, this.toConeOpacity);
+            this.toCone = new DataDoo.Cone(this.toConeHeight, this.toConeTopRadius, this.toConeBaseRadius, this.toConeColor, this.toConeOpacity);
             this.add(this.toCone);
+            this.toCone.position = this.toPosition;
         }
     }
 
     Arrow.prototype = Object.create(Primitive.prototype);
+    Arrow.prototype.resolve = function(){
+        Primitive.prototype.resolve.apply(this, arguments);
+        this.arrowLineDirection = this.toPosition.clone().sub(this.fromPosition).normalize();
+        if(this.toCone)this.setDirection(this.arrowLineDirection, this.toCone);
+        if(this.fromCone)this.setDirection(this.arrowLineDirection.clone().negate(), this.fromCone);
+    };
     DataDoo.Arrow = Arrow;
 
 
@@ -239,7 +232,7 @@
             var position = this.spline.getPoint(index);
             this.geometrySpline.vertices[ i ] = new THREE.Vector3(position.x,position.y,position.z);
         }
-        this.geometrySpline.computeLineDistances();
+        //this.geometrySpline.computeLineDistances();
 
         this.mesh = new THREE.Line(this.geometrySpline, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 3 }), THREE.LineStrip);
         this.add(this.mesh);
