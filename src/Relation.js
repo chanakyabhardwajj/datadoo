@@ -5,28 +5,12 @@
      * It contains a set of graphics primitives that represent itself.
      */
     function Relation(data) {
-        this.primitives = [];
+        DataDoo.DDObject3D.call(this);
         this.data = data || {};
+        this.position = new DataDoo.RVector3();
     }
-
-    Relation.prototype.addSpline= function(points, color, subdivisions) {
-        var spline = new DataDoo.Spline(points, color, subdivisions);
-        this.primitives.push(spline);
-        return spline;
-    };
-
-    Relation.prototype.addDashedLine = function(startPos, endPos, color, dashSize, gapSize, radius) {
-        var line = new DataDoo.DashedLine(startPos, endPos, color, dashSize, gapSize, radius);
-        this.primitives.push(line);
-        return line;
-    };
-
-    Relation.prototype.addSprite = function(url, position, scale) {
-        var sprite = new DataDoo.Sprite(url, position, scale);
-        this.primitives.push(sprite);
-        return sprite;
-    };
-
+    Relation.prototype = Object.create(DataDoo.DDObject3D.prototype);
+    _.extend(DataDoo.prototype, DataDoo.PrimitiveHelpers);
     DataDoo.Relation = Relation;
 })(window.DataDoo);
 

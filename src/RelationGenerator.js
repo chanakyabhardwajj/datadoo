@@ -26,8 +26,9 @@
     RelationGenerator.prototype.priority = 3;
     RelationGenerator.prototype.handler = function(/*array*/ events) {
         console.log("RelationGenerator" + this.id +": Received An Event");
+        var oldRelations = this.relations;
         this.generateRelations();
-        this.dd.eventBus.enqueue(this, "RELATION.UPDATE", this.relations);
+        this.dd.eventBus.enqueue(this, "RELATION.UPDATE", {removed: oldRelations, added: this.relations});
     };
 
     RelationGenerator.prototype.generateRelations = function() {

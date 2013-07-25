@@ -3,14 +3,10 @@
      *  Primitive base class
      */
     function Primitive() {
-        this.objects = [];
+        DataDoo.DDObject3D.call(this);
     }
-    Primitive.prototype.getPositions = function() {
-        return [];
-    };
-    Primitive.prototype.onResolve = function() {
-        throw new Error("Primitive : onResolve not implemented");
-    };
+    Primitive.prototype = Object.create(DataDoo.DDObject3D);
+    DataDoo.Primitive = Primitive;
 
     //This is a helper function to align any object in a direction
     Primitive.prototype.setDirection = function (obj) {
@@ -32,22 +28,22 @@
             }
         };
     }();
-    DataDoo.Primitive = Primitive;
 
     /**
      *  Sphere primitive
      */
-    function Sphere(radius, color, center) {
+    function Sphere(radius, color) {
+        Primitive.call(this);
         this.radius = radius || 10;
         this.color = color || 0x8888ff;
-        this.center = center || new DataDoo.Position(0,0,0);
 
         this.material = new THREE.MeshLambertMaterial({color: this.color});
         this.geometry = new THREE.SphereGeometry(this.radius,20,20);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
-        this.objects = [this.mesh];
+        this.add(this.mesh)
     }
     Sphere.prototype = Object.create(Primitive.prototype);
+    DataDoo.Sphere = Sphere;
     /**
      * Sets the radius of the sphere
      */
@@ -56,24 +52,17 @@
         this.geometry = new THREE.SphereGeometry(this.radius);
         this.mesh.setGeometry(this.geometry);
     };
-    Sphere.prototype.getPositions = function() {
-        return [this.center];
-    };
-    Sphere.prototype.onResolve = function() {
-        this.center.applyToVector(this.mesh.position);
-    };
-    DataDoo.Sphere = Sphere;
 
     /**
      *  Line primitive
      */
     function Line(startPos, endPos, lineLength, dir, color, thickness, opacity) {
-        THREE.Object3D.call(this);
+        Primitive.call(this);
 
         this.thickness = thickness || 1;
         this.opacity = opacity || 1;
         this.color = color || 0xcccccc;
-        this.startPos = startPos || new DataDoo.Position(0,0,0);
+        this.startPos = startPos || new THREE.Vector3(0,0,0);
         this.direction = dir || new THREE.Vector3(1,0,0);
         this.lineLength = lineLength || 50;
         this.direction.normalize();
@@ -94,25 +83,16 @@
         this.lineMaterial = new THREE.LineBasicMaterial( { color: this.color, linewidth: this.thickness, opacity: this.opacity } );
         this.line = new THREE.Line( this.lineGeometry, this.lineMaterial );
 
-        this.objects = [this.line];
+        this.add(line);
     }
     Line.prototype = Object.create(Primitive.prototype);
-    Line.prototype.getPositions = function() {
-        return [this.startPos, this.endPos];
-    };
-    Line.prototype.onResolve = function() {
-        this.startPos.applyToVector(this.lineGeometry.vertices[0]);
-        this.endPos.applyToVector(this.lineGeometry.vertices[1]);
-        this.lineGeometry.computeLineDistances();
-    };
     DataDoo.Line = Line;
-
 
     /**
      *  Cone primitive
      */
     function Cone(height, topRadius, baseRadius, position, dir, color, opacity) {
-        THREE.Object3D.call(this);
+        Primitive.call(this)
 
         this.position = position || new DataDoo.Position(0,0,0);
         this.height = height || 5;
@@ -128,21 +108,16 @@
         this.cone = new THREE.Mesh(coneGeometry, coneMat);
         this.setDirection(this.direction, this.cone);
 
-        this.objects = [this.cone];
+        this.add(cone);
     }
     Cone.prototype = Object.create(Primitive.prototype);
-    Cone.prototype.getPositions = function() {
-        return [this.position];
-    };
-    Cone.prototype.onResolve = function() {
-        this.position.applyToVector(this.cone.position);
-    };
     DataDoo.Cone = Cone;
 
     /**
      *  Arrow primitive
      */
     function Arrow(configObj) {
+        Primitive.call(this);
         configObj = configObj || {};
 
         /*configObj = {
@@ -170,7 +145,6 @@
             toConeOpacity : 1
         }*/
 
-        THREE.Object3D.call(this);
         this.type = configObj.type;
 
         this.fromPosition = configObj.from || new DataDoo.Position(0,0,0);
@@ -207,53 +181,34 @@
 
             this.toPosition = new DataDoo.Position(toPosX, toPosY, toPosZ);
         }
-        this.arrow = new THREE.Object3D();
 
         this.line = new DataDoo.Line(this.fromPosition, this.toPosition, this.arrowLineLength, this.arrowLineDirection, this.arrowLineColor, this.arrowLineThickness, this.arrowLineOpacity);
-        this.arrow.add(this.line);
+        this.add(this.line);
 
         if(this.fromCone){
             this.fromCone = new DataDoo.Cone(this.fromConeHeight, this.fromConeTopRadius, this.fromConeBaseRadius, this.fromPosition, this.arrowLineDirection.clone().negate(), this.fromConeColor, this.fromConeOpacity);
-            this.arrow.add(this.fromCone);
+            this.add(this.fromCone);
         }
 
         if(this.toCone){
             this.toCone = new DataDoo.Cone(this.toConeHeight, this.toConeTopRadius, this.toConeBaseRadius, this.toPosition, this.arrowLineDirection, this.toConeColor, this.toConeOpacity);
-            this.arrow.add(this.toCone);
+            this.add(this.toCone);
         }
-
-        this.objects = [this.arrow];
-
     }
     Arrow.prototype = Object.create(Primitive.prototype);
-    Arrow.prototype.getPositions = function() {
-        return [this.fromPosition, this.toPosition];
-    };
-    Arrow.prototype.onResolve = function() {
-        //ToDo : Fix this area!!
-
-        /*this.fromPosition.applyToVector(this.line.geometry.vertices[0]);
-        this.toPosition.applyToVector(this.line.geometry.vertices[1]);*/
-        this.line.onResolve();
-        if(this.fromCone){
-            this.fromPosition.applyToVector(this.fromCone.position);
-        }
-        if(this.toCone){
-            this.toPosition.applyToVector(this.toCone.position);
-        }
-    };
     DataDoo.Arrow = Arrow;
 
     /**
      *  DashedLine primitive
      */
     function DashedLine(startPos, endPos, color, dashSize, gapSize, radius) {
+        Primitive.call(this);
         this.dashSize = dashSize || 4;
         this.gapSize = gapSize || 2;
         this.color = color || 0x8888ff;
         this.radius = radius || 3;
-        this.startPos = startPos;
-        this.endPos = endPos;
+        this.startPos = this.vectorOrAnchor(startPos);
+        this.endPos = this.vectorOrAnchor(endPos);
 
         this.sphereMaterial = new THREE.MeshLambertMaterial({color: this.color});
         this.sphereGeometry = new THREE.SphereGeometry(this.radius);
@@ -265,33 +220,21 @@
         this.lineGeometry.vertices.push(new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0));
         this.lineMaterial = new THREE.LineDashedMaterial( { color: this.color, dashSize: this.dashSize, gapSize: this.gapSize } );
         this.line = new THREE.Line( this.lineGeometry, this.lineMaterial );
-
-        this.objects = [this.sphere1, this.sphere2, this.line];
+        this.add(line);
     }
     DashedLine.prototype = Object.create(Primitive.prototype);
-    DashedLine.prototype.getPositions = function() {
-        return [this.startPos, this.endPos];
-    };
-    DashedLine.prototype.onResolve = function() {
-        this.startPos.applyToVector(this.lineGeometry.vertices[0]);
-        this.endPos.applyToVector(this.lineGeometry.vertices[1]);
-        this.lineGeometry.computeLineDistances();
-
-        this.startPos.applyToVector(this.sphere1.position);
-        this.endPos.applyToVector(this.sphere2.position);
-    };
     DataDoo.DashedLine = DashedLine;
 
     /**
      *  Spline primitive
      */
     function Spline(points, color, subdivisions){
+        Primitive.call(this);
         this.points = points;
         this.color = color || 0xfc12340;
         this.subdivisions = subdivisions || 6;
         this.spline = new THREE.Spline( points );
         this.geometrySpline = new THREE.Geometry();
-        this.position = new DataDoo.Position(0,0,0);
 
         for ( var i = 0; i < this.points.length * this.subdivisions; i ++ ) {
             var index = i / ( this.points.length * this.subdivisions );
@@ -301,45 +244,32 @@
         this.geometrySpline.computeLineDistances();
 
         this.mesh = new THREE.Line( this.geometrySpline, new THREE.LineDashedMaterial( { color: this.color, dashSize: 4, gapSize: 2, linewidth : 3 } ), THREE.LineStrip );
-        this.objects = [this.mesh];
+        this.add(this.mesh);
     }
     Spline.prototype = Object.create(Primitive.prototype);
-    Spline.prototype.getPositions = function() {
-        return [this.position];
-    };
-    Spline.prototype.onResolve = function() {
-        this.position.applyToVector(this.mesh.position);
-    };
     DataDoo.Spline = Spline;
 
     /**
      *  Sprite primitive
      */
-    function Sprite(url, datadooPosition, scale){
+    function Sprite(url, scale){
+        Primitive.call(this);
         this.map = THREE.ImageUtils.loadTexture(url);
         this.scale = scale;
         this.material = new THREE.SpriteMaterial( { map: this.map, useScreenCoordinates: false, color: 0xffffff, fog: true } );
-        this.position = datadooPosition || new DataDoo.Position(0,0,0);
         this.sprite = new THREE.Sprite( this.material );
         this.sprite.scale.x = this.sprite.scale.y = this.sprite.scale.z = this.scale;
-        this.objects = [this.sprite];
+        this.add(this.sprite);
     }
     Sprite.prototype = Object.create(Primitive.prototype);
-    Sprite.prototype.getPositions = function() {
-        return [this.position];
-    };
-    Sprite.prototype.onResolve = function() {
-        this.position.applyToVector(this.sprite.position);
-        //this.sprite.position.multiplyScalar(this.radius);
-    };
     DataDoo.Sprite = Sprite;
 
 
     /**
      *  Label primitive
      */
-    function Label(message, position, offset){
-        THREE.Object3D.call(this);
+    function Label(message, offset){
+        Primitive.call(this);
 
         //Trick borrowed from MathBox!
         var element = document.createElement('div');
@@ -355,7 +285,6 @@
         inner.style.top = '-.5em';
 
         this.message = message;
-        this.position = position;
         this.element = element;
         this.distanceX = offset.x || 10;
         this.distanceY = offset.y || 10;
@@ -370,18 +299,13 @@
         //element.style.opacity = 0;
         inner.appendChild(document.createTextNode(this.message));
 
-        this.objects = [this.element];
         document.body.appendChild(element);
     }
     Label.prototype = Object.create(Primitive.prototype);
-    Label.prototype.getPositions = function() {
-        return [this.position];
-    };
-    Label.prototype.onResolve = function() {};
+    DataDoo.Label = Label;
     Label.prototype.updateElemPos = function(top, left) {
         this.element.style.top = top + this.distanceY + "px";
         this.element.style.left = left + this.distanceX + "px";
     };
-    DataDoo.Label = Label;
 
 })(window.DataDoo);

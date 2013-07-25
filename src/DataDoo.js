@@ -211,35 +211,21 @@ window.DataDoo = (function () {
         // compute axis values
         this._computeAxisValues(events);
 
-        // Resolve primitive positions
-
-        // TODO: resolve only dirty nodes/relations
-        var primitives = _.chain(this.bucket).values().flatten().filter(function (item) {
-            return item instanceof DataDoo.Node || item instanceof DataDoo.Relation;
-        }).map(function (node) {
-                return node.primitives;
-            }).flatten();
-
-        var primCopy = primitives;
+        // resolve positions of all objects
+        DataDoo.utils.traverseObject3D(this.scene, function(child) {
+            if(child instanceof DataDoo.DDObject3D) {
+                child.resolve(this.axesConf);
+            }
+        });
 
         // Find all the label objects and stuff them into the array
-        this.labelsArray = primCopy.filter(function(pr){
-            return pr instanceof DataDoo.Label;
-        }).value();
-
-        var positions = primitives.map(function (primitive) {
-            return primitive.getPositions();
-        }).flatten();
-
-        this._resolvePositions(positions);
-
-        // call onResolve on all primitives so that
-        // they can set positions for three.js primitives
-        primitives.each(function (primitive) {
-            primitive.onResolve();
-        });
+        this.labelsArray = [];
+        DataDoo.utils.traverseObject3D(this.scene, function(object){
+            if(object instanceof DataDoo.Label) {
+                this.labelsArray.push(object);
+            }
+        }, this);
     };
-
 
     DataDoo.prototype._computeAxisValues = function (events) {
         var changedDs = _.chain(DataDoo.EventBus.flattenEvents(events)).filter(function(event) {
@@ -278,132 +264,35 @@ window.DataDoo = (function () {
         DataDoo.EventBus.flatEventsIter(events, function (event) {
             switch (event.eventName) {
                 case "NODE.ADD":
-                    _.each(this._getObjects(event.data), function (object) {
+                    _.each(event.data, function (object) {
                         this.scene.add(object);
                     }, this);
                     break;
                 case "NODE.DELETE":
-                    _.each(this._getObjects(event.data), function (object) {
+                    _.each(event.data, function (object) {
                         this.scene.remove(object);
                     }, this);
                     break;
                 case "NODE.UPDATE":
-                    _.each(this._getObjects(event.data.updatedNodes), function (object) {
+                    _.each(event.data.added, function (object) {
                         this.scene.add(object);
                     }, this);
-                    _.each(this._getObjects(event.data.oldNodes), function (object) {
+                    _.each(event.data.removed, function (object) {
                         this.scene.remove(object);
                     }, this);
                     break;
 
                 case "RELATION.UPDATE":
-                    console.log("relation updates");
-                    console.dir(event);
-                    // Remove old relation primitives and add new ones here
-
-                    _.each(this._getObjects(event.data), function (object) {
+                    _.each(this._getObjects(event.data.added), function (object) {
                         this.scene.add(object);
+                    }, this);
+
+                    _.each(this._getObjects(event.data.removed), function (object) {
+                        this.scene.remove(object);
                     }, this);
                     break;
             }
         }, this);
-    };
-
-    DataDoo.prototype._resolvePositions = function (positions) {
-        // create dependency linked list
-        var start = null;
-        var end = null;
-        positions.each(function (position) {
-            if (!start) {
-                start = position;
-            }
-            if (position._seen) {
-                return;
-            }
-
-            var pointer = position;
-            position._prev = end;
-            // compute the current snippet
-            do {
-                pointer._seen = true;
-                pointer._next = pointer.relatedPos;
-                if (pointer.relatedPos) {
-                    if (pointer.relatedPos._seen) {
-                        // insert current snippet into list if
-                        // we reach an already seen node
-                        position._prev = pointer.relatedPos._prev;
-                        if (pointer.relatedPos._prev) {
-                            pointer.relatedPos._prev._next = position;
-                        }
-                        else {
-                            start = position;
-                        }
-                        pointer.relatedPos._prev = pointer;
-                        break;
-                    }
-                    pointer.relatedPos._prev = pointer;
-                }
-                else {
-                    if (end) {
-                        end._next = pointer;
-                    }
-                    end = pointer;
-                }
-                pointer = pointer.relatedPos;
-            } while (pointer);
-        });
-
-        // resolve position by traversing the dependency linked list
-        var pos = end;
-        while (pos) {
-            console.log("Resolving position type=" + pos.type + " (" + pos.x + "," + pos.y + "," + pos.z + ")");
-
-            switch (pos.type) {
-                case DataDoo.ABSOLUTE:
-                    pos.resolvedX = pos.x;
-                    pos.resolvedY = pos.y;
-                    pos.resolvedZ = pos.z;
-                    break;
-                case DataDoo.RELATIVE:
-                    pos.resolvedX = pos.relatedPos.resolvedX + pos.x;
-                    pos.resolvedY = pos.relatedPos.resolvedY + pos.y;
-                    pos.resolvedZ = pos.relatedPos.resolvedZ + pos.z;
-                    break;
-                case DataDoo.COSY:
-                    for (var axisName in this.axesConf) {
-                        if(!_.contains(["x", "y", "z"], axisName)) {
-                            continue;
-                        }
-                        var axis = this.axesConf[axisName];
-                        var resName = "resolved" + axisName.toUpperCase();
-                        if (axis.type == DataDoo.NUMBER) {
-                            pos[resName] = pos[axisName];
-                        }
-                        if (axis.type == DataDoo.COLUMNVALUE) {
-                            pos[resName] = axis.posMap[pos[axisName]];
-                        }
-                    }
-                    break;
-            }
-
-            // do spherical conversion
-            if(this.axesConf.type == DataDoo.SPHERICAL) {
-                var r = pos.resolvedX;
-                var theta = pos.resolvedY*Math.PI/180;
-                var phi = pos.resolvedZ*Math.PI/180;
-
-                pos.resolvedX = r * Math.sin(phi) * Math.cos(theta);
-                pos.resolvedY = r * Math.sin(phi) * Math.sin(theta);
-                pos.resolvedZ = r * Math.cos(phi);
-            }
-
-            var oldPos = pos;
-            pos = pos._prev;
-            // clear out all the linked list data
-            oldPos._next = undefined;
-            oldPos._prev = undefined;
-            oldPos._seen = undefined;
-        }
     };
 
     DataDoo.prototype.putLabelsToScreen = function(){
@@ -411,19 +300,10 @@ window.DataDoo = (function () {
         self.camera.updateMatrixWorld();
         _.each(self.labelsArray, function(label){
             var vector = self.projector.projectVector(label.position.toVector(), self.camera);
-            //var vector = self.projector.projectVector(new THREE.Vector3(20,20,20), self.camera);
             vector.x = (vector.x + 1)/2 * self.renderer.domElement.width;
             vector.y = -(vector.y - 1)/2 * self.renderer.domElement.height;
             label.updateElemPos(vector.y, vector.x);
         });
-    };
-
-    DataDoo.prototype._getObjects = function (nodes) {
-        return _.chain(nodes).map(function (node) {
-            return node.primitives;
-        }).flatten().map(function (primitive) {
-                return primitive.objects;
-            }).flatten().value();
     };
 
     return DataDoo;

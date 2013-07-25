@@ -18,6 +18,7 @@
 
         dd.eventBus.subscribe(this, dataSet);
     }
+    DataDoo.NodeGenerator = NodeGenerator;
     NodeGenerator.prototype.collapseEvents = false;
     NodeGenerator.prototype.priority = 2;
     NodeGenerator.prototype.handler = function(event) {
@@ -59,7 +60,7 @@
                         }
                     }
                 }, this);
-                this.dd.eventBus.enqueue(this, "NODE.UPDATE", {updated: updatedNodes, oldNodes: oldNodes});
+                this.dd.eventBus.enqueue(this, "NODE.UPDATE", {added: updatedNodes, removed: oldNodes});
                 break;
             default:
                 throw new Error("NodeGenerator "+ this.id + ": Unknown event "+event.eventName+" fired");
@@ -78,13 +79,12 @@
      * its visual
      */
     function Node(data) {
-        DataDoo.DDObject3D.apply(this);
-        this.data = data;
+        DataDoo.DDObject3D.call(this);
+        this.data = data || {};
         this.position = new DataDoo.RVector3();
     }
-    DataDoo.Node = Node;
-    DataDoo.prototype = Object.create(DataDoo.DDObject3D.prototype);
+    Node.prototype = Object.create(DataDoo.DDObject3D.prototype);
     _.extend(DataDoo.prototype, DataDoo.PrimitiveHelpers);
+    DataDoo.Node = Node;
 
-    DataDoo.NodeGenerator = NodeGenerator;
 })(window.DataDoo);

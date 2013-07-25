@@ -20,13 +20,27 @@
             });
         }
 
-        // resolve all children
-        _.each(this.children, function(child) {
-            if(child instanceof DDObject3D) {
-                child.resolution(axesConf);
-            }
-        });
+        if(this._onResolveCallbacks) {
+            _.each(this._onResolveCallbacks, function(cb) {
+                cb.call(this);
+            }, this);
+        }
     };
+
+    DDObject3D.bindOnResolve = function(callback) {
+        if(!this._onResolveCallbacks) {
+            this._onResolveCallbacks = [];
+        }
+        this._onResolveCallbacks.push(callback);
+    }
+
+    DDObject3D.prototype.vectorOrAnchor = function(vec) {
+        if(vec instanceof DDObject3D) {
+            return new DataDoo.AnchoredVector3(this, vec);
+        } else {
+            return vec;
+        }
+    }
 
 
     /**
