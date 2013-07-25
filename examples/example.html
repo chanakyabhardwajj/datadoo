@@ -105,16 +105,14 @@
             };
 
             var relAppFn = function($) {
-                var arr = [];
                 var n1 = $.ng1[$.ng1.length-2];
                 var n2 = $.ng2[$.ng2.length-2];
 
                 console.dir(n1);
-                console.dir(n2);
+                console.dir(n2);                
 
-                var r = new DataDoo.Relation();
+                var r = this.addRelation();
                 r.addDashedLine(n1, n2);
-                return arr;
             };
 
 

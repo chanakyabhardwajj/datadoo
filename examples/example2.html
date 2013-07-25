@@ -80,16 +80,13 @@
             };
 
             var relAppFn = function($) {
-                var arr = [];
                 for(var i = 0;i < $.ng1.length-1;i++) {
-                    var rel = new DataDoo.Relation();
+                    var rel = this.addRelation();
                     var node = $.ng1[i];
                     var nextNode = $.ng1[i+1];
                     rel.addDashedLine(node, nextNode, 0xff0000 + i*100);
                     rel.addDashedLine(node.sphere, nextNode.sphere, 0xff0000 + i*100);
-                    arr.push(rel);
                 }
-                return arr;
             }
 
             var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, nodeAppFn1);
