@@ -30,8 +30,7 @@
                 },
                 axes: {
                     x: {
-                        type: DataDoo.COLUMNVALUE,
-                        column: "ds1.one",
+                        type: DataDoo.NUMBER,
                         axisDivisions: 5,
                         axisLabelStartingFrom : 0,
                         axisLabel : "countries",
@@ -62,15 +61,6 @@
                 }
             });
 
-            var ds2 = new DataDoo.DataSet(dd, "ds2",{
-                importer : Miso.Dataset.Importers.GoogleSpreadsheet,
-                parser : Miso.Dataset.Parsers.GoogleSpreadsheet,
-                key : "0ArX_nhRDAroJdFM3aEdDWkJKdDBja1k1UHh3WnFqRlE",
-                worksheet : "1",
-                sync:true,
-                interval : 1000
-            });
-
             var ds1 = new DataDoo.DataSet(dd, "ds1", {
                 data: [
                     { one : "India", two : 10, three : 10 },
@@ -80,33 +70,37 @@
                 ]
             });
 
+            var ds2 = new DataDoo.DataSet(dd, "ds2",{
+                importer : Miso.Dataset.Importers.GoogleSpreadsheet,
+                parser : Miso.Dataset.Parsers.GoogleSpreadsheet,
+                key : "0ArX_nhRDAroJdFM3aEdDWkJKdDBja1k1UHh3WnFqRlE",
+                worksheet : "1",
+                sync:true,
+                interval : 1000
+            });
+
             var nodeAppFn1 = function($) {
                 //var sprite = this.addSprite("http://upload.wikimedia.org/wikipedia/commons/1/1b/Sunny_Leone_2012.jpg", new DataDoo.Position(this.data.Population,this.data.Population,this.data.Population), 10);
 
-
                 this.sphere = this.addSphere(5, 0xffcc00);
-                this.sphere2 = this.addSphere(2, 0xff0000);
-                this.sphere.position.set(10,10,30);
+                this.sphere.position.set(0,0,0);
 
-                //sphere.position.set(-10,-20,-10);
-                //this.addDashedLine(this.sphere, this.sphere2);
-
-
-                //var label = this.addLabel(this.data.one);
-                //label.position.set(this.data.two,this.data.two,this.data.two);
+                this.label = this.addLabel(this.data.one);
+                //this.label.position.set(this.data.two,this.data.two,this.data.two);
+                this.label.position.set(20,20,20);
 
                 this.position.set(this.data.two,this.data.two,this.data.two);
+
             };
 
             var nodeAppFn2 = function($) {
-                console.log(this.data)
-                this.position.set(this.data.GDP,this.data.GDP,this.data.GDP);
-               // var sphere = this.addSphere(this.data.GDP/10, 0xfc12340);
-                var sphere2 = this.addSphere(this.data.Population/10, 0x11cc88);
-                sphere2.position.set(this.data.GDP*10, this.data.GDP, this.data.GDP);
-               // sphere.position.set(this.data.Population, -this.data.Population/10, this.data.Population/10);
+                console.log(this.data);
 
-                this.position.setOnAxes(this.data.one,this.data.two,this.data.two);
+                //var sphere2 = this.addSphere(this.data.Population/2, 0x0000ff);
+                //sphere2.position.set(this.data.GDP*10, this.data.GDP, this.data.GDP);
+
+
+                //this.position.setOnAxes(this.data.GDP,this.data.Population,this.data.GDP);
             };
 
             var relAppFn = function($) {
@@ -119,39 +113,15 @@
                     rel.addDashedLine(node.sphere, nextNode.sphere, 0xff0000 + i*100);
                     arr.push(rel);
                 }
-                return arr;
+                //return arr;
             }
 
-            var relnAppFn = function($){
-                /*var arr=[];
-                var src = $.ng1[$.ng1.length-1];
-                var dst = $.ng2[$.ng2.length-1];
-
-                if (src && dst) {
-                    var rel = new DataDoo.Relation();
-                    rel.addDashedLine(src, dst);
-                    arr.push(rel);
-                }
-
-                if ($.ng1.length>0 && $.ng2.length>0) {
-                    var ns = [];
-                    ns.push($.ng1[$.ng1.length - 1].primitives[0].center);
-                    ns.push($.ng2[$.ng2.length - 1].primitives[0].center);
-                    ns.push($.ng1[$.ng1.length - 2].primitives[0].center);
-
-                    var rel2 = new DataDoo.Relation();
-                    arr.push(rel2);
-                    rel2.addSpline(ns, 0xff0000, 8);
-                }
-
-                return arr;*/
-            };
 
             var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, nodeAppFn1);
             var ng2 = new DataDoo.NodeGenerator(dd, "ng2", ds2, nodeAppFn2);
 
 
-            var rg1 = new DataDoo.RelationGenerator(dd, "rg1", [ng1, ng2], relnAppFn);
+            var rg1 = new DataDoo.RelationGenerator(dd, "rg1", [ng1, ng2], relAppFn);
             ds1.fetch();
             ds2.fetch();
 

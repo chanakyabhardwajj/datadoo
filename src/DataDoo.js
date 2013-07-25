@@ -300,9 +300,10 @@ window.DataDoo = (function () {
 
     DataDoo.prototype.putLabelsToScreen = function(){
         var self = this;
-        var vector = new THREE.Vector3();
+
         self.camera.updateMatrixWorld();
         _.each(self.labelsArray, function(label){
+            var vector = new THREE.Vector3();
             vector.getPositionFromMatrix( label.matrixWorld );
             var vector2 = self.projector.projectVector(vector.clone(), self.camera);
             vector2.x = (vector2.x + 1)/2 * self.renderer.domElement.width;
