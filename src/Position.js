@@ -8,7 +8,14 @@
         this.ry = ry || 0;
         this.rz = rz || 0;
     }
+
     RVector3.prototype = Object.create(THREE.Vector3.prototype);
+
+    RVector3.prototype.set = function(rx, ry, rz){
+        this.rx = rx;
+        this.ry = ry;
+        this.rz = rz;
+    };
     DataDoo.RVector3 = RVector3;
 
     /**

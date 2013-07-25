@@ -61,7 +61,7 @@
                 }
             });
 
-            var ds1 = new DataDoo.DataSet(dd, "ds1",{
+            var ds2 = new DataDoo.DataSet(dd, "ds2",{
                 importer : Miso.Dataset.Importers.GoogleSpreadsheet,
                 parser : Miso.Dataset.Parsers.GoogleSpreadsheet,
                 key : "0ArX_nhRDAroJdFM3aEdDWkJKdDBja1k1UHh3WnFqRlE",
@@ -70,12 +70,12 @@
                 interval : 1000
             });
 
-            var ds2 = new DataDoo.DataSet(dd, "ds2", {
+            var ds1 = new DataDoo.DataSet(dd, "ds1", {
                 data: [
-                    { one : "India", two : -10, three : 10 },
-                    { one : "Germany", two : -20, three : 20 },
-                    { one : "Japan", two : -30, three : 30 },
-                    { one : "Sweden", two : -40, three : 40 }
+                    { one : "India", two : 10, three : 10 },
+                    { one : "Germany", two : 20, three : 20 },
+                    { one : "Japan", two : 30, three : 30 },
+                    { one : "Sweden", two : 40, three : 40 }
                 ]
             })
 
@@ -83,11 +83,15 @@
                 //var sprite = this.addSprite("http://upload.wikimedia.org/wikipedia/commons/1/1b/Sunny_Leone_2012.jpg", new DataDoo.Position(this.data.Population,this.data.Population,this.data.Population), 10);
 
                 var sphere = this.addSphere(10, 0xffcc00);
-                this.position.set(this.data.Population,this.data.Population,this.data.Population);
+                var sphere2 = this.addSphere(2, 0xff0000);
+                sphere2.position.set(10,20,10);
+                //sphere.position.set(-10,-20,-10);
+
+                this.position.set(this.data.two,this.data.two,this.data.two);
             };
 
-            var nodeAppFn2 = function($) {
-                this.position.set(this.data.two,
+           /* var nodeAppFn2 = function($) {
+                *//*this.position.set(this.data.two,
                                   this.data.two,
                                   this.data.three)
 
@@ -105,11 +109,11 @@
 
                 var label = this.addLabel(this.data.one);
 
-                /*this.addLine(sphere, sphere(20, 20, 20), 100, new THREE.Vector3(1,0,1), 0xfc12340, 2, 0.6);
+                this.addLine(sphere, new THREE.Vector3(200,202,20), 100, new THREE.Vector3(1,0,1), 0xfc12340, 12, 0.6);
 
-                var cone = this.addCone(20, 3, 10, sphere.center.relative(20, 20, 20), new THREE.Vector3(0,1,0), 0xffcc00, 0.3);
+                var cone = this.addCone(20, 3, 10, new THREE.Vector3(120,202,20), new THREE.Vector3(0,1,0), 0xffcc00, 0.3);*//*
 
-                var arrow = this.addArrow({
+                *//*var arrow = this.addArrow({
                     from : new DataDoo.Position(20, 20, 20),
                     to : new DataDoo.Position(-20, -20, -20), //if "to" is provided, the lineLength and lineDirection params are ignored
 
@@ -121,11 +125,11 @@
                     lineOpacity : 1,
                     fromCone : true,
                     toCone : true
-                })*/
+                })*//*
 
-            };
+            };*/
 
-            var relnAppFn = function($){
+           /* var relnAppFn = function($){
                 var arr=[];
                 var src = $.ng1[$.ng1.length-1];
                 var dst = $.ng2[$.ng2.length-1];
@@ -136,7 +140,7 @@
                     arr.push(rel);
                 }
 
-                /*if ($.ng1.length>0 && $.ng2.length>0) {
+                *//*if ($.ng1.length>0 && $.ng2.length>0) {
                     var ns = [];
                     ns.push($.ng1[$.ng1.length - 1].primitives[0].center);
                     ns.push($.ng2[$.ng2.length - 1].primitives[0].center);
@@ -145,18 +149,18 @@
                     var rel2 = new DataDoo.Relation();
                     arr.push(rel2);
                     rel2.addSpline(ns, 0xff0000, 8);
-                }*/
+                }*//*
 
                 return arr;
-            };
+            };*/
 
             var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, nodeAppFn1);
-            var ng2 = new DataDoo.NodeGenerator(dd, "ng2", ds2, nodeAppFn2);
+           // var ng2 = new DataDoo.NodeGenerator(dd, "ng2", ds2, nodeAppFn2);
 
-            var rg1 = new DataDoo.RelationGenerator(dd, "rg1", [ng1, ng2], relnAppFn);
+            //var rg1 = new DataDoo.RelationGenerator(dd, "rg1", [ng1/*, ng2*/], relnAppFn);
             ds1.fetch();
-            ds2.fetch();
-            dd.startVis(rg1);
+            //ds2.fetch();
+            dd.startVis(ng1);
         </script>
     </body>
 </html>

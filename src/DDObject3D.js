@@ -16,13 +16,13 @@
         if(this.position instanceof DataDoo.RVector3) {
             _.each(["x", "y", "z"], function(axis) {
                 var axisConf = axesConf[axis];
-                if(axis.type == DataDoo.NUMBER) {
-                    this.position["r"+axis] = this.position[axis];
+                if(axisConf.type == DataDoo.NUMBER) {
+                    this.position[axis] = this.position["r"+axis];
                 }
-                if(axis.type == DataDoo.COLUMNVALUE) {
-                    this.position["r"+axis] = this.position[axisConf.posMap[axis]];
+                if(axisConf.type == DataDoo.COLUMNVALUE) {
+                    this.position[axis] = this.position[axisConf.posMap["r"+axis]];
                 }
-            });
+            }, this);
         }
 
         // fire callbacks if any

@@ -83,7 +83,7 @@
         this.lineMaterial = new THREE.LineBasicMaterial( { color: this.color, linewidth: this.thickness, opacity: this.opacity } );
         this.line = new THREE.Line( this.lineGeometry, this.lineMaterial );
 
-        this.add(line);
+        this.add(this.line);
     }
     Line.prototype = Object.create(Primitive.prototype);
     DataDoo.Line = Line;
@@ -108,7 +108,7 @@
         this.cone = new THREE.Mesh(coneGeometry, coneMat);
         this.setDirection(this.direction, this.cone);
 
-        this.add(cone);
+        this.add(this.cone);
     }
     Cone.prototype = Object.create(Primitive.prototype);
     DataDoo.Cone = Cone;
@@ -203,6 +203,7 @@
      */
     function DashedLine(startPos, endPos, color, dashSize, gapSize, radius) {
         Primitive.call(this);
+
         this.dashSize = dashSize || 4;
         this.gapSize = gapSize || 2;
         this.color = color || 0x8888ff;
@@ -328,6 +329,18 @@
             var sprite = new Sprite(url, position, scale);
             this.add(sprite);
             return sprite;
+        },
+
+        addLine : function(startPos, endPos, lineLength, dir, color, thickness, opacity) {
+            var line = new Line(startPos, endPos, lineLength, dir, color, thickness, opacity);
+            this.add(line);
+            return line;
+        },
+
+        addCone : function(height, topRadius, baseRadius, position, dir, color, opacity) {
+            var cone = new Cone(height, topRadius, baseRadius, position, dir, color, opacity);
+            this.add(cone);
+            return cone;
         },
 
         addLabel: function(message) {

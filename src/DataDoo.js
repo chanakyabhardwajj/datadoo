@@ -212,6 +212,7 @@ window.DataDoo = (function () {
         this._computeAxisValues(events);
 
         // resolve positions of all objects
+        //ToDo : Instead of the scene, use the bucket!!
         DataDoo.utils.traverseObject3D(this.scene, function(child) {
             if(child instanceof DataDoo.DDObject3D) {
                 child.resolve(this.axesConf);
@@ -220,6 +221,7 @@ window.DataDoo = (function () {
 
         // Find all the label objects and stuff them into the array
         this.labelsArray = [];
+        //ToDo : Instead of the scene, use the bucket!!
         DataDoo.utils.traverseObject3D(this.scene, function(object){
             if(object instanceof DataDoo.Label) {
                 this.labelsArray.push(object);

@@ -212,6 +212,7 @@ window.DataDoo = (function () {
         this._computeAxisValues(events);
 
         // resolve positions of all objects
+        //ToDo : Instead of the scene, use the bucket!!
         DataDoo.utils.traverseObject3D(this.scene, function(child) {
             if(child instanceof DataDoo.DDObject3D) {
                 child.resolve(this.axesConf);
@@ -220,6 +221,7 @@ window.DataDoo = (function () {
 
         // Find all the label objects and stuff them into the array
         this.labelsArray = [];
+        //ToDo : Instead of the scene, use the bucket!!
         DataDoo.utils.traverseObject3D(this.scene, function(object){
             if(object instanceof DataDoo.Label) {
                 this.labelsArray.push(object);
@@ -554,13 +556,13 @@ window.DataDoo = (function () {
         if(this.position instanceof DataDoo.RVector3) {
             _.each(["x", "y", "z"], function(axis) {
                 var axisConf = axesConf[axis];
-                if(axis.type == DataDoo.NUMBER) {
-                    this.position["r"+axis] = this.position[axis];
+                if(axisConf.type == DataDoo.NUMBER) {
+                    this.position[axis] = this.position["r"+axis];
                 }
-                if(axis.type == DataDoo.COLUMNVALUE) {
-                    this.position["r"+axis] = this.position[axisConf.posMap[axis]];
+                if(axisConf.type == DataDoo.COLUMNVALUE) {
+                    this.position[axis] = this.position[axisConf.posMap["r"+axis]];
                 }
-            });
+            }, this);
         }
 
         // fire callbacks if any
@@ -811,7 +813,14 @@ window.DataDoo = (function () {
         this.ry = ry || 0;
         this.rz = rz || 0;
     }
+
     RVector3.prototype = Object.create(THREE.Vector3.prototype);
+
+    RVector3.prototype.set = function(rx, ry, rz){
+        this.rx = rx;
+        this.ry = ry;
+        this.rz = rz;
+    };
     DataDoo.RVector3 = RVector3;
 
     /**
@@ -961,7 +970,7 @@ window.DataDoo = (function () {
         this.lineMaterial = new THREE.LineBasicMaterial( { color: this.color, linewidth: this.thickness, opacity: this.opacity } );
         this.line = new THREE.Line( this.lineGeometry, this.lineMaterial );
 
-        this.add(line);
+        this.add(this.line);
     }
     Line.prototype = Object.create(Primitive.prototype);
     DataDoo.Line = Line;
@@ -986,7 +995,7 @@ window.DataDoo = (function () {
         this.cone = new THREE.Mesh(coneGeometry, coneMat);
         this.setDirection(this.direction, this.cone);
 
-        this.add(cone);
+        this.add(this.cone);
     }
     Cone.prototype = Object.create(Primitive.prototype);
     DataDoo.Cone = Cone;
@@ -1081,6 +1090,7 @@ window.DataDoo = (function () {
      */
     function DashedLine(startPos, endPos, color, dashSize, gapSize, radius) {
         Primitive.call(this);
+
         this.dashSize = dashSize || 4;
         this.gapSize = gapSize || 2;
         this.color = color || 0x8888ff;
@@ -1206,6 +1216,18 @@ window.DataDoo = (function () {
             var sprite = new Sprite(url, position, scale);
             this.add(sprite);
             return sprite;
+        },
+
+        addLine : function(startPos, endPos, lineLength, dir, color, thickness, opacity) {
+            var line = new Line(startPos, endPos, lineLength, dir, color, thickness, opacity);
+            this.add(line);
+            return line;
+        },
+
+        addCone : function(height, topRadius, baseRadius, position, dir, color, opacity) {
+            var cone = new Cone(height, topRadius, baseRadius, position, dir, color, opacity);
+            this.add(cone);
+            return cone;
         },
 
         addLabel: function(message) {
