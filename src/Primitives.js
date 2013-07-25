@@ -138,28 +138,29 @@
      *  Arrow primitive
      */
     function Arrow(configObj) {
-        /*
-        * from : new THREE.Vector3(0,0,0),
-         to : new THREE.Vector3(0,100,0),
+         /*
+             from : new THREE.Vector3(0,0,0),
+             to : new THREE.Vector3(0,100,0),
 
-         lineDivisions : 10,
-         lineColor : "0x000000",
-         lineThickness : 1,
-         lineOpacity : 1,
+             lineDivisions : 10,
+             lineColor : "0x000000",
+             lineThickness : 1,
+             lineOpacity : 1,
 
-         fromCone : false,
-         fromConeHeight : 10,
-         fromConeTopRadius : 1,
-         fromConeBaseRadius : 5,
-         fromConeColor : "0xff0000",
-         fromConeOpacity : 1,
+             fromCone : false,
+             fromConeHeight : 10,
+             fromConeTopRadius : 1,
+             fromConeBaseRadius : 5,
+             fromConeColor : "0xff0000",
+             fromConeOpacity : 1,
 
-         toCone : true,
-         toConeHeight : 5,
-         toConeTopRadius : 0,
-         toConeBaseRadius : 3,
-         toConeColor : "0x000000",
-         toConeOpacity : 0.5*/
+             toCone : true,
+             toConeHeight : 5,
+             toConeTopRadius : 0,
+             toConeBaseRadius : 3,
+             toConeColor : "0x000000",
+             toConeOpacity : 0.5
+         */
 
 
         Primitive.call(this);
@@ -215,6 +216,63 @@
     };
     DataDoo.Arrow = Arrow;
 
+    /**
+     *  AxesHelper primitive
+     */
+    function AxesHelper(position, xObj, yObj, zObj) {
+        /*
+         x : {
+             type : DataDoo.NUMBER,
+             label : "x-axis",
+             lineColor : "0x000000",
+             labelColor : "0x000000",
+             length : 150,
+             withCone : false,
+             thickness : 1
+         }
+        */
+
+        Primitive.call(this);
+        this.position = this.vectorOrAnchor(position);
+        this.xObj = xObj || {};
+        this.yObj = yObj || {};
+        this.zObj = zObj || {};
+
+        this.xAxis = new DataDoo.Arrow({
+            from : new THREE.Vector3(0,0,0),
+            to : new THREE.Vector3(150,0,0),
+            lineDivisions : 10,
+            fromCone : false,
+            toCone : true
+        });
+        this.xlabel = new DataDoo.Label(this.xObj.label, new THREE.Vector3(150,1,0));
+        this.add(this.xAxis);
+        this.add(this.xlabel);
+
+        this.yAxis = new DataDoo.Arrow({
+            from : new THREE.Vector3(0,0,0),
+            to : new THREE.Vector3(0,150,0),
+            lineDivisions : 10,
+            fromCone : false,
+            toCone : true
+        });
+        this.ylabel = new DataDoo.Label(this.yObj.label, new THREE.Vector3(0,150,0));
+        this.add(this.yAxis);
+        this.add(this.ylabel);
+
+        this.zAxis = new DataDoo.Arrow({
+            from : new THREE.Vector3(0,0,0),
+            to : new THREE.Vector3(0,0,150),
+            lineDivisions : 10,
+            fromCone : false,
+            toCone : true
+        });
+        this.zlabel = new DataDoo.Label(this.zObj.label, new THREE.Vector3(0,0,150));
+        this.add(this.zAxis);
+        this.add(this.zlabel);
+    }
+    AxesHelper.prototype = Object.create(Primitive.prototype);
+    DataDoo.AxesHelper = AxesHelper;
 
     /**
      *  Spline primitive
@@ -278,8 +336,8 @@
         inner.className = 'datadoo-wrap';
         inner.style.position = 'relative';
         inner.style.display = 'inline-block';
-        inner.style.left = '-50%';
-        inner.style.top = '-.5em';
+        //inner.style.left = '-50%';
+        //inner.style.top = '-.5em';
 
         this.message = message || "empty label";
         this.element = element;

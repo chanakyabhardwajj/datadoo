@@ -23,33 +23,30 @@ window.DataDoo = (function () {
             axes : {
                 x : {
                     type : DataDoo.NUMBER,
-                    axisLabel : "x-axis",
-                    axisLineColor : 0xff0000,
-                    axisLabelColor : 0xff0000,
-                    axisDir : new THREE.Vector3(1, 0, 0),
-                    axisLength : 50,
-                    axisWithCone : false,
-                    axisThickness : 1
+                    label : "x-axis",
+                    lineColor : "0x000000",
+                    labelColor : "0x000000",
+                    length : 150,
+                    withCone : false,
+                    thickness : 1
                 },
                 y : {
                     type : DataDoo.NUMBER,
-                    axisLabel : "y-axis",
-                    axisLineColor : 0x00ff00,
-                    axisLabelColor : 0x00ff00,
-                    axisDir : new THREE.Vector3(0, 1, 0),
-                    axisLength : 50,
-                    axisWithCone : false,
-                    axisThickness : 1
+                    label : "y-axis",
+                    lineColor : "0x000000",
+                    labelColor :"0x000000",
+                    length : 150,
+                    withCone : false,
+                    thickness : 1
                 },
                 z : {
                     type : DataDoo.NUMBER,
-                    axisLabel : "z-axis",
-                    axisLineColor : 0x0000ff,
-                    axisLabelColor : 0x0000ff,
-                    axisDir : new THREE.Vector3(0, 0, 1),
-                    axisLength : 50,
-                    axisWithCone : false,
-                    axisThickness : 1
+                    label : "z-axis",
+                    lineColor : "0x000000",
+                    labelColor :"0x000000",
+                    length : 150,
+                    withCone : false,
+                    thickness : 1
                 }
             },
 
@@ -126,6 +123,7 @@ window.DataDoo = (function () {
             }
 
             this.grid = new THREE.Line(geometry, material, THREE.LinePieces);
+            this.grid.position.y = -0.5;
             this.scene.add(this.grid);
         }
 
@@ -150,8 +148,8 @@ window.DataDoo = (function () {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
 
         //AXES
-        this.axes = new DataDoo.AxesHelper(this.axesConf.x, this.axesConf.y, this.axesConf.z);
-        //this.scene.add(this.axes);
+        this.axes = new DataDoo.AxesHelper(new THREE.Vector3(0,0,0), this.axesConf.x, this.axesConf.y, this.axesConf.z);
+        this.scene.add(this.axes);
 
         //CAMERA
         var camSettings = this.cameraConf;
@@ -438,36 +436,36 @@ window.DataDoo = (function () {
             }
         },
 
-        traverseObject3D: function(object, iter, context) {
-            _.each(object.children, function(child) {
+        traverseObject3D : function (object, iter, context) {
+            _.each(object.children, function (child) {
                 iter.call(context, child);
                 this.traverseObject3D(child, iter, context);
             }, this);
         },
 
-        onResolveAll: (function() {
+        onResolveAll : (function () {
             function clear(array) {
-                for(var i = 0;i < array.length;i++) {
+                for (var i = 0; i < array.length; i++) {
                     array[i] = false;
                 }
             }
 
             function makeCallback(i, array, finalCallback) {
-                return function() {
+                return function () {
                     array[i] = true;
-                    if(_.every(array)) {
+                    if (_.every(array)) {
                         finalCallback();
                         clear(array);
                     }
                 };
             }
 
-            return function() {
+            return function () {
                 var finalCallback = _.last(arguments);
-                var objects = _.first(arguments, arguments.length-1);
+                var objects = _.first(arguments, arguments.length - 1);
                 var resolved = new Array(objects.length);
                 clear(resolved);
-                _.each(objects, function(object, i) {
+                _.each(objects, function (object, i) {
                     object.bindOnResolve(makeCallback(i, resolved, finalCallback));
                 });
             };
@@ -487,7 +485,7 @@ window.DataDoo = (function () {
             return this._raf.call(window, callback);
         },
 
-        makeTextSprite : function(message, parameters) {
+        makeTextSprite : function (message, parameters) {
             if (parameters === undefined) parameters = {};
 
             var fontface = parameters.hasOwnProperty("fontface") ?
@@ -511,7 +509,7 @@ window.DataDoo = (function () {
             var spriteAlignment = THREE.SpriteAlignment.topLeft;
 
             var canvas = document.getElementById("helperCanvas");
-            if(!canvas){
+            if (!canvas) {
                 canvas = document.createElement('canvas');
             }
             canvas.setAttribute("id", "helperCanvas");
@@ -535,7 +533,7 @@ window.DataDoo = (function () {
             // text color
             var tColor = new THREE.Color(textColor);
 
-            context.fillStyle = "rgba(" + tColor.r*255 + "," + tColor.g*255 + "," + tColor.b*255 + "," + " 1.0)";
+            context.fillStyle = "rgba(" + tColor.r * 255 + "," + tColor.g * 255 + "," + tColor.b * 255 + "," + " 1.0)";
             //context.fillStyle = "rgba(0.99, 0,0, 1.0)";
 
             context.fillText(message, borderThickness, fontsize + borderThickness);
@@ -551,7 +549,7 @@ window.DataDoo = (function () {
             return sprite;
         },
 
-        makeRoundRect : function(ctx, x, y, w, h, r) {
+        makeRoundRect : function (ctx, x, y, w, h, r) {
             ctx.beginPath();
             ctx.moveTo(x + r, y);
             ctx.lineTo(x + w - r, y);
@@ -565,7 +563,154 @@ window.DataDoo = (function () {
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
-        }
+        },
+
+        swatches : [
+            ["#14a697", "#f2c12e", "#f29d35", "#f27649", "#f25252"],
+
+            ["#2c3e50", "#fc4349", "#d7dadb", "#6dbcdb", "#ffffff"],
+
+            ["#252526", "#3e3e40", "#038c7e", "#03a688", "#73bf86"],
+
+            ["#f4fac7", "#7bad8d", "#ffb158", "#f77f45", "#c2454e"],
+
+            ["#0b0d0e", "#137074", "#7eb7a3", "#f1ddbb", "#ec6766"],
+
+            ["#3fb8af", "#7fc7af", "#dad8a7", "#ffb38b", "#ff3f34"],
+
+            ["#002a4a", "#17607d", "#fff1ce", "#ff9311", "#d64700"],
+
+            ["#324759", "#f2d95c", "#f2ac57", "#f28d52", "#f25757"],
+
+            ["#bf2431", "#f24150", "#2a4557", "#3b848c", "#eff2e4"],
+
+            ["#e53481", "#fcb215", "#9ccb3b", "#25b0e6", "#8151a1"],
+
+            ["#59323c", "#260126", "#f2eeb3", "#bfaf80", "#8c6954"],
+
+            ["#7ac5df", "#ff5452", "#ebf7f8", "#9aa5b8", "#525c72"],
+
+            ["#96ca2d", "#b5e655", "#f9fff2", "#4bb5c1", "#00191c"],
+
+            ["#002e40", "#2a5769", "#ffffff", "#fabd4a", "#f09000"],
+
+            ["#c7422f", "#e84c3d", "#1bb696", "#129078", "#2d3e50"],
+
+            ["#002e40", "#306378", "#404040", "#fabd4a", "#fa9600"],
+
+            ["#272d40", "#364659", "#55736d", "#9dbf8e", "#d0d991"],
+
+            ["#012d3d", "#38ad9e", "#ffeb9e", "#ff6867", "#d0dbed"],
+
+            ["#2d3340", "#5d768c", "#d9d3b8", "#bfae8e", "#8c7961"],
+
+            ["#004466", "#126d9c", "#3a9dd1", "#65bee8", "#ace2ff"],
+
+            ["#08afc7", "#adf7ff", "#fffef9", "#906a91", "#522554"],
+
+            ["#1e446b", "#4e78a1", "#9fdaff", "#fff5eb", "#616c6e"],
+
+            ["#195962", "#f56f6c", "#ffffff", "#252932", "#191c21"],
+
+            ["#edfeff", "#4e8c77", "#b4da81", "#fffee9", "#b5e0cb"],
+
+            ["#0e3559", "#027bbb", "#ffffff", "#e8560f", "#b31d10"],
+
+            ["#df3d4a", "#61274b", "#52ebb9", "#51ab83", "#a0ae9c"],
+
+            ["#5dbea9", "#efeddf", "#ef7247", "#4e3f35", "#d1cbba"],
+
+            ["#d30027", "#fcfbe7", "#9fd3da", "#008c9a", "#05484f"],
+
+            ["#371547", "#ed5715", "#a2c606", "#87025f", "#f9de19"],
+
+            ["#449bb5", "#043d5d", "#eb5055", "#68c39f", "#fffcf5"],
+
+            ["#3cb874", "#61d296", "#eaeff0", "#34465c", "#253342"],
+
+            ["#382f27", "#4bad9b", "#d9aa33", "#e3e0c9", "#d93d31"],
+
+            ["#590000", "#8c0000", "#fff7e3", "#807966", "#403533"],
+
+            ["#75bfbf", "#e7f2d5", "#f2d852", "#f2ae30", "#f29422"],
+
+            ["#e6e7e8", "#bad531", "#26a1d6", "#223032", "#000000"],
+
+            ["#114a63", "#c7c2b2", "#478396", "#cee830", "#ffffff"],
+
+            ["#0a111f", "#263248", "#7e8aa2", "#e3e3e3", "#a80b00"],
+
+            ["#eb6e44", "#ffe69e", "#cfee7f", "#8dcdc1", "#4f4a47"],
+
+            ["#fffed6", "#53eff0", "#8d5cd4", "#ff549d", "#ffcb28"],
+
+            ["#2e4350", "#f55a42", "#ecf0f1", "#42b2e3", "#4766b5"],
+
+            ["#2d2d3f", "#75a0a5", "#b8bf9e", "#bf9159", "#f2af5e"],
+
+            ["#35c1cf", "#95e2e8", "#fdfffe", "#ffb12a", "#ff7211"],
+
+            ["#101e26", "#f2f2f2", "#8c8c88", "#f28c0f", "#f2790f"],
+
+            ["#505050", "#129793", "#9bd7d5", "#ffeaab", "#ff7260"],
+
+            ["#ffd5e4", "#ffc1af", "#ffded2", "#b0908b", "#daf5ef"],
+
+            ["#043c4a", "#436873", "#e6e4e3", "#c96003", "#7d1b05"],
+
+            ["#143840", "#177373", "#5ba691", "#96d9ad", "#cef2d7"],
+
+            ["#073a59", "#2d9aa6", "#f2e2dc", "#f23322", "#a61b1b"],
+
+            ["#a6032f", "#037e8c", "#f2efc2", "#f2ab27", "#f25e3d"],
+
+            ["#2d5955", "#7ca68b", "#f2eeae", "#f2cda0", "#f29966"],
+
+            ["#36413a", "#b5c00b", "#1c231e", "#ffffff", "#4c5b52"],
+
+            ["#a6032f", "#037e8c", "#f2efc2", "#f2ab27", "#f25e3d"],
+
+            ["#9bc92e", "#f1fbff", "#28333d", "#5a707a", "#a7bdc6"],
+
+            ["#49bfa6", "#f2efa8", "#f2b431", "#6b432f", "#f2552b"],
+
+            ["#88c95f", "#6aa15f", "#ffd135", "#382830", "#ff4834"],
+
+            ["#9fa2a6", "#ebeef2", "#4f6273", "#4ed9bf", "#f25e5e"],
+
+            ["#c0ae72", "#fcfbfa", "#c2daa6", "#779a91", "#3b404f"],
+
+            ["#2f8a8a", "#f2ca04", "#d88e04", "#bf3503", "#721602"],
+
+            ["#e02d03", "#eb5825", "#ffdeb4", "#ffffff", "#0f8dcc"],
+
+            ["#d90718", "#242526", "#f2f2f2", "#848b8c", "#4f5859"],
+
+            ["#f8bd00", "#ed4500", "#fcfbe5", "#d9224c", "#bbd400"],
+
+            ["#98d3f5", "#cef0f7", "#ebfff1", "#ffe0c0", "#feb5a9"],
+
+            ["#032429", "#134a46", "#377d6a", "#7ab893", "#b2e3af"],
+
+            ["#1a402a", "#467339", "#75a644", "#a6d95b", "#edf2c9"],
+
+            ["#223245", "#637792", "#6a8ea9", "#c6beb5", "#9a9187"],
+
+            ["#607580", "#ffffff", "#c0eaff", "#4a6d80", "#9abbcc"],
+
+            ["#2651a3", "#3b7fff", "#8ab33f", "#faa918", "#ee3c27"],
+
+            ["#a20e30", "#e93c4f", "#dcdcd4", "#adbcc3", "#2d4255"],
+
+            ["#00afef", "#58595b", "#808285", "#bcbec0", "#d1d3d4"],
+
+            ["#049dd9", "#f2cb57", "#f29c50", "#f2783f", "#d93425"],
+
+            ["#505050", "#129793", "#9bd7d5", "#ffeaab", "#ff7260"],
+
+            ["#2c4259", "#9ed9d8", "#ede9f0", "#faf5f7", "#d4d0d1"]
+
+        ]
 
     };
 })(window.DataDoo);
@@ -973,7 +1118,7 @@ window.DataDoo = (function () {
 
         this.thickness = thickness || 1;
         this.opacity = opacity || 1;
-        this.color = color || 0xffaa00;
+        this.color = color || 0x000000;
         this.startPos = this.vectorOrAnchor(startPos);
         this.endPos = this.vectorOrAnchor(endPos);
 
@@ -993,7 +1138,6 @@ window.DataDoo = (function () {
     //ToDo : Something wrong with material here. Dashes are showing up!!
     function DashedLine(startPos, endPos, color, dashSize, gapSize, thickness, opacity) {
         Primitive.call(this);
-
         this.dashSize = dashSize || 4;
         this.gapSize = gapSize || 2;
         this.color = color || 0xffaa00;
@@ -1005,122 +1149,184 @@ window.DataDoo = (function () {
 
         this.lineGeometry = new THREE.Geometry();
         this.lineGeometry.vertices.push(this.startPos, this.endPos);
+        //this.lineGeometry.verticesNeedUpdate = true;
+        //this.lineGeometry.computeLineDistances();
         this.lineMaterial = new THREE.LineDashedMaterial({color : this.color, opacity:this.opacity, linewidth:this.thickness, dashSize:this.dashSize, gapSize:this.gapSize});
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
         this.add(this.line);
     }
     DashedLine.prototype = Object.create(Primitive.prototype);
+    DashedLine.prototype.resolve = function(){
+        Primitive.prototype.resolve.apply(this, arguments);
+        this.lineGeometry.computeLineDistances();
+    };
     DataDoo.DashedLine = DashedLine;
 
     /**
      *  Cone primitive
      */
-    function Cone(height, topRadius, baseRadius, position, dir, color, opacity) {
+    function Cone(height, topRadius, baseRadius, color, opacity) {
         Primitive.call(this);
 
-        this.position = position || new DataDoo.Position(0, 0, 0);
         this.height = height || 5;
         this.topRadius = topRadius || 0;
         this.baseRadius = baseRadius || 5;
         this.opacity = opacity || 1;
-        this.color = color || 0xcccccc;
-        this.direction = dir || new THREE.Vector3(0, 1, 0);
+        this.color = color || 0xff0000;
+
 
         var coneGeometry = new THREE.CylinderGeometry(this.topRadius, this.baseRadius, this.height, 10, 10);
         var coneMat = new THREE.MeshLambertMaterial({ color : this.color, opacity : this.opacity  });
         this.cone = new THREE.Mesh(coneGeometry, coneMat);
-        this.setDirection(this.direction, this.cone);
+
 
         this.add(this.cone);
     }
     Cone.prototype = Object.create(Primitive.prototype);
+    Cone.prototype.setDirection = function(dir){
+        this.setDirection(dir, this.cone);
+    };
     DataDoo.Cone = Cone;
 
     /**
      *  Arrow primitive
      */
     function Arrow(configObj) {
+         /*
+             from : new THREE.Vector3(0,0,0),
+             to : new THREE.Vector3(0,100,0),
+
+             lineDivisions : 10,
+             lineColor : "0x000000",
+             lineThickness : 1,
+             lineOpacity : 1,
+
+             fromCone : false,
+             fromConeHeight : 10,
+             fromConeTopRadius : 1,
+             fromConeBaseRadius : 5,
+             fromConeColor : "0xff0000",
+             fromConeOpacity : 1,
+
+             toCone : true,
+             toConeHeight : 5,
+             toConeTopRadius : 0,
+             toConeBaseRadius : 3,
+             toConeColor : "0x000000",
+             toConeOpacity : 0.5
+         */
+
+
         Primitive.call(this);
         configObj = configObj || {};
 
-        /*configObj = {
-         from : new DataDoo.Position(),
-         to : new DataDoo.Position(), //if "to" is provided, the lineLength and lineDirection params are ignored
+        this.fromPosition = this.vectorOrAnchor(configObj.from);
+        this.toPosition = this.vectorOrAnchor(configObj.to);
 
-         lineLength : 100,
-         lineDirection : new THREE.Vector3(1,0,0), //assumed normalized
-         lineDivisions : 10,
-         lineColor : 0x000000,
-         lineThickness : 1,
-         lineOpacity : 1,
+        //this.arrowLineDirection = this.toPosition.clone().sub(this.fromPosition).normalize();
 
-         fromCone : true,
-         fromConeHeight : 10,
-         fromConeTopRadius : 5,
-         fromConeBaseRadius : 5,
-         fromConeColor : 0x000000,
-         fromConeOpacity : 1,
-
-         toCone : true,
-         toConeHeight : 10,
-         toConeBaseRadius : 5,
-         toConeColor : 0x000000,
-         toConeOpacity : 1
-         }*/
-
-        this.type = configObj.type;
-
-        this.fromPosition = configObj.from || new DataDoo.Position(0, 0, 0);
-
-        this.arrowLineDirection = configObj.lineDirection || new THREE.Vector3(1, 0, 0);
-        this.arrowLineLength = configObj.lineLength || 50;
         this.arrowLineOpacity = configObj.lineOpacity || 1;
         this.arrowLineThickness = configObj.lineThickness || 1;
         this.arrowLineDivisions = configObj.lineDivisions || 0;
-        this.arrowLineColor = configObj.lineColor || 0x000000;
+        this.arrowLineColor = configObj.lineColor || "0x000000";
 
-        this.fromCone = configObj.fromCone;
-        this.fromConeHeight = configObj.fromConeHeight;
-        this.fromConeTopRadius = configObj.fromConeTopRadius;
-        this.fromConeBaseRadius = configObj.fromConeBaseRadius;
-        this.fromConeColor = configObj.fromConeColor;
-        this.fromConeOpacity = configObj.fromConeOpacity;
 
-        this.toCone = configObj.toCone;
-        this.toConeHeight = configObj.toConeHeight;
-        this.toConeTopRadius = configObj.toConeBaseRadius;
-        this.toConeBaseRadius = configObj.toConeBaseRadius;
-        this.toConeColor = configObj.toConeColor;
-        this.toConeOpacity = configObj.toConeOpacity;
+        this.fromCone = configObj.fromCone || false;
+        this.fromConeHeight = configObj.fromConeHeight || 5;
+        this.fromConeTopRadius = configObj.fromConeTopRadius || 0;
+        this.fromConeBaseRadius = configObj.fromConeBaseRadius || 3;
+        this.fromConeColor = configObj.fromConeColor || "0x000000";
+        this.fromConeOpacity = configObj.fromConeOpacity || 1;
 
-        if (configObj.to) {
-            this.toPosition = configObj.to;
-        }
-        else {
-            var toPosX = this.fromPosition.x + (this.arrowLineLength * this.arrowLineDirection.x);
-            var toPosY = this.fromPosition.y + (this.arrowLineLength * this.arrowLineDirection.y);
-            var toPosZ = this.fromPosition.z + (this.arrowLineLength * this.arrowLineDirection.z);
+        this.toCone = configObj.toCone || false;
+        this.toConeHeight = configObj.toConeHeight || 5;
+        this.toConeTopRadius = configObj.toConeTopRadius || 0;
+        this.toConeBaseRadius = configObj.toConeBaseRadius || 3;
+        this.toConeColor = configObj.toConeColor || "0x000000";
+        this.toConeOpacity = configObj.toConeOpacity || 1;
 
-            this.toPosition = new DataDoo.Position(toPosX, toPosY, toPosZ);
-        }
-
-        this.line = new DataDoo.Line(this.fromPosition, this.toPosition, this.arrowLineLength, this.arrowLineDirection, this.arrowLineColor, this.arrowLineThickness, this.arrowLineOpacity);
+        this.line = new DataDoo.Line(this.fromPosition, this.toPosition, this.arrowLineColor, this.arrowLineThickness, this.arrowLineOpacity);
         this.add(this.line);
 
         if (this.fromCone) {
-            this.fromCone = new DataDoo.Cone(this.fromConeHeight, this.fromConeTopRadius, this.fromConeBaseRadius, this.fromPosition, this.arrowLineDirection.clone().negate(), this.fromConeColor, this.fromConeOpacity);
+            this.fromCone = new DataDoo.Cone(this.fromConeHeight, this.fromConeTopRadius, this.fromConeBaseRadius, this.fromConeColor, this.fromConeOpacity);
             this.add(this.fromCone);
+            this.fromCone.position = this.fromPosition;
         }
 
         if (this.toCone) {
-            this.toCone = new DataDoo.Cone(this.toConeHeight, this.toConeTopRadius, this.toConeBaseRadius, this.toPosition, this.arrowLineDirection, this.toConeColor, this.toConeOpacity);
+            this.toCone = new DataDoo.Cone(this.toConeHeight, this.toConeTopRadius, this.toConeBaseRadius, this.toConeColor, this.toConeOpacity);
             this.add(this.toCone);
+            this.toCone.position = this.toPosition;
         }
     }
 
     Arrow.prototype = Object.create(Primitive.prototype);
+    Arrow.prototype.resolve = function(){
+        Primitive.prototype.resolve.apply(this, arguments);
+        this.arrowLineDirection = this.toPosition.clone().sub(this.fromPosition).normalize();
+        if(this.toCone)this.setDirection(this.arrowLineDirection, this.toCone);
+        if(this.fromCone)this.setDirection(this.arrowLineDirection.clone().negate(), this.fromCone);
+    };
     DataDoo.Arrow = Arrow;
 
+    /**
+     *  AxesHelper primitive
+     */
+    function AxesHelper(position, xObj, yObj, zObj) {
+        /*
+         x : {
+             type : DataDoo.NUMBER,
+             label : "x-axis",
+             lineColor : "0x000000",
+             labelColor : "0x000000",
+             length : 150,
+             withCone : false,
+             thickness : 1
+         }
+        */
+
+        Primitive.call(this);
+        this.position = this.vectorOrAnchor(position);
+        this.xObj = xObj || {};
+        this.yObj = yObj || {};
+        this.zObj = zObj || {};
+
+        this.xAxis = new DataDoo.Arrow({
+            from : new THREE.Vector3(0,0,0),
+            to : new THREE.Vector3(150,0,0),
+            lineDivisions : 10,
+            fromCone : false,
+            toCone : true
+        });
+        this.xlabel = new DataDoo.Label(this.xObj.label, new THREE.Vector3(150,1,0));
+        this.add(this.xAxis);
+        this.add(this.xlabel);
+
+        this.yAxis = new DataDoo.Arrow({
+            from : new THREE.Vector3(0,0,0),
+            to : new THREE.Vector3(0,150,0),
+            lineDivisions : 10,
+            fromCone : false,
+            toCone : true
+        });
+        this.ylabel = new DataDoo.Label(this.yObj.label, new THREE.Vector3(0,150,0));
+        this.add(this.yAxis);
+        this.add(this.ylabel);
+
+        this.zAxis = new DataDoo.Arrow({
+            from : new THREE.Vector3(0,0,0),
+            to : new THREE.Vector3(0,0,150),
+            lineDivisions : 10,
+            fromCone : false,
+            toCone : true
+        });
+        this.zlabel = new DataDoo.Label(this.zObj.label, new THREE.Vector3(0,0,150));
+        this.add(this.zAxis);
+        this.add(this.zlabel);
+    }
+    AxesHelper.prototype = Object.create(Primitive.prototype);
+    DataDoo.AxesHelper = AxesHelper;
 
     /**
      *  Spline primitive
@@ -1136,15 +1342,19 @@ window.DataDoo = (function () {
         for (var i = 0; i < this.points.length * this.subdivisions; i++) {
             var index = i / ( this.points.length * this.subdivisions );
             var position = this.spline.getPoint(index);
-            this.geometrySpline.vertices[ i ] = position;
+            this.geometrySpline.vertices[ i ] = new THREE.Vector3(position.x,position.y,position.z);
         }
-        this.geometrySpline.computeLineDistances();
+        //this.geometrySpline.computeLineDistances();
 
         this.mesh = new THREE.Line(this.geometrySpline, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 3 }), THREE.LineStrip);
         this.add(this.mesh);
     }
 
     Spline.prototype = Object.create(Primitive.prototype);
+    Spline.prototype.resolve = function(){
+        Primitive.prototype.resolve.apply(this, arguments);
+        this.geometrySpline.computeLineDistances();
+    };
     DataDoo.Spline = Spline;
 
     /**
@@ -1180,8 +1390,8 @@ window.DataDoo = (function () {
         inner.className = 'datadoo-wrap';
         inner.style.position = 'relative';
         inner.style.display = 'inline-block';
-        inner.style.left = '-50%';
-        inner.style.top = '-.5em';
+        //inner.style.left = '-50%';
+        //inner.style.top = '-.5em';
 
         this.message = message || "empty label";
         this.element = element;
@@ -1246,6 +1456,18 @@ window.DataDoo = (function () {
     Relation.prototype = Object.create(DataDoo.DDObject3D.prototype);
     _.extend(Relation.prototype, DataDoo.PrimitiveHelpers);
     DataDoo.Relation = Relation;
+
+
+    function RelationSet() {
+        Array.call(this);
+    }
+    RelationSet.prototype = Object.create(Array.prototype);
+    DataDoo.RelationSet = RelationSet;
+    RelationSet.prototype.addRelation = function() {
+        var relation = new Relation();
+        this.push(relation);
+        return relation;
+    };
 })(window.DataDoo);
 
 
@@ -1258,7 +1480,7 @@ window.DataDoo = (function () {
         this.dd = dd;
         this.id = id;
         this.ngs = ngs;
-        this.relations = [];
+        this.relations = new DataDoo.RelationSet();
         this.appFn = appFn;
 
         // put the relations array
@@ -1284,8 +1506,9 @@ window.DataDoo = (function () {
     };
 
     RelationGenerator.prototype.generateRelations = function() {
-        this.relations = this.appFn(this.dd.bucket);
+        this.relations = new DataDoo.RelationSet();
         this.dd.bucket[this.id] = this.relations;
+        this.appFn.call(this.relations, this.dd.bucket);
     };
 
     DataDoo.RelationGenerator = RelationGenerator;
@@ -1385,126 +1608,8 @@ window.DataDoo = (function () {
 (function (DataDoo) {
 
     /*
-     This is just a wrapper around THREE.js stuff.
-     Did not want to make changes in threejs files because then they would be bound to the DataDoo repo.
+     This is just a wrapper around the Arrow primitive.
      */
 
-    function AxisHelper(configObj) {
-        /*dir, origin, length, axisLineColor, axisLabel, axisLabelColor*/
-        console.dir(configObj);
-        THREE.Object3D.call(this);
-        this.type = configObj.type;
-        this.axisWithCone = configObj.axisWithCone || false;
-        this.axisDir = configObj.axisDir || new THREE.Vector3(1, 0, 0);
-        this.origin = configObj.origin || new THREE.Vector3(0, 0, 0);
-        this.axisLength = configObj.axisLength || 50;
-        this.axisThickness = configObj.axisThickness || 1;
-        this.axisDivisions = configObj.axisDivisions || 10;
-        this.axisLabelStartingFrom  = configObj.axisLabelStartingFrom || 0;
 
-        this.axisLineColor = configObj.axisLineColor || 0xffff00;
-        this.axisLabel = configObj.axisLabel || "empty label";
-        this.axisLabelColor = configObj.axisLabelColor || 0xffff00;
-
-        this.axisDir.normalize();
-
-        this.position = this.origin;
-
-        var lineGeometry = new THREE.Geometry();
-        lineGeometry.vertices.push(new THREE.Vector3(0, 0, 0));
-        lineGeometry.vertices.push(new THREE.Vector3(0, this.axisLength, 0));
-
-        this.line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({ color : this.axisLineColor, opacity : 0.5, linewidth : this.axisThickness  }));
-        this.line.matrixAutoUpdate = false;
-        this.add(this.line);
-
-        var coneGeometry = new THREE.CylinderGeometry(0, 5, 10, 10, 10);
-        //coneGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0.875, 0));
-
-        this.cone = new THREE.Mesh(coneGeometry, new THREE.MeshBasicMaterial({ color : this.axisLineColor, opacity : 0.5  }));
-        this.cone.position.set(0, this.axisLength , 0);
-        //this.cone.matrixAutoUpdate = false;
-        this.add(this.cone);
-        this.cone.visible = this.axisWithCone;
-
-        this.labelSprite = DataDoo.utils.makeTextSprite(this.axisLabel || "X Axis", {textColor : this.axisLabelColor});
-        this.add(this.labelSprite);
-        this.labelSprite.position.set(-0.1, this.axisLength, 0);
-
-
-
-        if(this.type === DataDoo.NUMBER){
-            var num = parseInt(this.axisLength/this.axisDivisions, 10);
-            var ptGeom = new THREE.SphereGeometry(0.01 * 100);
-            var ptMat = new THREE.MeshBasicMaterial({color:0x000000});
-            var labelNum = this.axisLabelStartingFrom;
-            var params = {
-                fontSize : 0.1 * 100,
-                textColor : 0x000000
-            };
-
-            for(var x = 0; x < num; x++){
-                var pt = new THREE.Mesh(ptGeom, ptMat);
-                var label = DataDoo.utils.makeTextSprite(labelNum + x, params);
-                pt.add(label);
-                this.line.add(pt);
-                pt.position.set(0, (x/num)*(this.axisLength), 0);
-            }
-        }
-
-        this.setDirection(this.axisDir);
-    }
-
-    AxisHelper.prototype = Object.create(THREE.Object3D.prototype);
-
-    AxisHelper.prototype.setDirection = function () {
-        var axis = new THREE.Vector3();
-        var radians;
-
-        return function (dir) {
-            // dir is assumed to be normalized
-            if (dir.y > 0.99999) {
-                this.quaternion.set(0, 0, 0, 1);
-            }
-            else if (dir.y < -0.99999) {
-                this.quaternion.set(1, 0, 0, 0);
-            }
-            else {
-                axis.set(dir.z, 0, -dir.x).normalize();
-                radians = Math.acos(dir.y);
-                this.quaternion.setFromAxisAngle(axis, radians);
-            }
-        };
-    }();
-
-    AxisHelper.prototype.setLength = function (length) {
-        this.scale.set(length, length, length);
-    };
-
-    AxisHelper.prototype.setColor = function (hex) {
-        this.line.material.color.setHex(hex);
-        this.cone.material.color.setHex(hex);
-    };
-
-    function AxesHelper(xObj, yObj, zObj) {
-        THREE.Object3D.call(this);
-
-        this.xObj = xObj || {};
-        this.yObj = yObj || {};
-        this.zObj = zObj || {};
-
-        this.xAxis = new DataDoo.AxisHelper(this.xObj);
-        this.add(this.xAxis);
-
-        this.yAxis = new DataDoo.AxisHelper(this.yObj);
-        this.add(this.yAxis);
-
-        this.zAxis = new DataDoo.AxisHelper(this.zObj);
-        this.add(this.zAxis);
-    }
-
-    AxesHelper.prototype = Object.create(THREE.Object3D.prototype);
-
-    DataDoo.AxisHelper = AxisHelper;
-    DataDoo.AxesHelper = AxesHelper;
 })(window.DataDoo);

@@ -11,8 +11,11 @@
             }
 
             .datadoo-label{
-                color: #767676;
-                border:1px solid black;
+                background: rgba(220,220,220,0.5);
+            }
+
+            .datadoo-wrap{
+
             }
         </style>
     </head>
@@ -33,32 +36,26 @@
                         type: DataDoo.COLUMNVALUE,
                         column : "ds1.one",
                         spacing : 30,
-                        axisDivisions: 5,
-                        axisLabelStartingFrom : 0,
-                        axisLabel : "countries",
-                        axisLength : 25,
-                        axisWithCone : false,
-                        axisThickness : 0.3
+                        label : "countries",
+                        length : 25,
+                        withCone : false,
+                        thickness : 0.3
                     },
 
                     y: {
                         type: DataDoo.NUMBER,
-                        axisDivisions: 5,
-                        axisLabelStartingFrom : 10,
-                        axisLabel : "hahaha",
-                        axisLength : 125,
-                        axisWithCone : true,
-                        axisThickness : 0.3
+                        label : "hahaha",
+                        length : 125,
+                        withCone : true,
+                        thickness : 0.3
                     },
 
                     z: {
                         type: DataDoo.NUMBER,
-                        axisDivisions: 12,
-                        axisLabelStartingFrom : 20,
-                        axisLabel : "vever",
-                        axisLength : 125,
-                        axisWithCone : false,
-                        axisThickness : 0.3
+                        label : "vever",
+                        length : 125,
+                        withCone : false,
+                        thickness : 0.3
                     }
                 }
             });
@@ -104,32 +101,6 @@
 
                 //this.position.setOnAxes(this.data.one,this.data.two,this.data.three);
 
-                //X Axis
-                this.addArrow({
-                    from : new THREE.Vector3(0,0,0),
-                    to : new THREE.Vector3(150,0,0),
-                    lineDivisions : 10,
-                    fromCone : false,
-                    toCone : true
-                });
-
-                //Y Axis
-                this.addArrow({
-                    from : new THREE.Vector3(0,0,0),
-                    to : new THREE.Vector3(0,150,0),
-                    lineDivisions : 10,
-                    fromCone : false,
-                    toCone : true
-                });
-
-                //Z Axis
-                this.addArrow({
-                    from : new THREE.Vector3(0,0,0),
-                    to : new THREE.Vector3(0,0,150),
-                    lineDivisions : 10,
-                    fromCone : false,
-                    toCone : true
-                });
 
 
 

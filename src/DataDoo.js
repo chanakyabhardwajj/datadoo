@@ -23,33 +23,30 @@ window.DataDoo = (function () {
             axes : {
                 x : {
                     type : DataDoo.NUMBER,
-                    axisLabel : "x-axis",
-                    axisLineColor : 0xff0000,
-                    axisLabelColor : 0xff0000,
-                    axisDir : new THREE.Vector3(1, 0, 0),
-                    axisLength : 50,
-                    axisWithCone : false,
-                    axisThickness : 1
+                    label : "x-axis",
+                    lineColor : "0x000000",
+                    labelColor : "0x000000",
+                    length : 150,
+                    withCone : false,
+                    thickness : 1
                 },
                 y : {
                     type : DataDoo.NUMBER,
-                    axisLabel : "y-axis",
-                    axisLineColor : 0x00ff00,
-                    axisLabelColor : 0x00ff00,
-                    axisDir : new THREE.Vector3(0, 1, 0),
-                    axisLength : 50,
-                    axisWithCone : false,
-                    axisThickness : 1
+                    label : "y-axis",
+                    lineColor : "0x000000",
+                    labelColor :"0x000000",
+                    length : 150,
+                    withCone : false,
+                    thickness : 1
                 },
                 z : {
                     type : DataDoo.NUMBER,
-                    axisLabel : "z-axis",
-                    axisLineColor : 0x0000ff,
-                    axisLabelColor : 0x0000ff,
-                    axisDir : new THREE.Vector3(0, 0, 1),
-                    axisLength : 50,
-                    axisWithCone : false,
-                    axisThickness : 1
+                    label : "z-axis",
+                    lineColor : "0x000000",
+                    labelColor :"0x000000",
+                    length : 150,
+                    withCone : false,
+                    thickness : 1
                 }
             },
 
@@ -151,8 +148,8 @@ window.DataDoo = (function () {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
 
         //AXES
-        this.axes = new DataDoo.AxesHelper(this.axesConf.x, this.axesConf.y, this.axesConf.z);
-        //this.scene.add(this.axes);
+        this.axes = new DataDoo.AxesHelper(new THREE.Vector3(0,0,0), this.axesConf.x, this.axesConf.y, this.axesConf.z);
+        this.scene.add(this.axes);
 
         //CAMERA
         var camSettings = this.cameraConf;
