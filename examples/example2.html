@@ -1,0 +1,103 @@
+<html>
+    <head>
+        <style>
+            body {
+                background:#fff;
+                padding:0;
+                margin:0;
+                overflow:hidden;
+                font-family:georgia;
+                text-align:center;
+            }
+
+            .datadoo-label{
+                color: #767676;
+                border:1px solid black;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="canvas"></canvas>
+
+        <script src="../build/vendor.js"></script>
+        <!--<script src="http://mrdoob.github.com/three.js/examples/fonts/helvetiker_regular.typeface.js"></script>-->
+        <script src="../build/datadoo.js"></script>
+        <script type="text/javascript">
+            var dd = new DataDoo({
+                canvas: document.getElementById("canvas"),
+                camera: {
+                    type: DataDoo.PERSPECTIVE
+                },
+                axes: {
+                    x: {
+                        type: DataDoo.COLUMNVALUE,
+                        column: "ds1.one",
+                        axisDivisions: 5,
+                        axisLabelStartingFrom : 0,
+                        axisLabel : "countries",
+                        axisLength : 25,
+                        axisWithCone : false,
+                        axisThickness : 0.3
+                    },
+
+                    y: {
+                        type: DataDoo.NUMBER,
+                        axisDivisions: 5,
+                        axisLabelStartingFrom : 10,
+                        axisLabel : "hahaha",
+                        axisLength : 125,
+                        axisWithCone : true,
+                        axisThickness : 0.3
+                    },
+
+                    z: {
+                        type: DataDoo.NUMBER,
+                        axisDivisions: 12,
+                        axisLabelStartingFrom : 20,
+                        axisLabel : "vever",
+                        axisLength : 125,
+                        axisWithCone : false,
+                        axisThickness : 0.3
+                    }
+                }
+            });
+
+            var ds1 = new DataDoo.DataSet(dd, "ds1", {
+                data: [
+                    { one : "India", two : 10, three : 10 },
+                    { one : "Germany", two : 20, three : 20 },
+                    { one : "Japan", two : 30, three : 30 },
+                    { one : "Sweden", two : 40, three : 40 }
+                ]
+            });
+
+            var nodeAppFn1 = function($) {
+                this.sphere = this.addSphere(5, 0xffcc00);
+                this.sphere2 = this.addSphere(2, 0xff0000);
+                this.sphere.position.set(10,10,30);
+
+                this.position.set(this.data.two,this.data.two,this.data.two);
+            };
+
+            var relAppFn = function($) {
+                var arr = [];
+                for(var i = 0;i < $.ng1.length-1;i++) {
+                    var rel = new DataDoo.Relation();
+                    var node = $.ng1[i];
+                    var nextNode = $.ng1[i+1];
+                    rel.addDashedLine(node, nextNode, 0xff0000 + i*100);
+                    rel.addDashedLine(node.sphere, nextNode.sphere, 0xff0000 + i*100);
+                    arr.push(rel);
+                }
+                return arr;
+            }
+
+            var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, nodeAppFn1);
+            var rg1 = new DataDoo.RelationGenerator(dd, "rg1", [ng1], relAppFn);
+
+            ds1.fetch();
+
+            dd.startVis(rg1);
+        </script>
+    </body>
+</html>
