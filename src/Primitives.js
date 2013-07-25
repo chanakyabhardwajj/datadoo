@@ -208,6 +208,7 @@
         this.gapSize = gapSize || 2;
         this.color = color || 0x8888ff;
         this.radius = radius || 3;
+        //ToDo : rename or abstract "vectorOrAnchor" function to make it easier for developers.
         this.startPos = this.vectorOrAnchor(startPos);
         this.endPos = this.vectorOrAnchor(endPos);
 

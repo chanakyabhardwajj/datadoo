@@ -228,6 +228,7 @@ window.DataDoo = (function () {
             }
         }, this);
     };
+    
 
     DataDoo.prototype._computeAxisValues = function (events) {
         var changedDs = _.chain(DataDoo.EventBus.flattenEvents(events)).filter(function(event) {
