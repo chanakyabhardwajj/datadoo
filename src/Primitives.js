@@ -308,4 +308,28 @@
         this.element.style.left = left + this.distanceX + "px";
     };
 
+    /**
+     * Primitive constructor helper mixin
+     */
+    var PrimitiveHelpers = {
+        addSphere : function(radius, color) {
+            var sphere = new DataDoo.Sphere(radius, color);
+            this.add(sphere);
+            return sphere;
+        },
+
+        addDashedLine : function(startPos, endPos, dashSize, gapSize, endRadius) {
+            var line = new DataDoo.DashedLine(startPos, endPos, dashSize, gapSize, endRadius);
+            this.add(line);
+            return line;
+        },
+
+        addSprite : function(url, position, scale) {
+            var sprite = new DataDoo.Sprite(url, position, scale);
+            this.add(sprite);
+            return sprite;
+        }
+    };
+    DataDoo.PrimitiveHelpers = PrimitiveHelpers;
+
 })(window.DataDoo);
