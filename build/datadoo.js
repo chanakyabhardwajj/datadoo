@@ -252,7 +252,7 @@ window.DataDoo = (function () {
                         values.reverse();
                     }
                 }
-                var spacing = axis.spacing || (axis.length/values.length);
+                var spacing = axis.spacing || (axis.axisLength/values.length);
                 var posMap = _.chain(values).map(function (value, i) {
                     return [value, (i + 1) * spacing];
                 }).object().value();
@@ -545,6 +545,7 @@ window.DataDoo = (function () {
      */
     function DDObject3D() {
         THREE.Object3D.apply(this);
+        this.position = new DataDoo.RVector3(0,0,0);
     }
     DDObject3D.prototype = Object.create(THREE.Object3D.prototype);
     DataDoo.DDObject3D = DDObject3D;
@@ -554,14 +555,14 @@ window.DataDoo = (function () {
      */
     DDObject3D.prototype.resolve = function(axesConf) {
         // resolve position if its instance of RVector3
-        if(this.position instanceof DataDoo.RVector3) {
+        if(this.position.resolvable) {
             _.each(["x", "y", "z"], function(axis) {
                 var axisConf = axesConf[axis];
                 if(axisConf.type == DataDoo.NUMBER) {
                     this.position[axis] = this.position["r"+axis];
                 }
                 if(axisConf.type == DataDoo.COLUMNVALUE) {
-                    this.position[axis] = this.position[axisConf.posMap["r"+axis]];
+                    this.position[axis] = axisConf.posMap[this.position["r"+axis]];
                 }
             }, this);
         }
@@ -808,16 +809,15 @@ window.DataDoo = (function () {
     /**
      * DataDoo Resolvable vector
      */
-    function RVector3(rx, ry, rz) {
-        THREE.Vector3.call(this);
-        this.rx = rx || 0;
-        this.ry = ry || 0;
-        this.rz = rz || 0;
+    function RVector3(x, y, z) {
+        THREE.Vector3.apply(this, arguments);
+        this.resolvable = false;
     }
 
     RVector3.prototype = Object.create(THREE.Vector3.prototype);
 
-    RVector3.prototype.set = function(rx, ry, rz){
+    RVector3.prototype.setOnAxes = function(rx, ry, rz){
+        this.resolvable = true;
         this.rx = rx;
         this.ry = ry;
         this.rz = rz;

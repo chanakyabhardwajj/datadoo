@@ -28,9 +28,9 @@
                     type: DataDoo.PERSPECTIVE
                 },
                 axes: {
-                    type: DataDoo.SPHERICAL,
                     x: {
-                        type: DataDoo.NUMBER,
+                        type: DataDoo.COLUMNVALUE,
+                        column: "ds1.one",
                         axisDivisions: 5,
                         axisLabelStartingFrom : 0,
                         axisLabel : "countries",
@@ -88,7 +88,7 @@
                 //sphere.position.set(-10,-20,-10);
                 //this.addDashedLine(this.sphere, this.sphere2);
 
-                this.position.set(this.data.two,this.data.two,this.data.two);
+                this.position.setOnAxes(this.data.one,this.data.two,this.data.two);
             };
 
             var relAppFn = function($) {

@@ -2,16 +2,15 @@
     /**
      * DataDoo Resolvable vector
      */
-    function RVector3(rx, ry, rz) {
-        THREE.Vector3.call(this);
-        this.rx = rx || 0;
-        this.ry = ry || 0;
-        this.rz = rz || 0;
+    function RVector3(x, y, z) {
+        THREE.Vector3.apply(this, arguments);
+        this.resolvable = false;
     }
 
     RVector3.prototype = Object.create(THREE.Vector3.prototype);
 
-    RVector3.prototype.set = function(rx, ry, rz){
+    RVector3.prototype.setOnAxes = function(rx, ry, rz){
+        this.resolvable = true;
         this.rx = rx;
         this.ry = ry;
         this.rz = rz;
