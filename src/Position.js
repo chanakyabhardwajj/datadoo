@@ -45,4 +45,13 @@
         return new THREE.Vector3(this.resolvedX, this.resolvedY, this.resolvedZ);
     };
     DataDoo.Position = Position;
+
+
+    function RVector3(rx, ry, rz) {
+        this.rx = rx || 0;
+        this.ry = ry || 0;
+        this.rz = rz || 0;
+    }
+    RVector3.prototype = Object.create(Vector3.prototype);
+    DataDoo.RVector3 = RVector3;
 })(window.DataDoo);

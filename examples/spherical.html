@@ -1,0 +1,50 @@
+<html>
+    <head>
+        <style>
+            body {
+                background:#fff;
+                padding:0;
+                margin:0;
+                overflow:hidden;
+                font-family:georgia;
+                text-align:center;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="canvas"></canvas>
+
+        <script src="../build/vendor.js"></script>
+        <script src="../build/datadoo.js"></script>
+        <script type="text/javascript">
+            var dd = new DataDoo({
+                canvas: document.getElementById("canvas"),
+                camera: {
+                    type: DataDoo.PERSPECTIVE
+                },
+                axes: {
+                    type: DataDoo.SPHERICAL
+                }
+            });
+
+            var ds1 = new DataDoo.DataSet(dd, "ds1",{
+                importer : Miso.Dataset.Importers.GoogleSpreadsheet,
+                parser : Miso.Dataset.Parsers.GoogleSpreadsheet,
+                key : "0AvXXjvK0s2-zdGF4SWtRWTNYaVNRY3VJRFFEYkYtOEE",
+                worksheet : "1",
+                sync:true,
+                interval : 1000
+            });
+
+            var nodeAppFn1 = function($) {
+                var sphere = this.addSphere(3, 0x43ccc2);
+                sphere.center.set(100, this.data.latitude, this.data.longitude);
+            };
+
+            var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, nodeAppFn1);
+
+            ds1.fetch();
+            dd.startVis(ng1);
+        </script>
+    </body>
+</html>

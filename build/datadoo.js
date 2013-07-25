@@ -372,8 +372,8 @@ window.DataDoo = (function () {
                 var theta = pos.resolvedY*Math.PI/180;
                 var phi = pos.resolvedZ*Math.PI/180;
 
-                pos.resolvedX = r * Math.sin(theta) * Math.cos(phi);
-                pos.resolvedY = r * Math.sin(theta) * Math.sin(phi);
+                pos.resolvedX = r * Math.sin(phi) * Math.cos(theta);
+                pos.resolvedY = r * Math.sin(phi) * Math.sin(theta);
                 pos.resolvedZ = r * Math.cos(phi);
             }
 

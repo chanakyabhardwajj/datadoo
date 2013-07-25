@@ -78,51 +78,13 @@
      * its visual
      */
     function Node(data) {
-        this.primitives = [];
+        DataDoo.DDObject3D.apply(this);
         this.data = data;
+        this.position = new DataDoo.RVector3();
     }
-    Node.prototype.addSphere = function(radius, color) {
-        var sphere = new DataDoo.Sphere(radius, color);
-        this.primitives.push(sphere);
-        return sphere;
-    };
-
-    Node.prototype.addLabel = function(msg, pos, offset) {
-        var label = new DataDoo.Label(msg, pos, offset);
-        this.primitives.push(label);
-        return label;
-    };
-
-    Node.prototype.addDashedLine = function(startPos, endPos, color, dashSize, gapSize, radius) {
-        var line = new DataDoo.DashedLine(startPos, endPos, color, dashSize, gapSize, radius);
-        this.primitives.push(line);
-        return line;
-    };
-
-    Node.prototype.addLine = function(startPos, endPos, lineLength, dir, color, thickness, opacity) {
-        var line = new DataDoo.Line(startPos, endPos, lineLength, dir, color, thickness, opacity);
-        this.primitives.push(line);
-        return line;
-    };
-
-    Node.prototype.addSprite = function(url, position, scale) {
-        var sprite = new DataDoo.Sprite(url, position, scale);
-        this.primitives.push(sprite);
-        return sprite;
-    };
-
-    Node.prototype.addCone = function(height, topRadius, baseRadius, position, dir, color, opacity) {
-        var cone = new DataDoo.Cone(height, topRadius, baseRadius, position, dir, color, opacity);
-        this.primitives.push(cone);
-        return cone;
-    };
-
-    Node.prototype.addArrow = function(obj) {
-        var arrow = new DataDoo.Arrow(obj);
-        this.primitives.push(arrow);
-        return arrow;
-    };
     DataDoo.Node = Node;
+    DataDoo.prototype = Object.create(DataDoo.DDObject3D.prototype);
+    _.extend(DataDoo.prototype, DataDoo.PrimitiveHelpers);
 
     DataDoo.NodeGenerator = NodeGenerator;
 })(window.DataDoo);
