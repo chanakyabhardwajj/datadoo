@@ -82,13 +82,27 @@
             var nodeAppFn1 = function($) {
                 //var sprite = this.addSprite("http://upload.wikimedia.org/wikipedia/commons/1/1b/Sunny_Leone_2012.jpg", new DataDoo.Position(this.data.Population,this.data.Population,this.data.Population), 10);
 
-                var sphere = this.addSphere(10, 0xffcc00);
-                var sphere2 = this.addSphere(2, 0xff0000);
-                sphere2.position.set(10,20,10);
+                this.sphere = this.addSphere(5, 0xffcc00);
+                this.sphere2 = this.addSphere(2, 0xff0000);
+                this.sphere.position.set(10,10,30);
                 //sphere.position.set(-10,-20,-10);
+                //this.addDashedLine(this.sphere, this.sphere2);
 
                 this.position.set(this.data.two,this.data.two,this.data.two);
             };
+
+            var relAppFn = function($) {
+                var arr = [];
+                for(var i = 0;i < $.ng1.length-1;i++) {
+                    var rel = new DataDoo.Relation();
+                    var node = $.ng1[i];
+                    var nextNode = $.ng1[i+1];
+                    rel.addDashedLine(node, nextNode, 0xff0000 + i*100);
+                    rel.addDashedLine(node.sphere, nextNode.sphere, 0xff0000 + i*100);
+                    arr.push(rel);
+                }
+                return arr;
+            }
 
            /* var nodeAppFn2 = function($) {
                 *//*this.position.set(this.data.two,
@@ -157,10 +171,10 @@
             var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, nodeAppFn1);
            // var ng2 = new DataDoo.NodeGenerator(dd, "ng2", ds2, nodeAppFn2);
 
-            //var rg1 = new DataDoo.RelationGenerator(dd, "rg1", [ng1/*, ng2*/], relnAppFn);
+            var rg1 = new DataDoo.RelationGenerator(dd, "rg1", [ng1], relAppFn);
             ds1.fetch();
             //ds2.fetch();
-            dd.startVis(ng1);
+            dd.startVis(rg1);
         </script>
     </body>
 </html>

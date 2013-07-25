@@ -35,9 +35,14 @@
      */
     function AnchoredVector3(parent, srcParent, srcVector) {
         THREE.Vector3.call(this);
-        this.srcVector = srcVector || srcParent.position;
         this.parent = parent;
-        this.srcParent = srcParent;
+        if(!srcVector) {
+            this.srcVector = srcParent.position;
+            this.srcParent = srcParent.parent;
+        } else {
+            this.srcVector = srcVector;
+            this.srcParent = srcParent;
+        }
 
         var parentResolved = false;
         var srcParentResolved = false;

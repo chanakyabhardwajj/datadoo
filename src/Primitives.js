@@ -219,7 +219,7 @@
 
 
         this.lineGeometry = new THREE.Geometry();
-        this.lineGeometry.vertices.push(startPos, endPos);
+        this.lineGeometry.vertices.push(this.startPos, this.endPos);
         this.lineMaterial = new THREE.LineDashedMaterial( { color: this.color, dashSize: this.dashSize, gapSize: this.gapSize } );
         this.line = new THREE.Line( this.lineGeometry, this.lineMaterial );
         this.add(this.line);

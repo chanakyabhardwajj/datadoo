@@ -841,9 +841,14 @@ window.DataDoo = (function () {
      */
     function AnchoredVector3(parent, srcParent, srcVector) {
         THREE.Vector3.call(this);
-        this.srcVector = srcVector || srcParent.position;
         this.parent = parent;
-        this.srcParent = srcParent;
+        if(!srcVector) {
+            this.srcVector = srcParent.position;
+            this.srcParent = srcParent.parent;
+        } else {
+            this.srcVector = srcVector;
+            this.srcParent = srcParent;
+        }
 
         var parentResolved = false;
         var srcParentResolved = false;
@@ -1107,7 +1112,7 @@ window.DataDoo = (function () {
 
 
         this.lineGeometry = new THREE.Geometry();
-        this.lineGeometry.vertices.push(startPos, endPos);
+        this.lineGeometry.vertices.push(this.startPos, this.endPos);
         this.lineMaterial = new THREE.LineDashedMaterial( { color: this.color, dashSize: this.dashSize, gapSize: this.gapSize } );
         this.line = new THREE.Line( this.lineGeometry, this.lineMaterial );
         this.add(this.line);
