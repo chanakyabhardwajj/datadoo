@@ -118,10 +118,10 @@
                     ns.push(n.sphere.position);
                 })
 
-
-
-                var r = this.addRelation();
-                r.addDashedLine(n1, n2, 0xff0000);
+                if(n1 && n2) {
+                    var r = this.addRelation();
+                    r.addDashedLine(n1, n2, 0xff0000);
+                }
             };
 
 

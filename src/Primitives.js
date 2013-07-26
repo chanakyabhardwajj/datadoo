@@ -113,7 +113,7 @@
 
         this.addDependancy(startPos, endPos);
         this.lineGeometry = new THREE.Geometry();
-        this.lineGeometry.vertices.push(this.getVectors(this.startPos, this.endPos));
+        this.lineGeometry.vertices.push(this.getVectors(startPos, endPos));
         this.lineMaterial = new THREE.LineDashedMaterial({color : this.color, opacity:this.opacity, linewidth:this.thickness, dashSize:this.dashSize, gapSize:this.gapSize, transparent:true});
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
         this.add(this.line);

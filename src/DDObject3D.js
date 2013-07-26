@@ -1,6 +1,7 @@
 (function(DataDoo) {
 
     function DDObject3D() {
+        THREE.Object3D.call(this);
         this.matrixAutoUpdate = false;
         this.position = new DataDoo.RVector3(this);
         this.dependants = [];

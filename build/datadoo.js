@@ -212,17 +212,17 @@ window.DataDoo = (function () {
 
         // set matrix world needs update on all ddobjects
         DataDoo.utils.traverseObject3D(this.scene, function(object) {
-            if(object instanceof DDObject3D) {
+            if(object instanceof DataDoo.DDObject3D) {
                 object.matrixWorldNeedsUpdate = true;
             }
         });
 
         // call update on all objects
         _.chain(this.bucket).values().flatten().filter(function(object) {
-            return object instanceof DDObject3D;
+            return object instanceof DataDoo.DDObject3D;
         }).each(function(object) {
-            object.update(axesConf);
-        });
+            object.update(this.axesConf);
+        }, this);
 
         // Find all the label objects and stuff them into the array
         this.labelsArray = [];
@@ -725,6 +725,7 @@ window.DataDoo = (function () {
 (function(DataDoo) {
 
     function DDObject3D() {
+        THREE.Object3D.call(this);
         this.matrixAutoUpdate = false;
         this.position = new DataDoo.RVector3(this);
         this.dependants = [];
@@ -1245,7 +1246,7 @@ window.DataDoo = (function () {
 
         this.addDependancy(startPos, endPos);
         this.lineGeometry = new THREE.Geometry();
-        this.lineGeometry.vertices.push(this.getVectors(this.startPos, this.endPos));
+        this.lineGeometry.vertices.push(this.getVectors(startPos, endPos));
         this.lineMaterial = new THREE.LineDashedMaterial({color : this.color, opacity:this.opacity, linewidth:this.thickness, dashSize:this.dashSize, gapSize:this.gapSize, transparent:true});
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
         this.add(this.line);
