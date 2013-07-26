@@ -1052,7 +1052,7 @@ window.DataDoo = (function () {
     RVector3.prototype = Object.create(THREE.Vector3.prototype);
 
     RVector3.prototype.set = function(x, y, z) {
-        this.setOnAxes = true;
+        this.setOnAxes = false;
         this.relative = false;
         this.x = x;
         this.y = y;
