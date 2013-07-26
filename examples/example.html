@@ -82,22 +82,22 @@
                 //var sprite = this.addSprite("http://upload.wikimedia.org/wikipedia/commons/1/1b/Sunny_Leone_2012.jpg", new DataDoo.Position(this.data.Population,this.data.Population,this.data.Population), 10);
 
                 this.sphere = this.addSphere(5, 0xffcc00, 0.3);
-                this.sphere.position.set(this.data.two*2.5,this.data.two*2.5,this.data.two*2.5);
+                this.sphere.position.set(Math.random()*50,Math.random()*50,Math.random()*50);
 
-                this.cone = this.addCone(10,10,10, "0xe7676e", 0.7);
-                this.cone.position.set(this.data.two*5,this.data.two*5,this.data.two*5);
+                //this.cone = this.addCone(10,10,10, "0xe7676e", 0.7);
+                //this.cone.position.set(this.data.two*5,this.data.two*5,this.data.two*5);
                 //this.cone.rotation.set(this.data.two,this.data.two,this.data.two);
-                this.addLine(this.cone, this.sphere);
+                //this.addLine(this.cone, this.sphere);
 
                 this.label = this.addLabel(this.data.one);
-                this.label.position.set(this.data.two - 90,this.data.two + 30,this.data.two + 60);
+                this.label.position.set(this.data.two - Math.random()*50,this.data.two + Math.random()*50,this.data.two + Math.random()*50);
                 //this.label.rotation.set(this.data.two - 90,this.data.two + 30,this.data.two + 60);
                 //this.label.position.set(20,20,20);
 
                 this.addDashedLine(this.sphere, this.label);
 
 
-                this.addDashedLine(new THREE.Vector3(-300,-300,-300), new THREE.Vector3(-70,-70,-70));
+                //this.addDashedLine(new THREE.Vector3(-300,-300,-300), new THREE.Vector3(-70,-70,-70));
 
                 //this.position.setOnAxes(this.data.one,this.data.two,this.data.three);
 
@@ -107,11 +107,16 @@
             };
 
             var nodeAppFn2 = function($) {
-                console.log(this.data);
 
-                var sphere2 = this.addSphere(this.data.Population/10, 0x767676, 0.5);
-                sphere2.position.set(this.data.GDP*10, this.data.GDP, this.data.GDP);
 
+                this.sphere2 = this.addSphere(this.data.Population/10, 0x767676, 0.5);
+                this.sphere2.position.set(this.data.GDP*10, this.data.GDP, this.data.GDP);
+
+
+                this.cube = this.addCube(this.data.GDP, this.data.GDP, this.data.GDP/3);
+                this.cube.position.set(this.data.GDP + Math.random()*-50,Math.random()*-50,Math.random()*-50);
+
+                this.addDashedLine(this.sphere2, this.cube);
 
                 //this.position.set(this.data.GDP,this.data.Population,this.data.GDP);
             };
@@ -128,7 +133,7 @@
 
 
                 var r = this.addRelation();
-                if(n1 && n2){r.addDashedLine(n1, n2);}
+                //if(n1 && n2){r.addDashedLine(n1, n2);}
 
                 r.addSpline(ns, 0x8fe3aa, 12);
 

@@ -33,7 +33,6 @@
     /**
      *  Sphere primitive
      */
-    //ToDo : Opacity is not working!!
     function Sphere(radius, color, opacity, wireframe) {
         Primitive.call(this);
         this.radius = radius || 10;
@@ -46,15 +45,37 @@
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         this.add(this.mesh);
     }
-
     Sphere.prototype = Object.create(Primitive.prototype);
     DataDoo.Sphere = Sphere;
-
     Sphere.prototype.setRadius = function (radius) {
         this.radius = radius;
         this.geometry = new THREE.SphereGeometry(this.radius);
         this.mesh.setGeometry(this.geometry);
     };
+
+    /**
+     *  Cube primitive
+     */
+    function Cube(width, height, depth, color, opacity, wireframe) {
+        Primitive.call(this);
+        this.width = width || 10;
+        this.height = height || 10;
+        this.depth = depth || 10;
+        this.color = color || 0x767676;
+        this.opacity = opacity || 1;
+        this.wireframe = wireframe || false;
+
+        this.material = new THREE.MeshLambertMaterial({color : this.color, opacity : this.opacity, wireframe : this.wireframe, transparent:true});
+        this.geometry = new THREE.CubeGeometry(this.width, this.height, this.depth);
+        this.mesh = new THREE.Mesh(this.geometry, this.material);
+        this.add(this.mesh);
+    }
+    Cube.prototype = Object.create(Primitive.prototype);
+    Cube.prototype.resolve = function(){
+        Primitive.prototype.resolve.apply(this, arguments);
+        this.geometry.computeLineDistances();
+    };
+    DataDoo.Cube = Cube;
 
     /**
      *  Line primitive
@@ -76,12 +97,15 @@
         this.add(this.line);
     }
     Line.prototype = Object.create(Primitive.prototype);
+    Line.prototype.resolve = function(){
+        Primitive.prototype.resolve.apply(this, arguments);
+        this.lineGeometry.computeLineDistances();
+    };
     DataDoo.Line = Line;
 
     /**
      *  DashedLine primitive
      */
-    //ToDo : Something wrong with material here. Dashes are showing up!!
     function DashedLine(startPos, endPos, color, dashSize, gapSize, thickness, opacity) {
         Primitive.call(this);
         this.dashSize = dashSize || 4;
@@ -95,8 +119,6 @@
 
         this.lineGeometry = new THREE.Geometry();
         this.lineGeometry.vertices.push(this.startPos, this.endPos);
-        //this.lineGeometry.verticesNeedUpdate = true;
-        //this.lineGeometry.computeLineDistances();
         this.lineMaterial = new THREE.LineDashedMaterial({color : this.color, opacity:this.opacity, linewidth:this.thickness, dashSize:this.dashSize, gapSize:this.gapSize, transparent:true});
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
         this.add(this.line);
