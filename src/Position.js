@@ -2,20 +2,39 @@
     /**
      * DataDoo Resolvable vector
      */
-    function RVector3(x, y, z) {
-        THREE.Vector3.apply(this, arguments);
-        this.resolvable = false;
+    function RVector3(parent) {
+        THREE.Vector3.call(this);
+        this.parent = parent;
+        this.setOnAxes = false;
+        this.relative = false;
     }
-
+    DataDoo.RVector3 = RVector3;
     RVector3.prototype = Object.create(THREE.Vector3.prototype);
 
+    RVector3.prototype.set = function(x, y, z) {
+        this.setOnAxes = true;
+        this.relative = false;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.target = undefined;
+    };
+
     RVector3.prototype.setOnAxes = function(rx, ry, rz){
-        this.resolvable = true;
+        this.setOnAxes = true;
+        this.relative = false;
         this.rx = rx;
         this.ry = ry;
         this.rz = rz;
     };
-    DataDoo.RVector3 = RVector3;
+
+    RVector3.prototype.setRelative = function(target, x, y, z) {
+        this.relative = true;
+        this.setOnAxes = false;
+        this.set(x, y, z);
+        this.target = target;
+        target.addDependency(this.parent);
+    };
 
     /**
      * Anchored vector.

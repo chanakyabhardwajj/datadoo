@@ -1,20 +1,39 @@
 (function(DataDoo) {
-    /**
-     * Parent Object for DataDoo scene items
-     */
+
     function DDObject3D() {
-        THREE.Object3D.apply(this);
-        this.position = new DataDoo.RVector3(0,0,0);
+        this.matrixAutoUpdate = false;
+        this.position = new DataDoo.RVector3(this);
+        this.dependants = [];
+        this.dependencies = [];
     }
     DDObject3D.prototype = Object.create(THREE.Object3D.prototype);
     DataDoo.DDObject3D = DDObject3D;
 
-    /**
-     * Resolves the position of this object
-     */
-    DDObject3D.prototype.resolve = function(axesConf) {
-        // resolve position if its instance of RVector3
-        if(this.position.resolvable) {
+    DDObject3D.prototype.addDependency = function(object) {
+        this.dependants.push(object);
+    };
+
+    DDObject3D.prototype.update = function(axesConf) {
+        if(!this.matrixWorldNeedsUpdate) {
+            return;
+        }
+
+        // check if all of this object's dependencies have updated
+        var check = [this.parent.matrixWorldNeedsUpdate];
+        if(this.position.relative) {
+            check.push(this.position.target.matrixWorldNeedsUpdate);
+        }
+        _.each(this.dependencies, function(dependency) {
+            check.push(dependency.matrixWorldNeedsUpdate);
+        });
+        if(!_.every(check, function(v) {return !v;})) {
+            // all of the dependencies' matrixWorldNeedsUpdate are not false
+            // so return for now.
+            return;
+        }
+
+        //resolve the position
+        if(this.position.setOnAxes) {
             _.each(["x", "y", "z"], function(axis) {
                 var axisConf = axesConf[axis];
                 if(axisConf.type == DataDoo.NUMBER) {
@@ -25,38 +44,35 @@
                 }
             }, this);
         }
-
-        // fire callbacks if any
-        if(this._onResolveCallbacks) {
-            _.each(this._onResolveCallbacks, function(cb) {
-                cb.call(this);
-            }, this);
+        if(this.position.relative) {
+            var target = this.position.target;
+            var worldPos = target.parent.localToWorld(target.position);
+            var finalPos = this.parent.worldToLocal(worldPos);
+            this.position.copy(finalPos);
         }
-    };
 
-    /**
-     * Binds a callback that will be called when this object's
-     * position is resolved.
-     */
-    DDObject3D.prototype.bindOnResolve = function(callback) {
-        if(!this._onResolveCallbacks) {
-            this._onResolveCallbacks = [];
-        }
-        this._onResolveCallbacks.push(callback);
-    };
-
-    /**
-     * Helper function that returns either a vector
-     * or an anchor to another DDObject3D, depending
-     * on the parameter type
-     */
-    DDObject3D.prototype.vectorOrAnchor = function(vec) {
-        if(vec instanceof DDObject3D) {
-            return new DataDoo.AnchoredVector3(this, vec);
+        // update world this object's world matrix
+        this.updateMatrix();
+        if(this.parent === undefined) {
+            this.matrixWorld.copy(this.matrix);
         } else {
-            return vec;
+            this.matrixWorld.multiplyMatrices(this.parent.matrixWorld, this.matrix);
         }
-    };
+        this.matrixWorldNeedsUpdate = false;
 
+        // call update on all dependants
+        _.each(this.dependants, function(object) {
+            object.update(axesConf);
+        }, this);
+
+        // call update or updateMatrixWorld on all children
+        _.each(this.children, function(child) {
+            if(child instanceof DDObject3D) {
+                child.update(axesConf);
+            } else {
+                child.updateMatrixWorld(true);
+            }
+        });
+    };
 
 })(window.DataDoo);

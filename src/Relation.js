@@ -7,7 +7,6 @@
     function Relation(data) {
         DataDoo.DDObject3D.call(this);
         this.data = data || {};
-        this.position = new DataDoo.RVector3();
     }
     Relation.prototype = Object.create(DataDoo.DDObject3D.prototype);
     _.extend(Relation.prototype, DataDoo.PrimitiveHelpers);
