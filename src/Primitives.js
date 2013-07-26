@@ -71,8 +71,7 @@
         this.add(this.mesh);
     }
     Cube.prototype = Object.create(Primitive.prototype);
-    Cube.prototype.resolve = function(){
-        Primitive.prototype.resolve.apply(this, arguments);
+    Cube.prototype.updateGeometry = function(){
         this.geometry.computeLineDistances();
     };
     DataDoo.Cube = Cube;
@@ -86,19 +85,17 @@
         this.thickness = thickness || 1;
         this.opacity = opacity || 1;
         this.color = color || 0x000000;
-        this.startPos = this.vectorOrAnchor(startPos);
-        this.endPos = this.vectorOrAnchor(endPos);
 
+        this.addDependancy(startPos, endPos);
         this.lineGeometry = new THREE.Geometry();
-        this.lineGeometry.vertices.push(this.startPos, this.endPos);
+        this.lineGeometry.vertices.push(this.getVectors(startPos, endPos));
         this.lineMaterial = new THREE.LineBasicMaterial({ color : this.color, linewidth : this.thickness, opacity : this.opacity, transparent:true });
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
 
         this.add(this.line);
     }
     Line.prototype = Object.create(Primitive.prototype);
-    Line.prototype.resolve = function(){
-        Primitive.prototype.resolve.apply(this, arguments);
+    Line.prototype.updateGeometry = function(){
         this.lineGeometry.computeLineDistances();
     };
     DataDoo.Line = Line;
@@ -113,19 +110,16 @@
         this.color = color || 0xffaa00;
         this.thickness = thickness || 1;
         this.opacity = opacity || 0.6;
-        //ToDo : rename or abstract "vectorOrAnchor" function to make it easier for developers.
-        this.startPos = this.vectorOrAnchor(startPos);
-        this.endPos = this.vectorOrAnchor(endPos);
 
+        this.addDependancy(startPos, endPos);
         this.lineGeometry = new THREE.Geometry();
-        this.lineGeometry.vertices.push(this.startPos, this.endPos);
+        this.lineGeometry.vertices.push(this.getVectors(this.startPos, this.endPos));
         this.lineMaterial = new THREE.LineDashedMaterial({color : this.color, opacity:this.opacity, linewidth:this.thickness, dashSize:this.dashSize, gapSize:this.gapSize, transparent:true});
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
         this.add(this.line);
     }
     DashedLine.prototype = Object.create(Primitive.prototype);
-    DashedLine.prototype.resolve = function(){
-        Primitive.prototype.resolve.apply(this, arguments);
+    DashedLine.prototype.updateGeometry = function(){
         this.lineGeometry.computeLineDistances();
     };
     DataDoo.DashedLine = DashedLine;
@@ -188,8 +182,8 @@
         Primitive.call(this);
         configObj = configObj || {};
 
-        this.fromPosition = this.vectorOrAnchor(configObj.from);
-        this.toPosition = this.vectorOrAnchor(configObj.to);
+        this.fromPosition = configObj.from;
+        this.toPosition = configObj.to;
 
         //this.arrowLineDirection = this.toPosition.clone().sub(this.fromPosition).normalize();
 
@@ -230,18 +224,18 @@
     }
 
     Arrow.prototype = Object.create(Primitive.prototype);
-    Arrow.prototype.resolve = function(){
-        Primitive.prototype.resolve.apply(this, arguments);
-        this.arrowLineDirection = this.toPosition.clone().sub(this.fromPosition).normalize();
-        if(this.toCone)this.setDirection(this.arrowLineDirection, this.toCone);
-        if(this.fromCone)this.setDirection(this.arrowLineDirection.clone().negate(), this.fromCone);
+    Arrow.prototype.updateGeometry = function(){
+        var positions = this.getVectors(this.toPosition, this.fromPosition);
+        this.arrowLineDirection = positions[0].clone().sub(positions[1]).normalize();
+        if(this.toCone) this.setDirection(this.arrowLineDirection, this.toCone);
+        if(this.fromCone) this.setDirection(this.arrowLineDirection.clone().negate(), this.fromCone);
     };
     DataDoo.Arrow = Arrow;
 
     /**
      *  AxesHelper primitive
      */
-    function AxesHelper(position, xObj, yObj, zObj) {
+    function AxesHelper(xObj, yObj, zObj) {
         /*
          x : {
              type : DataDoo.NUMBER,
@@ -255,7 +249,6 @@
         */
 
         Primitive.call(this);
-        this.position = this.vectorOrAnchor(position);
         this.xObj = xObj || {};
         this.yObj = yObj || {};
         this.zObj = zObj || {};
@@ -306,21 +299,18 @@
         this.subdivisions = subdivisions || 6;
         this.spline = new THREE.Spline(points);
         this.geometrySpline = new THREE.Geometry();
-
-        for (var i = 0; i < this.points.length * this.subdivisions; i++) {
-            var index = i / ( this.points.length * this.subdivisions );
-            var position = this.spline.getPoint(index);
-            this.geometrySpline.vertices[ i ] = new THREE.Vector3(position.x,position.y,position.z);
-        }
-        //this.geometrySpline.computeLineDistances();
-
         this.mesh = new THREE.Line(this.geometrySpline, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 3 , transparent:true}), THREE.LineStrip);
         this.add(this.mesh);
     }
 
     Spline.prototype = Object.create(Primitive.prototype);
-    Spline.prototype.resolve = function(){
-        Primitive.prototype.resolve.apply(this, arguments);
+    Spline.prototype.updateGeometry = function(){
+        var points = this.getVectors(this.points);
+        for (var i = 0; i < points.length * this.subdivisions; i++) {
+            var index = i / ( points.length * this.subdivisions );
+            var position = this.spline.getPoint(index);
+            this.geometrySpline.vertices[ i ] = new THREE.Vector3(position.x,position.y,position.z);
+        }
         this.geometrySpline.computeLineDistances();
     };
     DataDoo.Spline = Spline;
@@ -373,7 +363,7 @@
         element.style.top = 0;
         inner.appendChild(document.createTextNode(this.message));
 
-        labelPos = labelPos || new DataDoo.RVector3(0,0,0);
+        labelPos = labelPos || new DataDoo.RVector3(this);
         this.position = labelPos;
 
         document.body.appendChild(element);

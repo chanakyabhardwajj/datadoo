@@ -28,12 +28,15 @@
         this.rz = rz;
     };
 
-    RVector3.prototype.setRelative = function(target, x, y, z) {
+    RVector3.prototype.setRelative = function(target, rx, ry, rz) {
         this.relative = true;
         this.setOnAxes = false;
-        this.set(x, y, z);
+        this.rx = rx || 0;
+        this.ry = ry || 0;
+        this.rz = rz || 0;
         this.target = target;
-        target.addDependency(this.parent);
+        target.addDependant(this.parent);
+        this.parent.addDependancy(target);
     };
 
     /**

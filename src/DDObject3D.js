@@ -9,8 +9,32 @@
     DDObject3D.prototype = Object.create(THREE.Object3D.prototype);
     DataDoo.DDObject3D = DDObject3D;
 
-    DDObject3D.prototype.addDependency = function(object) {
+    DDObject3D.prototype.addDependant = function(object) {
+        if(!(object instanceof DDObject3D)) {
+            throw new Error("Cannot set dependency on non-DDObject3D objects");
+        }
         this.dependants.push(object);
+    };
+
+    DDObject3D.prototype.addDependancy = function() {
+        var list = _.flatten(arguments);
+        _.each(list, function(object) {
+            if(object instanceof DDObject3D) {
+                this.dependencies.push(object);
+            }
+        }, this);
+    };
+
+    DDObject3D.prototype.getVectors = function() {
+        var points = _.flatten(arguments);
+        return _.map(points, function(point) {
+            if(point instanceof THREE.Object3D) {
+                return point.position;
+            } else if(point instanceof THREE.Vector3){
+                return point;
+            }
+            throw new Error("DDObject3D : getVectors cannot find vector in argument");
+        });
     };
 
     DDObject3D.prototype.update = function(axesConf) {
@@ -48,10 +72,18 @@
             var target = this.position.target;
             var worldPos = target.parent.localToWorld(target.position);
             var finalPos = this.parent.worldToLocal(worldPos);
+            finalPos.x += finalPos.rx;
+            finalPos.y += finalPos.ry;
+            finalPos.z += finalPos.rz;
             this.position.copy(finalPos);
         }
 
-        // update world this object's world matrix
+        // update the geometry
+        if(this.updateGeometry) {
+            this.updateGeometry();
+        }
+
+        // update this object's world matrix
         this.updateMatrix();
         if(this.parent === undefined) {
             this.matrixWorld.copy(this.matrix);
@@ -59,6 +91,7 @@
             this.matrixWorld.multiplyMatrices(this.parent.matrixWorld, this.matrix);
         }
         this.matrixWorldNeedsUpdate = false;
+
 
         // call update on all dependants
         _.each(this.dependants, function(object) {
