@@ -150,6 +150,7 @@ window.DataDoo = (function () {
 
         //AXES
         this.axes = new DataDoo.AxesHelper(new THREE.Vector3(0,0,0), this.axesConf.x, this.axesConf.y, this.axesConf.z);
+        this.bucket.axes = this.axes;
         this.scene.add(this.axes);
 
         //CAMERA

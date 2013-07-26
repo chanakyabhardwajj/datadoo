@@ -85,7 +85,7 @@
                 this.sphere.position.set(this.data.two*2.5,this.data.two*2.5,this.data.two*2.5);
 
                 this.cone = this.addCone(10,10,10, "0xe7676e", 0.7);
-                this.cone.position.set(this.data.two*5,this.data.two*5,this.data.two*5);
+                this.cone.position.set(-this.data.two*5,this.data.two*5,this.data.two*5);
                 //this.cone.rotation.set(this.data.two,this.data.two,this.data.two);
                 this.addLine(this.cone, this.sphere);
 
@@ -94,7 +94,7 @@
                 //this.label.rotation.set(this.data.two - 90,this.data.two + 30,this.data.two + 60);
                 //this.label.position.set(20,20,20);
 
-                //this.addDashedLine(this.sphere, this.label);
+                this.addDashedLine(this.sphere, this.label);
                 this.position.set(this.data.two,this.data.two,this.data.two);
 
             };
