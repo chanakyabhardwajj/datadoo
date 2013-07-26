@@ -1221,7 +1221,7 @@ window.DataDoo = (function () {
 
         this.addDependancy(startPos, endPos);
         this.lineGeometry = new THREE.Geometry();
-        this.lineGeometry.vertices.push(this.getVectors(startPos, endPos));
+        this.lineGeometry.vertices = this.getVectors(startPos, endPos);
         this.lineMaterial = new THREE.LineBasicMaterial({ color : this.color, linewidth : this.thickness, opacity : this.opacity, transparent:true });
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
 
@@ -1246,7 +1246,7 @@ window.DataDoo = (function () {
 
         this.addDependancy(startPos, endPos);
         this.lineGeometry = new THREE.Geometry();
-        this.lineGeometry.vertices.push(this.getVectors(startPos, endPos));
+        this.lineGeometry.vertices = this.getVectors(startPos, endPos);
         this.lineMaterial = new THREE.LineDashedMaterial({color : this.color, opacity:this.opacity, linewidth:this.thickness, dashSize:this.dashSize, gapSize:this.gapSize, transparent:true});
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
         this.add(this.line);
@@ -1433,6 +1433,7 @@ window.DataDoo = (function () {
         this.spline = new THREE.Spline(points);
         this.geometrySpline = new THREE.Geometry();
         this.mesh = new THREE.Line(this.geometrySpline, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 3 , transparent:true}), THREE.LineStrip);
+        this.addDependancy(points);
         this.add(this.mesh);
     }
 
