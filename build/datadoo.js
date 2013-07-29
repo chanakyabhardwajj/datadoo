@@ -222,7 +222,13 @@ window.DataDoo = (function () {
         });
 
         // call update on all objects
-        _.chain(this.bucket).values().flatten().filter(function(object) {
+        _.chain(this.bucket).values().map(function(object) {
+            if(object instanceof DataDoo.RelationSet) {
+                return object.getArray();
+            } else {
+                return object;
+            }
+        }).flatten().filter(function(object) {
             return object instanceof DataDoo.DDObject3D;
         }).each(function(object) {
             object.update(this.axesConf);
@@ -732,6 +738,7 @@ window.DataDoo = (function () {
         THREE.Object3D.call(this);
         this.matrixAutoUpdate = false;
         this.position = new DataDoo.RVector3(this);
+        this.rVectors = [];
         this.dependants = [];
         this.dependencies = [];
     }
@@ -754,16 +761,45 @@ window.DataDoo = (function () {
         }, this);
     };
 
-    DDObject3D.prototype.getVectors = function() {
+    DDObject3D.prototype.makeRVector = function(point) {
+        if(point instanceof DataDoo.DDObject3D) {
+            var vector = new DataDoo.RVector3(this);
+            vector.setRelative(point);
+            this.rVectors.push(vector);
+            return vector;
+        } else if(point instanceof THREE.Vector3){
+            return point;
+        }
+        throw new Error("DDObject3D : makeRVector cannot make vector from argument");
+    };
+
+    DDObject3D.prototype.makeRVectors = function() {
         var points = _.flatten(arguments);
-        return _.map(points, function(point) {
-            if(point instanceof THREE.Object3D) {
-                return point.position;
-            } else if(point instanceof THREE.Vector3){
-                return point;
-            }
-            throw new Error("DDObject3D : getVectors cannot find vector in argument");
-        });
+        return _.map(points, this.makeRVector, this);
+    };
+
+    DDObject3D.prototype._resolvePosition = function(position, parent) {
+        if(position.setOnAxes) {
+            _.each(["x", "y", "z"], function(axis) {
+                var axisConf = axesConf[axis];
+                if(axisConf.type == DataDoo.NUMBER) {
+                    position[axis] = position["r"+axis];
+                }
+                if(axisConf.type == DataDoo.COLUMNVALUE) {
+                    position[axis] = axisConf.posMap[position["r"+axis]];
+                }
+            });
+        }
+        if(position.relative) {
+            var target = position.target;
+            var vector = target.position.clone();
+            target.parent.localToWorld(vector);
+            parent.worldToLocal(vector);
+            vector.x += position.rx;
+            vector.y += position.ry;
+            vector.z += position.rz;
+            position.copy(vector);
+        }
     };
 
     DDObject3D.prototype.update = function(axesConf) {
@@ -785,32 +821,8 @@ window.DataDoo = (function () {
             return;
         }
 
-        //resolve the position
-        if(this.position.setOnAxes) {
-            _.each(["x", "y", "z"], function(axis) {
-                var axisConf = axesConf[axis];
-                if(axisConf.type == DataDoo.NUMBER) {
-                    this.position[axis] = this.position["r"+axis];
-                }
-                if(axisConf.type == DataDoo.COLUMNVALUE) {
-                    this.position[axis] = axisConf.posMap[this.position["r"+axis]];
-                }
-            }, this);
-        }
-        if(this.position.relative) {
-            var target = this.position.target;
-            var worldPos = target.parent.localToWorld(target.position);
-            var finalPos = this.parent.worldToLocal(worldPos);
-            finalPos.x += finalPos.rx;
-            finalPos.y += finalPos.ry;
-            finalPos.z += finalPos.rz;
-            this.position.copy(finalPos);
-        }
-
-        // update the geometry
-        if(this.updateGeometry) {
-            this.updateGeometry();
-        }
+        //resolve own position
+        this._resolvePosition(this.position, this.parent);
 
         // update this object's world matrix
         this.updateMatrix();
@@ -821,6 +833,15 @@ window.DataDoo = (function () {
         }
         this.matrixWorldNeedsUpdate = false;
 
+        // resolve rvectors
+        _.each(this.rVectors, function(vector) {
+            this._resolvePosition(vector, this);
+        }, this);
+
+        // update the geometry
+        if(this.updateGeometry) {
+            this.updateGeometry();
+        }
 
         // call update on all dependants
         _.each(this.dependants, function(object) {
@@ -1223,9 +1244,8 @@ window.DataDoo = (function () {
         this.opacity = opacity || 1;
         this.color = color || 0x000000;
 
-        this.addDependancy(startPos, endPos);
         this.lineGeometry = new THREE.Geometry();
-        this.lineGeometry.vertices = this.getVectors(startPos, endPos);
+        this.lineGeometry.vertices = this.makeRVectors(startPos, endPos);
         this.lineMaterial = new THREE.LineBasicMaterial({ color : this.color, linewidth : this.thickness, opacity : this.opacity, transparent:true });
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
 
@@ -1248,9 +1268,8 @@ window.DataDoo = (function () {
         this.thickness = thickness || 1;
         this.opacity = opacity || 0.6;
 
-        this.addDependancy(startPos, endPos);
         this.lineGeometry = new THREE.Geometry();
-        this.lineGeometry.vertices = this.getVectors(startPos, endPos);
+        this.lineGeometry.vertices = this.makeRVectors(startPos, endPos);
         this.lineGeometry.computeLineDistances();
         this.lineMaterial = new THREE.LineDashedMaterial({color : this.color, opacity:this.opacity, linewidth:this.thickness, dashSize:this.dashSize, gapSize:this.gapSize, transparent:true});
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
@@ -1258,7 +1277,7 @@ window.DataDoo = (function () {
     }
     DashedLine.prototype = Object.create(Primitive.prototype);
     DashedLine.prototype.updateGeometry = function(){
-        //this.lineGeometry.computeLineDistances();
+        this.lineGeometry.computeLineDistances();
     };
     DataDoo.DashedLine = DashedLine;
 
@@ -1320,8 +1339,8 @@ window.DataDoo = (function () {
         Primitive.call(this);
         configObj = configObj || {};
 
-        this.fromPosition = configObj.from;
-        this.toPosition = configObj.to;
+        this.fromPosition = this.makeRVector(configObj.from);
+        this.toPosition = this.makeRVector(configObj.to);
 
         //this.arrowLineDirection = this.toPosition.clone().sub(this.fromPosition).normalize();
 
@@ -1363,8 +1382,7 @@ window.DataDoo = (function () {
 
     Arrow.prototype = Object.create(Primitive.prototype);
     Arrow.prototype.updateGeometry = function(){
-        var positions = this.getVectors(this.toPosition, this.fromPosition);
-        this.arrowLineDirection = positions[0].clone().sub(positions[1]).normalize();
+        this.arrowLineDirection = this.toPosition.clone().sub(this.fromPosition).normalize();
         if(this.toCone) this.setDirection(this.arrowLineDirection, this.toCone);
         if(this.fromCone) this.setDirection(this.arrowLineDirection.clone().negate(), this.fromCone);
     };
@@ -1432,19 +1450,18 @@ window.DataDoo = (function () {
      */
     function Spline(points, color, subdivisions) {
         Primitive.call(this);
-        this.points = points;
+        this.points = this.makeRVectors(points);
         this.color = color || 0xfc12340;
         this.subdivisions = subdivisions || 6;
-        this.spline = new THREE.Spline(points);
+        this.spline = new THREE.Spline(this.points);
         this.geometrySpline = new THREE.Geometry();
         this.mesh = new THREE.Line(this.geometrySpline, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 3 , transparent:true}), THREE.LineStrip);
-        this.addDependancy(points);
         this.add(this.mesh);
     }
 
     Spline.prototype = Object.create(Primitive.prototype);
     Spline.prototype.updateGeometry = function(){
-        var points = this.getVectors(this.points);
+        var points = this.points;
         for (var i = 0; i < points.length * this.subdivisions; i++) {
             var index = i / ( points.length * this.subdivisions );
             var position = this.spline.getPoint(index);
@@ -1527,11 +1544,12 @@ window.DataDoo = (function () {
         var primClass = pair[1];
         return ["add" + className, function() {
             var args = arguments;
-            function F() {
+            var F = function() {
                 return primClass.apply(this, args);
-            }
+            };
             F.prototype = primClass.prototype;
             var primitive = new F();
+            primitive.constructor = primClass;
             this.add(primitive);
             return primitive;
         }];
@@ -1563,6 +1581,9 @@ window.DataDoo = (function () {
         var relation = new Relation();
         this.push(relation);
         return relation;
+    };
+    RelationSet.prototype.getArray = function() {
+        return _.map(this, _.identity);
     };
 })(window.DataDoo);
 

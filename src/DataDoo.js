@@ -232,7 +232,13 @@ window.DataDoo = (function () {
         });
 
         // call update on all objects
-        _.chain(this.bucket).values().flatten().filter(function(object) {
+        _.chain(this.bucket).values().map(function(object) {
+            if(object instanceof DataDoo.RelationSet) {
+                return object.getArray();
+            } else {
+                return object;
+            }
+        }).flatten().filter(function(object) {
             return object instanceof DataDoo.DDObject3D;
         }).each(function(object) {
             object.update(this.axesConf);

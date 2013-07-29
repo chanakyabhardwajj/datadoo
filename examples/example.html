@@ -86,7 +86,7 @@
                 //var sprite = this.addSprite("http://upload.wikimedia.org/wikipedia/commons/1/1b/Sunny_Leone_2012.jpg", new DataDoo.Position(this.data.Population,this.data.Population,this.data.Population), 10);
 
                 this.sphere = this.addSphere(5, 0xffcc00, 0.3);
-                this.sphere.position.set(this.data.two*2.5,this.data.two*2.5,this.data.two*2.5);
+                this.sphere.position.set(this.data.two*Math.random()*10,this.data.two*2.5,this.data.two*2.5);
 
                 this.cone = this.addCone(10,1,10, "0xe7676e", 0.7);
                 this.cone.position.set(-this.data.two*5,this.data.two*5,this.data.two*5);
@@ -122,7 +122,7 @@
 
                     var ns = [];
                     _.each($.ng1, function(n){
-                        ns.push(n);
+                        ns.push(n.sphere);
                     })
                     console.log(ns)
                     r.addSpline(ns, "0xff0000", 12);

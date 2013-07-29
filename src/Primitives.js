@@ -88,10 +88,9 @@
         this.opacity = opacity || 1;
         this.color = color || 0x000000;
 
-        this.addDependancy(startPos, endPos);
         this.lineGeometry = new THREE.Geometry();
-        this.lineGeometry.vertices = this.getVectors(startPos, endPos);
-        this.lineMaterial = new THREE.LineBasicMaterial({ color : this.color, linewidth : this.thickness, opacity : this.opacity, transparent : true });
+        this.lineGeometry.vertices = this.makeRVectors(startPos, endPos);
+        this.lineMaterial = new THREE.LineBasicMaterial({ color : this.color, linewidth : this.thickness, opacity : this.opacity, transparent:true });
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
 
         this.add(this.line);
@@ -114,9 +113,8 @@
         this.thickness = thickness || 1;
         this.opacity = opacity || 0.6;
 
-        this.addDependancy(startPos, endPos);
         this.lineGeometry = new THREE.Geometry();
-        this.lineGeometry.vertices = this.getVectors(startPos, endPos);
+        this.lineGeometry.vertices = this.makeRVectors(startPos, endPos);
         this.lineGeometry.computeLineDistances();
         this.lineMaterial = new THREE.LineDashedMaterial({color : this.color, opacity : this.opacity, linewidth : this.thickness, dashSize : this.dashSize, gapSize : this.gapSize, transparent : true});
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
@@ -184,8 +182,8 @@
         Primitive.call(this);
         configObj = configObj || {};
 
-        this.fromPosition = configObj.from;
-        this.toPosition = configObj.to;
+        this.fromPosition = this.makeRVector(configObj.from);
+        this.toPosition = this.makeRVector(configObj.to);
 
         //this.arrowLineDirection = this.toPosition.clone().sub(this.fromPosition).normalize();
 
@@ -224,11 +222,10 @@
     }
 
     Arrow.prototype = Object.create(Primitive.prototype);
-    Arrow.prototype.updateGeometry = function () {
-        var positions = this.getVectors(this.toPosition, this.fromPosition);
-        this.arrowLineDirection = positions[0].clone().sub(positions[1]).normalize();
-        if (this.toCone) this.setDirection(this.arrowLineDirection, this.toCone);
-        if (this.fromCone) this.setDirection(this.arrowLineDirection.clone().negate(), this.fromCone);
+    Arrow.prototype.updateGeometry = function(){
+        this.arrowLineDirection = this.toPosition.clone().sub(this.fromPosition).normalize();
+        if(this.toCone) this.setDirection(this.arrowLineDirection, this.toCone);
+        if(this.fromCone) this.setDirection(this.arrowLineDirection.clone().negate(), this.fromCone);
     };
     DataDoo.Arrow = Arrow;
 
@@ -385,19 +382,18 @@
      */
     function Spline(points, color, subdivisions) {
         Primitive.call(this);
-        this.points = points;
+        this.points = this.makeRVectors(points);
         this.color = color || 0xfc12340;
         this.subdivisions = subdivisions || 6;
-        this.spline = new THREE.Spline(points);
+        this.spline = new THREE.Spline(this.points);
         this.geometrySpline = new THREE.Geometry();
-        this.mesh = new THREE.Line(this.geometrySpline, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 3, transparent : true}), THREE.LineStrip);
-        this.addDependancy(points);
+        this.mesh = new THREE.Line(this.geometrySpline, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 3 , transparent:true}), THREE.LineStrip);
         this.add(this.mesh);
     }
 
     Spline.prototype = Object.create(Primitive.prototype);
-    Spline.prototype.updateGeometry = function () {
-        var points = this.getVectors(this.points);
+    Spline.prototype.updateGeometry = function(){
+        var points = this.points;
         for (var i = 0; i < points.length * this.subdivisions; i++) {
             var index = i / ( points.length * this.subdivisions );
             var position = this.spline.getPoint(index);
@@ -474,21 +470,20 @@
     DataDoo.PrimitiveHelpers = _.chain(DataDoo).pairs().filter(function (pair) {
         // filter out Primitive constructor classes from DataDoo
         return _.isFunction(pair[1]) && ("setDirection" in pair[1].prototype) && (pair[0] != "Primitive");
-    }).map(function (pair) {
-            var className = pair[0];
-            var primClass = pair[1];
-            return ["add" + className, function () {
-                var args = arguments;
-
-                function F() {
-                    return primClass.apply(this, args);
-                }
-
-                F.prototype = primClass.prototype;
-                var primitive = new F();
-                this.add(primitive);
-                return primitive;
-            }];
-        }).object().value();
+    }).map(function(pair) {
+        var className = pair[0];
+        var primClass = pair[1];
+        return ["add" + className, function() {
+            var args = arguments;
+            var F = function() {
+                return primClass.apply(this, args);
+            };
+            F.prototype = primClass.prototype;
+            var primitive = new F();
+            primitive.constructor = primClass;
+            this.add(primitive);
+            return primitive;
+        }];
+    }).object().value();
 
 })(window.DataDoo);

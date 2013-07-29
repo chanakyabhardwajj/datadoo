@@ -4,6 +4,7 @@
         THREE.Object3D.call(this);
         this.matrixAutoUpdate = false;
         this.position = new DataDoo.RVector3(this);
+        this.rVectors = [];
         this.dependants = [];
         this.dependencies = [];
     }
@@ -26,16 +27,45 @@
         }, this);
     };
 
-    DDObject3D.prototype.getVectors = function() {
+    DDObject3D.prototype.makeRVector = function(point) {
+        if(point instanceof DataDoo.DDObject3D) {
+            var vector = new DataDoo.RVector3(this);
+            vector.setRelative(point);
+            this.rVectors.push(vector);
+            return vector;
+        } else if(point instanceof THREE.Vector3){
+            return point;
+        }
+        throw new Error("DDObject3D : makeRVector cannot make vector from argument");
+    };
+
+    DDObject3D.prototype.makeRVectors = function() {
         var points = _.flatten(arguments);
-        return _.map(points, function(point) {
-            if(point instanceof THREE.Object3D) {
-                return point.position;
-            } else if(point instanceof THREE.Vector3){
-                return point;
-            }
-            throw new Error("DDObject3D : getVectors cannot find vector in argument");
-        });
+        return _.map(points, this.makeRVector, this);
+    };
+
+    DDObject3D.prototype._resolvePosition = function(position, parent) {
+        if(position.setOnAxes) {
+            _.each(["x", "y", "z"], function(axis) {
+                var axisConf = axesConf[axis];
+                if(axisConf.type == DataDoo.NUMBER) {
+                    position[axis] = position["r"+axis];
+                }
+                if(axisConf.type == DataDoo.COLUMNVALUE) {
+                    position[axis] = axisConf.posMap[position["r"+axis]];
+                }
+            });
+        }
+        if(position.relative) {
+            var target = position.target;
+            var vector = target.position.clone();
+            target.parent.localToWorld(vector);
+            parent.worldToLocal(vector);
+            vector.x += position.rx;
+            vector.y += position.ry;
+            vector.z += position.rz;
+            position.copy(vector);
+        }
     };
 
     DDObject3D.prototype.update = function(axesConf) {
@@ -57,32 +87,8 @@
             return;
         }
 
-        //resolve the position
-        if(this.position.setOnAxes) {
-            _.each(["x", "y", "z"], function(axis) {
-                var axisConf = axesConf[axis];
-                if(axisConf.type == DataDoo.NUMBER) {
-                    this.position[axis] = this.position["r"+axis];
-                }
-                if(axisConf.type == DataDoo.COLUMNVALUE) {
-                    this.position[axis] = axisConf.posMap[this.position["r"+axis]];
-                }
-            }, this);
-        }
-        if(this.position.relative) {
-            var target = this.position.target;
-            var worldPos = target.parent.localToWorld(target.position);
-            var finalPos = this.parent.worldToLocal(worldPos);
-            finalPos.x += finalPos.rx;
-            finalPos.y += finalPos.ry;
-            finalPos.z += finalPos.rz;
-            this.position.copy(finalPos);
-        }
-
-        // update the geometry
-        if(this.updateGeometry) {
-            this.updateGeometry();
-        }
+        //resolve own position
+        this._resolvePosition(this.position, this.parent);
 
         // update this object's world matrix
         this.updateMatrix();
@@ -93,6 +99,15 @@
         }
         this.matrixWorldNeedsUpdate = false;
 
+        // resolve rvectors
+        _.each(this.rVectors, function(vector) {
+            this._resolvePosition(vector, this);
+        }, this);
+
+        // update the geometry
+        if(this.updateGeometry) {
+            this.updateGeometry();
+        }
 
         // call update on all dependants
         _.each(this.dependants, function(object) {
