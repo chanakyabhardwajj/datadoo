@@ -51,12 +51,18 @@
         // Request animationframe helper
         _raf : (
             window.requestAnimationFrame ||
-                window.webkitRequestAnimationFrame ||
-                window.mozRequestAnimationFrame ||
-                function (callback) {
-                    return window.setTimeout(callback, 1000 / 60);
-                }
-            ),
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            function (callback) {
+                return window.setTimeout(callback, 1000 / 60);
+            }
+        ),
+
+
+        performanceNow: function() {
+            return ((self.performance !== undefined && self.performance.now !== undefined)?
+                    self.performance.now():Date.now());
+        },
 
         requestAnimationFrame : function (callback) {
             return this._raf.call(window, callback);
