@@ -145,7 +145,8 @@
             var tim1 = new DataDoo.Timer(dd, "tim1", 0.05);
             var anim = new DataDoo.Animator(dd, "anim", [rg1, tim1], function($, time, delta, elapsedTime) {
                 _.each($.ng1, function(node) {
-                    node.sphere.setRadius(5 + elapsedTime%10);
+                    node.sphere.setRadius(5 + elapsedTime);
+                    node.sphere.position.set(50*Math.sin(elapsedTime) ,50*Math.cos(elapsedTime) ,5 + elapsedTime%10);
                 });
             });
 
