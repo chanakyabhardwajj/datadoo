@@ -176,8 +176,12 @@ window.DataDoo = (function () {
         }
 
         //CAMERA CONTROLS
-        //this.cameraControls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-        this.cameraControls = new THREE.TrackballControls(this.camera, this.renderer.domElement);
+        this.cameraControls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+        this.cameraControls.maxDistance=2000;
+        this.cameraControls.minDistance=5;
+        this.cameraControls.autoRotate = false;
+
+        //this.cameraControls = new THREE.TrackballControls(this.camera, this.renderer.domElement);
 
         //Projector
         this.projector = new THREE.Projector();
