@@ -355,8 +355,8 @@
             if (this.yObj.type === 5) {
                 for (i = 0, j = this.yObj.values.length; i < j; i++) {
                     notchShape = new THREE.Mesh(this.notchGeom, this.notchMat);
-                    notchShape.position.set(this.yObj.origin.x + this.yObj.posMap[this.yObj.values[i]], this.yObj.origin.y, this.yObj.origin.z);
-                    notch = new DataDoo.Label(this.yObj.values[i], new THREE.Vector3(this.yObj.origin.x + this.yObj.posMap[this.yObj.values[i]], this.yObj.origin.y, this.yObj.origin.z));
+                    notchShape.position.set(this.yObj.origin.x, this.yObj.origin.y + this.yObj.posMap[this.yObj.values[i]], this.yObj.origin.z);
+                    notch = new DataDoo.Label(this.yObj.values[i], new THREE.Vector3(this.yObj.origin.x, this.yObj.origin.y + this.yObj.posMap[this.yObj.values[i]], this.yObj.origin.z));
                     this.yAxis.add(notchShape);
                     this.yAxis.add(notch);
                 }
@@ -367,8 +367,8 @@
             if (this.zObj.type === 5) {
                 for (i = 0, j = this.zObj.values.length; i < j; i++) {
                     notchShape = new THREE.Mesh(this.notchGeom, this.notchMat);
-                    notchShape.position.set(this.zObj.origin.x + this.zObj.posMap[this.zObj.values[i]], this.zObj.origin.y, this.zObj.origin.z);
-                    notch = new DataDoo.Label(this.zObj.values[i], new THREE.Vector3(this.zObj.origin.x + this.zObj.posMap[this.zObj.values[i]], this.zObj.origin.y, this.zObj.origin.z));
+                    notchShape.position.set(this.zObj.origin.x, this.zObj.origin.y, this.zObj.origin.z + this.zObj.posMap[this.zObj.values[i]]);
+                    notch = new DataDoo.Label(this.zObj.values[i], new THREE.Vector3(this.zObj.origin.x, this.zObj.origin.y, this.zObj.origin.z + this.zObj.posMap[this.zObj.values[i]]));
                     this.zAxis.add(notchShape);
                     this.zAxis.add(notch);
                 }

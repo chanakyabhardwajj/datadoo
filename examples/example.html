@@ -24,7 +24,6 @@
         <canvas id="canvas"></canvas>
 
         <script src="../build/vendor.js"></script>
-        <!--<script src="http://mrdoob.github.com/three.js/examples/fonts/helvetiker_regular.typeface.js"></script>-->
         <script src="../build/datadoo.js"></script>
         <script type="text/javascript">
             var dd = new DataDoo({
@@ -55,6 +54,8 @@
                     },
 
                     z: {
+                        type: DataDoo.COLUMNVALUE,
+                        column : "ds1.three",
                         label : "vever",
                         length : 250,
                         withCone: true,
@@ -67,10 +68,10 @@
 
             var ds1 = new DataDoo.DataSet(dd, "ds1", {
                 data: [
-                    { one : "India", two : 10, three : 10 },
-                    { one : "Germany", two : 20, three :20 },
-                    { one : "Japan", two : 30, three : 30 },
-                    { one : "Sweden", two : 40, three : 40 }
+                    { one : "India", two : 10,   three : "aa" },
+                    { one : "Germany", two : 20, three : "bb" },
+                    { one : "Japan", two : 30,   three : "cc" },
+                    { one : "Sweden", two : 40,  three : "dd" }
                 ]
             });
 
@@ -100,7 +101,8 @@
                 //this.label.position.set(20,20,20);
 
                 this.addDashedLine(this.sphere, this.label);
-                this.position.set(this.data.two,this.data.two,this.data.two);
+                //this.position.set(this.data.two,this.data.two,this.data.two);
+                this.position.setOnAxes(this.data.one,this.data.two,this.data.three);
 
             };
 

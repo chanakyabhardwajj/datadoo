@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>DataDoo : Three.js activity on Github</title>
+        <style>
+            body {
+                background: #fff;
+                padding: 0;
+                margin: 0;
+                overflow: hidden;
+                font-family: "Lucida Console", "Lucida Sans Typewriter", Monaco, "Bitstream Vera Sans Mono", monospace;
+                text-align: center;
+            }
+
+            .datadoo-label {
+                background: rgba(220, 220, 220, 0.5);
+                font-size: 0.7em;
+            }
+
+            .datadoo-wrap {
+
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="canvas"></canvas>
+        <script src="../build/vendor.js"></script>
+        <script src="../build/datadoo.js"></script>
+
+        <script type="text/javascript">
+            var dd = new DataDoo({
+                canvas: document.getElementById("canvas"),
+                camera: {
+                    type: DataDoo.PERSPECTIVE
+                },
+                axes: {
+                    x: {
+                        type: DataDoo.COLUMNVALUE,
+                        column : "ds.week",
+                        label : "week#",
+                        length : 200,
+                        withCone: false,
+                        notches : true,
+                        notchSpacing : 50
+                    },
+
+                    y: {
+                        type: DataDoo.COLUMNVALUE,
+                        column : "ds.commitCount",
+                        label : "count#",
+                        withCone: true,
+                        length : 50,
+                        notches : true,
+                        notchSpacing : 5
+                    },
+
+                    z: {
+                        type: DataDoo.COLUMNVALUE,
+                        column : "ds.dayName",
+                        label : "dayname",
+                        length : 350,
+                        withCone: true,
+                        notches : true,
+                        notchSpacing : 50
+                    }
+                }
+            });
+
+            var GH = {};
+            GH.CommitsParser = function (options) {};
+            _.extend(GH.CommitsParser.prototype, Miso.Dataset.Parsers.prototype, {
+                parse : function (data) {
+                    var columns = ['week', 'dayName', 'dayNumber', 'commitCount'];
+                    var dataColumns = { week : [], dayName : [], dayNumber : [], commitCount : [] };
+
+                    _.each(data, function (c) {
+                        var d = moment(c.commit.committer.date);
+                        var week = d.week();
+                        var dayName = d.format("dddd");
+                        var dayNumber = d.dayOfYear();
+
+                        //Find if an entry for this commit exists already by checking the dayNumber array
+                        var indx = _.indexOf(dataColumns.dayNumber, dayNumber);
+
+                        if(indx!==-1){
+                            dataColumns.commitCount[indx]++;
+                        }
+                        else{
+                            dataColumns.week.push(week);
+                            dataColumns.dayName.push(dayName);
+                            dataColumns.dayNumber.push(dayNumber);
+                            dataColumns.commitCount.push(1);
+                        }
+                    });
+
+                    return {
+                        columns : columns,
+                        data : dataColumns
+                    };
+                }
+            });
+
+            var misoConfig = {
+                url : 'https://api.github.com/repos/mrdoob/three.js/commits?per_page=100&callback=',
+                jsonp : true,
+                extract : function(response) {
+                    return response.data;
+                },
+                parser : GH.CommitsParser,
+                sync:true
+            };
+
+            var ds = new DataDoo.DataSet(dd, "ds", misoConfig);
+
+            var nodeFn = function($) {
+                console.log(this.data);
+                this.sphere = this.addSphere(10, 0x767676, 0.5);
+                this.sphere.position.set(this.data.commitCount, this.data.commitCount, this.data.commitCount);
+            };
+
+            var relFn = function($) {};
+
+            var ng = new DataDoo.NodeGenerator(dd, "ng", ds, nodeFn);
+
+            var rg = new DataDoo.RelationGenerator(dd, "rg", [ng], relFn);
+
+            ds.fetch();
+
+
+            dd.startVis(rg);
+
+        </script>
+    </body>
+</html>
