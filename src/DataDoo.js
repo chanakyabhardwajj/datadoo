@@ -282,9 +282,10 @@ window.DataDoo = (function () {
                     return;
                 }
                 var values = _.pluck(this.bucket[dsId].countBy(colName).toJSON(), colName);
-                if (!_.isUndefined(axis.sort)) {
-                    values.sort();
-                    if (axis.sort == DataDoo.DESCENDING) {
+                if (axis.sort) {
+                    var sortFunc = _.isFunction(axis.sortFunc)?axis.sortFunc:_.identity;
+                    values = _.sortBy(values, sortFunc);
+                    if (axis.sortOrder == DataDoo.DESCENDING) {
                         values.reverse();
                     }
                 }
@@ -346,6 +347,16 @@ window.DataDoo = (function () {
             vector2.y = -(vector2.y - 1)/2 * self.renderer.domElement.height;
             label.updateElemPos(vector2.y, vector2.x);
         });
+    };
+
+    DataDoo.Sort = {
+        Week : (function() {
+            var weeks = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+
+            return function(value) {
+                return _.indexOf(weeks, value.toLowerCase().substring(0, 3));
+            };
+        })()
     };
 
     return DataDoo;
