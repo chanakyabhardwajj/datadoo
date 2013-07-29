@@ -121,7 +121,7 @@
     }
     DashedLine.prototype = Object.create(Primitive.prototype);
     DashedLine.prototype.updateGeometry = function(){
-        //this.lineGeometry.computeLineDistances();
+        this.lineGeometry.computeLineDistances();
     };
     DataDoo.DashedLine = DashedLine;
 

@@ -84,7 +84,7 @@
                 this.sphere = this.addSphere(5, 0xffcc00, 0.3);
                 this.sphere.position.set(this.data.two*2.5,this.data.two*2.5,this.data.two*2.5);
 
-                this.cone = this.addCone(10,10,10, "0xe7676e", 0.7);
+                this.cone = this.addCone(10,1,10, "0xe7676e", 0.7);
                 this.cone.position.set(-this.data.two*5,this.data.two*5,this.data.two*5);
                 //this.cone.rotation.set(this.data.two,this.data.two,this.data.two);
                 this.addLine(this.cone, this.sphere);
@@ -110,15 +110,21 @@
                 var n1 = $.ng1[$.ng1.length-1];
                 var n2 = $.ng2[$.ng2.length-1];
 
-                var ns = [];
-                _.each($.ng1, function(n){
-                    ns.push(n.sphere.position);
-                })
+
 
                 if(n1 && n2) {
                     var r = this.addRelation();
                     r.addDashedLine(n1, n2, 0xff0000);
+
+                    var ns = [];
+                    _.each($.ng1, function(n){
+                        ns.push(n);
+                    })
+                    console.log(ns)
+                    r.addSpline(ns, "0xff0000", 12);
                 }
+
+
             };
 
 
