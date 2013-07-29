@@ -5,7 +5,7 @@
     function RVector3(parent) {
         THREE.Vector3.call(this);
         this.parent = parent;
-        this.setOnAxes = false;
+        this.isSetOnAxes = false;
         this.relative = false;
     }
     DataDoo.RVector3 = RVector3;
