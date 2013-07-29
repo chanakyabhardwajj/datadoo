@@ -33,7 +33,8 @@ module.exports = function(grunt) {
                         'src/libs/components/underscore/underscore.js',
                         'src/libs/components/miso.dataset/dist/miso.ds.deps.0.4.1.js',
                         'src/libs/components/threejs/build/three.js',
-                        'src/libs/components/threejs/examples/js/controls/OrbitControls.js'
+                        'src/libs/components/threejs/examples/js/controls/OrbitControls.js',
+                        'src/libs/components/threejs/examples/js/controls/TrackballControls.js'
                     ]
                 },
 
