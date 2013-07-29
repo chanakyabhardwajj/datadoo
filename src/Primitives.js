@@ -41,8 +41,9 @@
         this.wireframe = wireframe || false;
 
         this.material = new THREE.MeshLambertMaterial({color : this.color, opacity : this.opacity, wireframe : this.wireframe, transparent : true});
-        this.geometry = new THREE.SphereGeometry(this.radius, 50, 50);
+        this.geometry = new THREE.SphereGeometry(1, 50, 50);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
+        this.scale.set(this.radius, this.radius, this.radius);
         this.add(this.mesh);
     }
 
@@ -50,10 +51,7 @@
     DataDoo.Sphere = Sphere;
     Sphere.prototype.setRadius = function (radius) {
         this.radius = radius;
-        this.geometry = new THREE.SphereGeometry(this.radius);
-        this.remove(this.mesh);
-        this.mesh = new THREE.Mesh(this.geometry, this.material);
-        this.add(this.mesh);
+        this.scale.set(this.radius, this.radius, this.radius);
     };
 
     /**
