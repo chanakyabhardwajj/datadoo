@@ -43,8 +43,15 @@
         this.material = new THREE.MeshLambertMaterial({color : this.color, opacity : this.opacity, wireframe : this.wireframe, transparent : true});
         this.geometry = new THREE.SphereGeometry(1, 50, 50);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
+
+        this.outlineMaterial = new THREE.MeshBasicMaterial( { color: 0x3c3c3c, side: THREE.BackSide } );
+        this.outlineMesh = new THREE.Mesh( this.geometry, this.outlineMaterial );
+        this.outlineMesh.scale.multiplyScalar(1.03);
+        this.mesh.add(this.outlineMesh);
+
         this.scale.set(this.radius, this.radius, this.radius);
         this.add(this.mesh);
+
     }
 
     Sphere.prototype = Object.create(Primitive.prototype);
@@ -387,7 +394,7 @@
         this.subdivisions = subdivisions || 6;
         this.spline = new THREE.Spline(this.points);
         this.geometrySpline = new THREE.Geometry();
-        this.mesh = new THREE.Line(this.geometrySpline, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 3 , transparent:true}), THREE.LineStrip);
+        this.mesh = new THREE.Line(this.geometrySpline, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 1 , transparent:true}));
         this.add(this.mesh);
     }
 
