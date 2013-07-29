@@ -171,6 +171,9 @@ window.DataDoo = (function () {
         //Projector
         this.projector = new THREE.Projector();
 
+        // update the matrix once, so that positions
+        // can be calculated for the first time
+        this.scene.updateMatrixWorld();
     };
 
     DataDoo.prototype.id = "DD";

@@ -103,15 +103,12 @@
                 console.log(this.data);
 
                 var sphere2 = this.addSphere(this.data.Population/10, 0x767676, 0.5);
-                sphere2.position.set(this.data.GDP*10, this.data.GDP, this.data.GDP);
-
-
-                //this.position.set(this.data.GDP,this.data.Population,this.data.GDP);
+                this.position.set(this.data.GDP*10, this.data.GDP, this.data.GDP);
             };
 
             var relAppFn = function($) {
-                var n1 = $.ng1[$.ng1.length-2];
-                var n2 = $.ng2[$.ng2.length-2];
+                var n1 = $.ng1[$.ng1.length-1];
+                var n2 = $.ng2[$.ng2.length-1];
 
                 var ns = [];
                 _.each($.ng1, function(n){
