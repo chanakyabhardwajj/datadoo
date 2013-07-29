@@ -23,6 +23,9 @@
         this.push(relation);
         return relation;
     };
+    RelationSet.prototype.getArray = function() {
+        return _.map(this, _.identity);
+    };
 })(window.DataDoo);
 
 
