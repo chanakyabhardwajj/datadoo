@@ -1,6 +1,6 @@
 (function(DataDoo) {
     function Timer(dd, id, timeout) {
-        this.timeout = timeout || 0;
+        this.timeout = Math.max(timeout || 0, 1/60);
         this.id = id;
         this.oldTime = 0;
         this.elapsedTime = 0;
@@ -16,9 +16,9 @@
         }
         var newTime = DataDoo.utils.performanceNow();
         var diff = 0.001 * (newTime - this.oldTime);
-        this.oldTime = newTime;
         this.elapsedTime += diff;
         if(diff > this.timeout) {
+            this.oldTime = newTime;
             this.dd.eventBus.enqueue(this, "TIMER.FIRE", {
                 time: newTime,
                 delta: diff,

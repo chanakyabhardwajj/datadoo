@@ -142,7 +142,7 @@
             ds1.fetch();
             ds2.fetch();
 
-            var tim1 = new DataDoo.Timer(dd, "tim1");
+            var tim1 = new DataDoo.Timer(dd, "tim1", 0.05);
             var anim = new DataDoo.Animator(dd, "anim", [rg1, tim1], function($, time, delta, elapsedTime) {
                 _.each($.ng1, function(node) {
                     node.sphere.setRadius(5 + elapsedTime%10);
