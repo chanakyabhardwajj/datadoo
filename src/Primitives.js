@@ -385,7 +385,7 @@
     function Spline(points, color, subdivisions) {
         Primitive.call(this);
         this.points = this.makeRVectors(points);
-        this.color = color || 0xfc12340;
+        this.color = color || "0xfc12340";
         this.subdivisions = subdivisions || 6;
         this.spline = new THREE.Spline(this.points);
         this.geometrySpline = new THREE.Geometry();

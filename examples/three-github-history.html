@@ -36,32 +36,32 @@
                 axes: {
                     x: {
                         type: DataDoo.COLUMNVALUE,
-                        column : "ds.week",
+                        column : "dsMiso.week",
                         label : "week#",
-                        length : 200,
+                        length : 500,
                         withCone: false,
                         notches : true,
-                        notchSpacing : 50
+                        notchSpacing : 10
                     },
 
                     y: {
-                        /*type: DataDoo.COLUMNVALUE,
-                        column : "ds.commitCount",*/
+                        type: DataDoo.COLUMNVALUE,
+                        column : "dsMiso.commitCount",
                         label : "count#",
                         withCone: true,
-                        length : 50,
+                        length : 500,
                         notches : true,
-                        notchSpacing : 5
+                        notchSpacing : 25
                     },
 
                     z: {
                         type: DataDoo.COLUMNVALUE,
-                        column : "ds.dayName",
+                        column : "dsMiso.dayName",
                         label : "dayname",
                         length : 350,
                         withCone: true,
                         notches : true,
-                        notchSpacing : 50
+                        notchSpacing : 20
                     }
                 }
             });
@@ -101,6 +101,16 @@
             });
 
             var misoConfig = {
+                url : 'https://api.github.com/repos/misoproject/dataset/commits?per_page=100&callback=',
+                jsonp : true,
+                extract : function(response) {
+                    return response.data;
+                },
+                parser : GH.CommitsParser,
+                sync:true
+            };
+
+            var threeConfig = {
                 url : 'https://api.github.com/repos/mrdoob/three.js/commits?per_page=100&callback=',
                 jsonp : true,
                 extract : function(response) {
@@ -110,21 +120,32 @@
                 sync:true
             };
 
-            var ds = new DataDoo.DataSet(dd, "ds", misoConfig);
+            var dsMiso = new DataDoo.DataSet(dd, "dsMiso", misoConfig);
+            var dsThree = new DataDoo.DataSet(dd, "dsThree", threeConfig);
 
-            var nodeFn = function($) {
-                console.log(this.data);
-                this.sphere = this.addSphere(10, 0x767676, 0.5);
+            var nodeFnMiso = function($) {
+                this.sphere = this.addSphere(this.data.commitCount, 0xffaa00, 0.7);
                 this.position.setOnAxes(this.data.week, this.data.commitCount, this.data.dayName);
             };
 
-            var relFn = function($) {};
+            var nodeFnThree = function($) {
+                this.sphere = this.addSphere(this.data.commitCount, 0xff0000, 1);
+                this.position.setOnAxes(this.data.week, this.data.commitCount, this.data.dayName);
+            };
 
-            var ng = new DataDoo.NodeGenerator(dd, "ng", ds, nodeFn);
+            var relFn = function($) {
+                var r = this.addRelation();
+                r.addSpline($.ngMiso, "0xffcc00", 12);
+                //r.addSpline($.ngThree, "0xfc1234", 12);
+            };
 
-            var rg = new DataDoo.RelationGenerator(dd, "rg", [ng], relFn);
+            var ngMiso = new DataDoo.NodeGenerator(dd, "ngMiso", dsMiso, nodeFnMiso);
+            var ngThree = new DataDoo.NodeGenerator(dd, "ngThree", dsThree, nodeFnThree);
 
-            ds.fetch();
+            var rg = new DataDoo.RelationGenerator(dd, "rg", [ngMiso, ngThree], relFn);
+
+            dsMiso.fetch();
+            dsThree.fetch();
 
 
             dd.startVis(rg);
