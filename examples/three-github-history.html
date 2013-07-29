@@ -45,8 +45,8 @@
                     },
 
                     y: {
-                        type: DataDoo.COLUMNVALUE,
-                        column : "ds.commitCount",
+                        /*type: DataDoo.COLUMNVALUE,
+                        column : "ds.commitCount",*/
                         label : "count#",
                         withCone: true,
                         length : 50,
@@ -115,7 +115,7 @@
             var nodeFn = function($) {
                 console.log(this.data);
                 this.sphere = this.addSphere(10, 0x767676, 0.5);
-                this.sphere.position.set(this.data.commitCount, this.data.commitCount, this.data.commitCount);
+                this.position.setOnAxes(this.data.week, this.data.commitCount, this.data.dayName);
             };
 
             var relFn = function($) {};
