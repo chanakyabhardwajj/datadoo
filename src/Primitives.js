@@ -40,11 +40,12 @@
         this.opacity = opacity || 1;
         this.wireframe = wireframe || false;
 
-        this.material = new THREE.MeshLambertMaterial({color : this.color, opacity : this.opacity, wireframe : this.wireframe, transparent:true});
+        this.material = new THREE.MeshLambertMaterial({color : this.color, opacity : this.opacity, wireframe : this.wireframe, transparent : true});
         this.geometry = new THREE.SphereGeometry(this.radius, 50, 50);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         this.add(this.mesh);
     }
+
     Sphere.prototype = Object.create(Primitive.prototype);
     DataDoo.Sphere = Sphere;
     Sphere.prototype.setRadius = function (radius) {
@@ -65,13 +66,14 @@
         this.opacity = opacity || 1;
         this.wireframe = wireframe || false;
 
-        this.material = new THREE.MeshLambertMaterial({color : this.color, opacity : this.opacity, wireframe : this.wireframe, transparent:true});
+        this.material = new THREE.MeshLambertMaterial({color : this.color, opacity : this.opacity, wireframe : this.wireframe, transparent : true});
         this.geometry = new THREE.CubeGeometry(this.width, this.height, this.depth);
         this.mesh = new THREE.Mesh(this.geometry, this.material);
         this.add(this.mesh);
     }
+
     Cube.prototype = Object.create(Primitive.prototype);
-    Cube.prototype.updateGeometry = function(){
+    Cube.prototype.updateGeometry = function () {
         this.geometry.computeLineDistances();
     };
     DataDoo.Cube = Cube;
@@ -89,13 +91,14 @@
         this.addDependancy(startPos, endPos);
         this.lineGeometry = new THREE.Geometry();
         this.lineGeometry.vertices = this.getVectors(startPos, endPos);
-        this.lineMaterial = new THREE.LineBasicMaterial({ color : this.color, linewidth : this.thickness, opacity : this.opacity, transparent:true });
+        this.lineMaterial = new THREE.LineBasicMaterial({ color : this.color, linewidth : this.thickness, opacity : this.opacity, transparent : true });
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
 
         this.add(this.line);
     }
+
     Line.prototype = Object.create(Primitive.prototype);
-    Line.prototype.updateGeometry = function(){
+    Line.prototype.updateGeometry = function () {
         this.lineGeometry.computeLineDistances();
     };
     DataDoo.Line = Line;
@@ -115,12 +118,13 @@
         this.lineGeometry = new THREE.Geometry();
         this.lineGeometry.vertices = this.getVectors(startPos, endPos);
         this.lineGeometry.computeLineDistances();
-        this.lineMaterial = new THREE.LineDashedMaterial({color : this.color, opacity:this.opacity, linewidth:this.thickness, dashSize:this.dashSize, gapSize:this.gapSize, transparent:true});
+        this.lineMaterial = new THREE.LineDashedMaterial({color : this.color, opacity : this.opacity, linewidth : this.thickness, dashSize : this.dashSize, gapSize : this.gapSize, transparent : true});
         this.line = new THREE.Line(this.lineGeometry, this.lineMaterial);
         this.add(this.line);
     }
+
     DashedLine.prototype = Object.create(Primitive.prototype);
-    DashedLine.prototype.updateGeometry = function(){
+    DashedLine.prototype.updateGeometry = function () {
         this.lineGeometry.computeLineDistances();
     };
     DataDoo.DashedLine = DashedLine;
@@ -137,16 +141,15 @@
         this.opacity = opacity || 1;
         this.color = color || 0x767676;
 
-
         var coneGeometry = new THREE.CylinderGeometry(this.topRadius, this.baseRadius, this.height, 20, 20);
-        var coneMat = new THREE.MeshLambertMaterial({ color : this.color, opacity : this.opacity, transparent:true});
+        var coneMat = new THREE.MeshLambertMaterial({ color : this.color, opacity : this.opacity, transparent : true});
         this.cone = new THREE.Mesh(coneGeometry, coneMat);
-
 
         this.add(this.cone);
     }
+
     Cone.prototype = Object.create(Primitive.prototype);
-    Cone.prototype.setDirection = function(dir){
+    Cone.prototype.setDirection = function (dir) {
         this.setDirection(dir, this.cone);
     };
     DataDoo.Cone = Cone;
@@ -155,30 +158,28 @@
      *  Arrow primitive
      */
     function Arrow(configObj) {
-         /*
-             from : new THREE.Vector3(0,0,0),
-             to : new THREE.Vector3(0,100,0),
+        /*
+         from : new THREE.Vector3(0,0,0),
+         to : new THREE.Vector3(0,100,0),
 
-             lineDivisions : 10,
-             lineColor : "0x000000",
-             lineThickness : 1,
-             lineOpacity : 1,
+         lineColor : "0x000000",
+         lineThickness : 1,
+         lineOpacity : 1,
 
-             fromCone : false,
-             fromConeHeight : 10,
-             fromConeTopRadius : 1,
-             fromConeBaseRadius : 5,
-             fromConeColor : "0xff0000",
-             fromConeOpacity : 1,
+         fromCone : false,
+         fromConeHeight : 10,
+         fromConeTopRadius : 1,
+         fromConeBaseRadius : 5,
+         fromConeColor : "0xff0000",
+         fromConeOpacity : 1,
 
-             toCone : true,
-             toConeHeight : 5,
-             toConeTopRadius : 0,
-             toConeBaseRadius : 3,
-             toConeColor : "0x000000",
-             toConeOpacity : 0.5
+         toCone : true,
+         toConeHeight : 5,
+         toConeTopRadius : 0,
+         toConeBaseRadius : 3,
+         toConeColor : "0x000000",
+         toConeOpacity : 0.5
          */
-
 
         Primitive.call(this);
         configObj = configObj || {};
@@ -190,9 +191,7 @@
 
         this.arrowLineOpacity = configObj.lineOpacity || 1;
         this.arrowLineThickness = configObj.lineThickness || 1;
-        this.arrowLineDivisions = configObj.lineDivisions || 0;
         this.arrowLineColor = configObj.lineColor || "0x000000";
-
 
         this.fromCone = configObj.fromCone || false;
         this.fromConeHeight = configObj.fromConeHeight || 5;
@@ -225,11 +224,11 @@
     }
 
     Arrow.prototype = Object.create(Primitive.prototype);
-    Arrow.prototype.updateGeometry = function(){
+    Arrow.prototype.updateGeometry = function () {
         var positions = this.getVectors(this.toPosition, this.fromPosition);
         this.arrowLineDirection = positions[0].clone().sub(positions[1]).normalize();
-        if(this.toCone) this.setDirection(this.arrowLineDirection, this.toCone);
-        if(this.fromCone) this.setDirection(this.arrowLineDirection.clone().negate(), this.fromCone);
+        if (this.toCone) this.setDirection(this.arrowLineDirection, this.toCone);
+        if (this.fromCone) this.setDirection(this.arrowLineDirection.clone().negate(), this.fromCone);
     };
     DataDoo.Arrow = Arrow;
 
@@ -238,56 +237,147 @@
      */
     function AxesHelper(xObj, yObj, zObj) {
         /*
-         x : {
-             type : DataDoo.NUMBER,
-             label : "x-axis",
-             lineColor : "0x000000",
-             labelColor : "0x000000",
-             length : 150,
-             withCone : false,
-             thickness : 1
-         }
-        */
+         type: DataDoo.COLUMNVALUE,
+         column : "ds1.one",
+
+         type : DataDoo.NUMBER,
+
+
+         label : "x-axis",
+         length : 150,
+         withCone : false,
+         thickness : 1,
+         lineColor : "0x000000",
+         coneColor : "0x000000",
+         notches : true,
+         notchSpacing : 5,
+         notchStartingFrom : 0,
+         origin : new THREE.Vector3(0,0,0)
+         */
 
         Primitive.call(this);
         this.xObj = xObj || {};
         this.yObj = yObj || {};
         this.zObj = zObj || {};
 
+        var i, j, notch, notchShape;
+        this.notchGeom = new THREE.SphereGeometry(0.9);
+        this.notchMat = new THREE.MeshBasicMaterial({color:"0x000000", opacity:0.4});
+
         this.xAxis = new DataDoo.Arrow({
-            from : new THREE.Vector3(0,0,0),
-            to : new THREE.Vector3(150,0,0),
-            lineDivisions : 10,
+            from : this.xObj.origin,
+            to : new THREE.Vector3(this.xObj.length, this.xObj.origin.y, this.xObj.origin.z),
             fromCone : false,
-            toCone : true
+            toCone : this.xObj.withCone,
+            lineColor : this.xObj.lineColor,
+            toConeColor : this.xObj.coneColor,
+            lineThickness : this.xObj.thickness
         });
-        this.xlabel = new DataDoo.Label(this.xObj.label, new THREE.Vector3(150,1,0));
+        this.xlabel = new DataDoo.Label(this.xObj.label, new THREE.Vector3(this.xObj.length, this.xObj.origin.y, this.xObj.origin.z));
+        this.xAxis.add(this.xlabel);
+
+        if (this.xObj.notches) {
+            if (this.xObj.type === 6) {
+                for (i = 0, j = this.xObj.length / this.xObj.notchSpacing; i < j; i++) {
+                    notchShape = new THREE.Mesh(this.notchGeom, this.notchMat);
+                    notchShape.position.set(this.xObj.origin.x + (this.xObj.notchSpacing * i), this.xObj.origin.y, this.xObj.origin.z);
+                    notch = new DataDoo.Label(this.xObj.notchStartingFrom + i, new THREE.Vector3(this.xObj.origin.x + (this.xObj.notchSpacing * i), this.xObj.origin.y, this.xObj.origin.z));
+                    this.xAxis.add(notchShape);
+                    this.xAxis.add(notch);
+                }
+            }
+        }
+
         this.add(this.xAxis);
-        this.add(this.xlabel);
 
         this.yAxis = new DataDoo.Arrow({
-            from : new THREE.Vector3(0,0,0),
-            to : new THREE.Vector3(0,150,0),
-            lineDivisions : 10,
+            from : this.yObj.origin,
+            to : new THREE.Vector3(this.yObj.origin.x, this.yObj.length, this.yObj.origin.z),
             fromCone : false,
-            toCone : true
+            toCone : this.yObj.withCone,
+            lineColor : this.yObj.lineColor,
+            toConeColor : this.yObj.coneColor,
+            lineThickness : this.yObj.thickness
         });
-        this.ylabel = new DataDoo.Label(this.yObj.label, new THREE.Vector3(0,150,0));
+        this.ylabel = new DataDoo.Label(this.yObj.label, new THREE.Vector3(this.yObj.origin.x, this.yObj.length, this.yObj.origin.z));
+        this.yAxis.add(this.ylabel);
+        if (this.yObj.notches) {
+            if (this.yObj.type === 6) {
+                for (i = 0, j = this.yObj.length / this.yObj.notchSpacing; i < j; i++) {
+                    notchShape = new THREE.Mesh(this.notchGeom, this.notchMat);
+                    notchShape.position.set(this.yObj.origin.x, this.yObj.origin.y + (this.yObj.notchSpacing * i), this.yObj.origin.z);
+                    notch = new DataDoo.Label(this.yObj.notchStartingFrom + i, new THREE.Vector3(this.yObj.origin.x, this.yObj.origin.y + (this.yObj.notchSpacing * i), this.yObj.origin.z));
+                    this.yAxis.add(notchShape);
+                    this.yAxis.add(notch);
+                }
+            }
+        }
         this.add(this.yAxis);
-        this.add(this.ylabel);
 
         this.zAxis = new DataDoo.Arrow({
-            from : new THREE.Vector3(0,0,0),
-            to : new THREE.Vector3(0,0,150),
-            lineDivisions : 10,
+            from : this.zObj.origin,
+            to : new THREE.Vector3(this.zObj.origin.x, this.zObj.origin.y, this.zObj.length),
             fromCone : false,
-            toCone : true
+            toCone : this.zObj.withCone,
+            lineColor : this.zObj.lineColor,
+            toConeColor : this.zObj.coneColor,
+            lineThickness : this.zObj.thickness
         });
-        this.zlabel = new DataDoo.Label(this.zObj.label, new THREE.Vector3(0,0,150));
+        this.zlabel = new DataDoo.Label(this.zObj.label, new THREE.Vector3(this.zObj.origin.x, this.zObj.origin.y, this.zObj.length));
+        this.zAxis.add(this.zlabel);
+        if (this.zObj.notches) {
+            if (this.zObj.type === 6) {
+                for (i = 0, j = this.zObj.length / this.zObj.notchSpacing; i < j; i++) {
+                    notchShape = new THREE.Mesh(this.notchGeom, this.notchMat);
+                    notchShape.position.set(this.zObj.origin.x, this.zObj.origin.y, this.zObj.origin.z + (this.zObj.notchSpacing * i));
+                    notch = new DataDoo.Label(this.zObj.notchStartingFrom + i, new THREE.Vector3(this.zObj.origin.x, this.zObj.origin.y, this.zObj.origin.z + (this.zObj.notchSpacing * i)));
+                    this.zAxis.add(notchShape);
+                    this.zAxis.add(notch);
+                }
+            }
+        }
         this.add(this.zAxis);
-        this.add(this.zlabel);
     }
+
     AxesHelper.prototype = Object.create(Primitive.prototype);
+    AxesHelper.prototype.updateGeometry = function () {
+
+        if (this.xObj.notches) {
+            if (this.xObj.type === 5) {
+                for (i = 0, j = this.xObj.values.length; i < j; i++) {
+                    notchShape = new THREE.Mesh(this.notchGeom, this.notchMat);
+                    notchShape.position.set(this.xObj.origin.x + this.xObj.posMap[this.xObj.values[i]], this.xObj.origin.y, this.xObj.origin.z);
+                    notch = new DataDoo.Label(this.xObj.values[i], new THREE.Vector3(this.xObj.origin.x + this.xObj.posMap[this.xObj.values[i]], this.xObj.origin.y, this.xObj.origin.z));
+                    this.xAxis.add(notchShape);
+                    this.xAxis.add(notch);
+                }
+            }
+        }
+
+        if (this.yObj.notches) {
+            if (this.yObj.type === 5) {
+                for (i = 0, j = this.yObj.values.length; i < j; i++) {
+                    notchShape = new THREE.Mesh(this.notchGeom, this.notchMat);
+                    notchShape.position.set(this.yObj.origin.x + this.yObj.posMap[this.yObj.values[i]], this.yObj.origin.y, this.yObj.origin.z);
+                    notch = new DataDoo.Label(this.yObj.values[i], new THREE.Vector3(this.yObj.origin.x + this.yObj.posMap[this.yObj.values[i]], this.yObj.origin.y, this.yObj.origin.z));
+                    this.yAxis.add(notchShape);
+                    this.yAxis.add(notch);
+                }
+            }
+        }
+
+        if (this.zObj.notches) {
+            if (this.zObj.type === 5) {
+                for (i = 0, j = this.zObj.values.length; i < j; i++) {
+                    notchShape = new THREE.Mesh(this.notchGeom, this.notchMat);
+                    notchShape.position.set(this.zObj.origin.x + this.zObj.posMap[this.zObj.values[i]], this.zObj.origin.y, this.zObj.origin.z);
+                    notch = new DataDoo.Label(this.zObj.values[i], new THREE.Vector3(this.zObj.origin.x + this.zObj.posMap[this.zObj.values[i]], this.zObj.origin.y, this.zObj.origin.z));
+                    this.zAxis.add(notchShape);
+                    this.zAxis.add(notch);
+                }
+            }
+        }
+    };
     DataDoo.AxesHelper = AxesHelper;
 
     /**
@@ -300,18 +390,18 @@
         this.subdivisions = subdivisions || 6;
         this.spline = new THREE.Spline(points);
         this.geometrySpline = new THREE.Geometry();
-        this.mesh = new THREE.Line(this.geometrySpline, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 3 , transparent:true}), THREE.LineStrip);
+        this.mesh = new THREE.Line(this.geometrySpline, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 3, transparent : true}), THREE.LineStrip);
         this.addDependancy(points);
         this.add(this.mesh);
     }
 
     Spline.prototype = Object.create(Primitive.prototype);
-    Spline.prototype.updateGeometry = function(){
+    Spline.prototype.updateGeometry = function () {
         var points = this.getVectors(this.points);
         for (var i = 0; i < points.length * this.subdivisions; i++) {
             var index = i / ( points.length * this.subdivisions );
             var position = this.spline.getPoint(index);
-            this.geometrySpline.vertices[ i ] = new THREE.Vector3(position.x,position.y,position.z);
+            this.geometrySpline.vertices[ i ] = new THREE.Vector3(position.x, position.y, position.z);
         }
         this.geometrySpline.computeLineDistances();
     };
@@ -336,7 +426,7 @@
     /**
      *  Label primitive
      */
-    //ToDo : Fix label toscreen coords for objects that are behind the camera!!
+        //ToDo : Fix label toscreen coords for objects that are behind the camera!!
     function Label(message, labelPos) {
         Primitive.call(this);
 
@@ -353,7 +443,7 @@
         //inner.style.left = '-50%';
         //inner.style.top = '-.5em';
 
-        this.message = message || "empty label";
+        this.message = (message).toString() || "empty label";
         this.element = element;
         this.width = 0;
         this.height = 0;
@@ -378,26 +468,27 @@
         this.element.style.left = left + "px";
     };
 
-
     /**
      * Primitive constructor helper mixin
      */
-    DataDoo.PrimitiveHelpers = _.chain(DataDoo).pairs().filter(function(pair) {
+    DataDoo.PrimitiveHelpers = _.chain(DataDoo).pairs().filter(function (pair) {
         // filter out Primitive constructor classes from DataDoo
         return _.isFunction(pair[1]) && ("setDirection" in pair[1].prototype) && (pair[0] != "Primitive");
-    }).map(function(pair) {
-        var className = pair[0];
-        var primClass = pair[1];
-        return ["add" + className, function() {
-            var args = arguments;
-            function F() {
-                return primClass.apply(this, args);
-            }
-            F.prototype = primClass.prototype;
-            var primitive = new F();
-            this.add(primitive);
-            return primitive;
-        }];
-    }).object().value();
+    }).map(function (pair) {
+            var className = pair[0];
+            var primClass = pair[1];
+            return ["add" + className, function () {
+                var args = arguments;
+
+                function F() {
+                    return primClass.apply(this, args);
+                }
+
+                F.prototype = primClass.prototype;
+                var primitive = new F();
+                this.add(primitive);
+                return primitive;
+            }];
+        }).object().value();
 
 })(window.DataDoo);

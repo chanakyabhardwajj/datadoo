@@ -24,29 +24,39 @@ window.DataDoo = (function () {
                 x : {
                     type : DataDoo.NUMBER,
                     label : "x-axis",
-                    lineColor : "0x000000",
-                    labelColor : "0x000000",
                     length : 150,
                     withCone : false,
-                    thickness : 1
+                    thickness : 1,
+                    lineColor : "0x000000",
+                    coneColor : "0x000000",
+                    notches : true,
+                    notchSpacing : 5,
+                    notchStartingFrom : 0,
+                    origin : new THREE.Vector3(0,0,0)
                 },
                 y : {
                     type : DataDoo.NUMBER,
                     label : "y-axis",
-                    lineColor : "0x000000",
-                    labelColor :"0x000000",
                     length : 150,
                     withCone : false,
-                    thickness : 1
+                    thickness : 1,
+                    lineColor : "0x000000",
+                    coneColor : "0x000000",
+                    notchSpacing : 5,
+                    notchStartingFrom : 0,
+                    origin : new THREE.Vector3(0,0,0)
                 },
                 z : {
                     type : DataDoo.NUMBER,
                     label : "z-axis",
-                    lineColor : "0x000000",
-                    labelColor :"0x000000",
                     length : 150,
                     withCone : false,
-                    thickness : 1
+                    thickness : 1,
+                    lineColor : "0x000000",
+                    coneColor : "0x000000",
+                    notchSpacing : 5,
+                    notchStartingFrom : 0,
+                    origin : new THREE.Vector3(0,0,0)
                 }
             },
 
@@ -149,7 +159,7 @@ window.DataDoo = (function () {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
 
         //AXES
-        this.axes = new DataDoo.AxesHelper(new THREE.Vector3(0,0,0), this.axesConf.x, this.axesConf.y, this.axesConf.z);
+        this.axes = new DataDoo.AxesHelper(this.axesConf.x, this.axesConf.y, this.axesConf.z);
         this.bucket.axes = this.axes;
         this.scene.add(this.axes);
 
@@ -261,7 +271,7 @@ window.DataDoo = (function () {
                         values.reverse();
                     }
                 }
-                var spacing = axis.spacing || (axis.axisLength/values.length);
+                var spacing = axis.notchSpacing || (axis.length/values.length);
                 var posMap = _.chain(values).map(function (value, i) {
                     return [value, (i + 1) * spacing];
                 }).object().value();

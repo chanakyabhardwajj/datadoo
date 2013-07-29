@@ -35,27 +35,31 @@
                     x: {
                         type: DataDoo.COLUMNVALUE,
                         column : "ds1.one",
-                        spacing : 30,
                         label : "countries",
-                        length : 25,
-                        withCone : false,
-                        thickness : 0.3
+                        length : 80,
+                        //origin : new THREE.Vector3(-10,-10,-10),
+                        withCone: false,
+                        notches : true,
+                        notchSpacing : 20
                     },
 
                     y: {
-                        type: DataDoo.NUMBER,
                         label : "hahaha",
                         length : 125,
-                        withCone : true,
-                        thickness : 0.3
+                        withCone: true,
+                        //origin : new THREE.Vector3(-120,-10,-10),
+                        notches : true,
+                        notchSpacing : 10,
+                        notchStartingFrom : 0
                     },
 
                     z: {
-                        type: DataDoo.NUMBER,
                         label : "vever",
                         length : 125,
-                        withCone : false,
-                        thickness : 0.3
+                        withCone: true,
+                        notches : true,
+                        notchSpacing : 10,
+                        notchStartingFrom : 0
                     }
                 }
             });
