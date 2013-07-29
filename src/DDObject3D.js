@@ -45,7 +45,7 @@
     };
 
     DDObject3D.prototype._resolvePosition = function(position, parent) {
-        if(position.setOnAxes) {
+        if(position.isSetOnAxes) {
             _.each(["x", "y", "z"], function(axis) {
                 var axisConf = axesConf[axis];
                 if(axisConf.type == DataDoo.NUMBER) {

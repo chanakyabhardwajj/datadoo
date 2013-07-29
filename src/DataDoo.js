@@ -90,6 +90,9 @@ window.DataDoo = (function () {
 
         this.bucket = {};
 
+        // list of timers
+        this.timers = [];
+
         // create three.js stuff
         this.scene = new THREE.Scene();
 
@@ -211,6 +214,9 @@ window.DataDoo = (function () {
 
         function renderFrame() {
             DataDoo.utils.requestAnimationFrame(renderFrame);
+            _.each(self.timers, function(timer) {
+                timer.tick();
+            });
             // we clear the eventbus, to make sure all the components have run
             self.eventBus.execute();
             // render the frame
