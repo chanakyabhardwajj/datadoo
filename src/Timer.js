@@ -1,6 +1,7 @@
 (function(DataDoo) {
-    function Timer(dd, timeout) {
+    function Timer(dd, id, timeout) {
         this.timeout = timeout || 0;
+        this.id = id;
         this.oldTime = 0;
         this.elapsedTime = 0;
         this.started = false;
@@ -17,8 +18,12 @@
         var diff = 0.001 * (newTime - this.oldTime);
         this.oldTime = newTime;
         this.elapsedTime += diff;
-        if(diff > timeout) {
-            this.dd.eventBus.enqueue(this, "TIMER.FIRE", this);
+        if(diff > this.timeout) {
+            this.dd.eventBus.enqueue(this, "TIMER.FIRE", {
+                time: newTime,
+                delta: diff,
+                elapsedTime: this.elapsedTime,
+            });
         }
     };
 })(window.DataDoo);

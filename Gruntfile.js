@@ -25,6 +25,8 @@ module.exports = function(grunt) {
                         'src/Relation.js',
                         'src/RelationGenerator.js',
                         'src/NodeGenerator.js',
+                        'src/Timer.js',
+                        'src/Animator.js',
                         'src/AxesHelper.js'
 
                     ],

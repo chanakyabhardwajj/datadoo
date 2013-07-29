@@ -51,7 +51,9 @@
     Sphere.prototype.setRadius = function (radius) {
         this.radius = radius;
         this.geometry = new THREE.SphereGeometry(this.radius);
-        this.mesh.setGeometry(this.geometry);
+        this.remove(this.mesh);
+        this.mesh = new THREE.Mesh(this.geometry, this.material);
+        this.add(this.mesh);
     };
 
     /**
