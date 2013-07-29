@@ -44,7 +44,7 @@
         return _.map(points, this.makeRVector, this);
     };
 
-    DDObject3D.prototype._resolvePosition = function(position, parent) {
+    DDObject3D.prototype._resolvePosition = function(position, parent, axesConf) {
         if(position.isSetOnAxes) {
             _.each(["x", "y", "z"], function(axis) {
                 var axisConf = axesConf[axis];
@@ -88,7 +88,7 @@
         }
 
         //resolve own position
-        this._resolvePosition(this.position, this.parent);
+        this._resolvePosition(this.position, this.parent, axesConf);
 
         // update this object's world matrix
         this.updateMatrix();
@@ -101,7 +101,7 @@
 
         // resolve rvectors
         _.each(this.rVectors, function(vector) {
-            this._resolvePosition(vector, this);
+            this._resolvePosition(vector, this, axesConf);
         }, this);
 
         // update the geometry

@@ -12,7 +12,7 @@
     RVector3.prototype = Object.create(THREE.Vector3.prototype);
 
     RVector3.prototype.set = function(x, y, z) {
-        this.setOnAxes = false;
+        this.isSetOnAxes = false;
         this.relative = false;
         this.x = x;
         this.y = y;
@@ -21,7 +21,7 @@
     };
 
     RVector3.prototype.setOnAxes = function(rx, ry, rz){
-        this.setOnAxes = true;
+        this.isSetOnAxes = true;
         this.relative = false;
         this.rx = rx;
         this.ry = ry;
@@ -30,7 +30,7 @@
 
     RVector3.prototype.setRelative = function(target, rx, ry, rz) {
         this.relative = true;
-        this.setOnAxes = false;
+        this.isSetOnAxes = false;
         this.rx = rx || 0;
         this.ry = ry || 0;
         this.rz = rz || 0;
