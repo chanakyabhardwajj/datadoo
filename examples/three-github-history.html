@@ -13,7 +13,8 @@
             }
 
             .datadoo-label {
-                background: rgba(220, 220, 220, 0.5);
+                /*background: rgba(220, 220, 220, 0.5);*/
+                background: transparent;
                 font-size: 0.7em;
             }
 
@@ -32,22 +33,23 @@
                 canvas: document.getElementById("canvas"),
                 camera: {
                     type: DataDoo.PERSPECTIVE
+                    //type: DataDoo.ORTHOGRAPHIC
                 },
                 axes: {
                     x: {
                         type: DataDoo.COLUMNVALUE,
-                        column : ["dsMiso.week", "dsThree.week"],
+                        column : ["dsMiso.week"/*, "dsThree.week"*/],
                         label : "week#",
                         length : 500,
                         withCone: false,
                         notches : true,
-                        notchSpacing : 30,
+                        notchSpacing : 50,
                         sort: true
                     },
 
                     y: {
-                        type: DataDoo.COLUMNVALUE,
-                        column : ["dsMiso.commitCount", "dsThree.commitCount"],
+                        /*type: DataDoo.COLUMNVALUE,
+                        column : ["dsMiso.commitCount", "dsThree.commitCount"],*/
                         label : "count#",
                         withCone: true,
                         length : 500,
@@ -58,7 +60,7 @@
 
                     z: {
                         type: DataDoo.COLUMNVALUE,
-                        column : ["dsMiso.dayName", "dsThree.dayName"],
+                        column : ["dsMiso.dayName"/*, "dsThree.dayName"*/],
                         label : "dayname",
                         length : 350,
                         withCone: true,
@@ -90,7 +92,8 @@
                             dataColumns.commitCount[indx]++;
                         }
                         else{
-                            dataColumns.week.push(week);
+                            //dataColumns.week.push(week);
+                            dataColumns.week.push(parseInt(Math.random()*10)+1);
                             dataColumns.dayName.push(dayName);
                             dataColumns.dayNumber.push(dayNumber);
                             dataColumns.commitCount.push(1);
@@ -129,18 +132,21 @@
 
             var nodeFnMiso = function($) {
                 this.sphere = this.addSphere(this.data.commitCount, 0xffaa00, 0.7);
+                this.label = this.addLabel(this.data.week + "--" + this.data.dayName);
                 this.position.setOnAxes(this.data.week, this.data.commitCount, this.data.dayName);
             };
 
             var nodeFnThree = function($) {
                 this.sphere = this.addSphere(this.data.commitCount, 0xff0000, 1);
+                this.label = this.addLabel(this.data.week);
+                //this.label.position.setRelative(this.sphere, 0, 100, 0);
                 this.position.setOnAxes(this.data.week, this.data.commitCount, this.data.dayName);
             };
 
             var relFn = function($) {
                 var r = this.addRelation();
-                r.addSpline($.ngMiso, "0xffcc00", 12);
-                //r.addSpline($.ngThree, "0xfc1234", 12);
+                //r.addSpline($.ngMiso, 1, "0xffcc00");
+                //r.addMultiline($.ngThree, "0xfc1234");
             };
 
             var ngMiso = new DataDoo.NodeGenerator(dd, "ngMiso", dsMiso, nodeFnMiso);
@@ -148,8 +154,9 @@
 
             var rg = new DataDoo.RelationGenerator(dd, "rg", [ngMiso, ngThree], relFn);
 
+            //dsThree.fetch();
             dsMiso.fetch();
-            dsThree.fetch();
+
 
 
             dd.startVis(rg);

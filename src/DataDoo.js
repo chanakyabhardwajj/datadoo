@@ -276,16 +276,26 @@ window.DataDoo = (function () {
         _.each(this.axesConf, function (axis, name) {
             if (axis.type == DataDoo.COLUMNVALUE) {
                 var columns = _.isArray(axis.column)?axis.column:[axis.column];
-
-                var values = _.chain(columns).map(function(column) {
+                var tempValues = [];
+                var values = [];
+                var self = this;
+                _.each(columns, function(column){
                     var split = column.split(".");
                     var dsId = split[0];
                     var colName = split[1];
-                    if (!_.contains(changedDs, dsId)) {
+                    tempValues.push(_.pluck(self.bucket[dsId].countBy(colName).toJSON(), colName));
+                });
+                values = _.unique(_.flatten(tempValues));
+                //console.log(values);
+               /* var values = _.chain(columns).map(function(column) {
+                    var split = column.split(".");
+                    var dsId = split[0];
+                    var colName = split[1];
+                    *//*if (!_.contains(changedDs, dsId)) {
                         return [];
-                    }
+                    }*//*
                     return _.pluck(this.bucket[dsId].countBy(colName).toJSON(), colName);
-                }, this).flatten().value();
+                }, this).flatten().value();*/
 
                 if (axis.sort) {
                     var sortFunc = _.isFunction(axis.sortFunc)?axis.sortFunc:_.identity;

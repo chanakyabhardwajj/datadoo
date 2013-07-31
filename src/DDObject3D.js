@@ -49,7 +49,7 @@
             _.each(["x", "y", "z"], function(axis) {
                 var axisConf = axesConf[axis];
                 if(axisConf.type == DataDoo.NUMBER) {
-                    position[axis] = position["r"+axis];
+                    position[axis] = position["r"+axis] * axisConf.notchSpacing;
                 }
                 if(axisConf.type == DataDoo.COLUMNVALUE) {
                     position[axis] = axisConf.posMap[position["r"+axis]];

@@ -387,14 +387,17 @@
     /**
      *  Spline primitive
      */
-    function Spline(points, color, subdivisions) {
+    function Spline(points, subdivisions, color, thickness, dashSize, gapSize) {
         Primitive.call(this);
         this.points = this.makeRVectors(points);
         this.color = color || "0xfc12340";
         this.subdivisions = subdivisions || 6;
+        this.thickness = thickness || 1;
+        this.dashSize = dashSize || 4;
+        this.gapSize = gapSize || 2;
         this.spline = new THREE.Spline(this.points);
         this.geometrySpline = new THREE.Geometry();
-        this.mesh = new THREE.Line(this.geometrySpline, new THREE.LineDashedMaterial({ color : this.color, dashSize : 4, gapSize : 2, linewidth : 1 , transparent:true}));
+        this.mesh = new THREE.Line(this.geometrySpline, new THREE.LineDashedMaterial({ color : this.color, dashSize : this.dashSize, gapSize : this.gapSize, linewidth : this.thickness , transparent:true}));
         this.add(this.mesh);
     }
 
@@ -409,6 +412,32 @@
         this.geometrySpline.computeLineDistances();
     };
     DataDoo.Spline = Spline;
+
+    /**
+     *  Multiline primitive
+     */
+    function Multiline(points, color, thickness, dashSize, gapSize) {
+        Primitive.call(this);
+        this.points = this.makeRVectors(points);
+        this.color = color || "0xfc12340";
+        this.thickness = thickness || 1;
+        this.dashSize = dashSize || 4;
+        this.gapSize = gapSize || 2;
+
+        this.geometry = new THREE.Geometry();
+        this.mesh = new THREE.Line(this.geometry, new THREE.LineDashedMaterial({ color : this.color, dashSize : this.dashSize, gapSize : this.gapSize, linewidth : this.thickness , transparent:true}));
+        this.add(this.mesh);
+    }
+
+    Multiline.prototype = Object.create(Primitive.prototype);
+    Multiline.prototype.updateGeometry = function(){
+        var points = this.points;
+        for (var i = 0; i < points.length; i++) {
+            this.geometry.vertices.push(new THREE.Vector3(points[i].x, points[i].y, points[i].z));
+        }
+        this.geometry.computeLineDistances();
+    };
+    DataDoo.Multiline = Multiline;
 
     /**
      *  Sprite primitive
