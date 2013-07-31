@@ -185,6 +185,7 @@ window.DataDoo = (function () {
         }
 
         //CAMERA CONTROLS
+        //this.cameraControls = new DataDoo.CameraControls(this.camera, this.renderer.domElement);
         this.cameraControls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
         this.cameraControls.maxDistance=10000;
         this.cameraControls.minDistance=5;

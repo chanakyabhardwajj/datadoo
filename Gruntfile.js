@@ -27,8 +27,8 @@ module.exports = function(grunt) {
                         'src/NodeGenerator.js',
                         'src/Timer.js',
                         'src/Animator.js',
-                        'src/AxesHelper.js'
-
+                        'src/AxesHelper.js',
+                        'src/CameraControls.js'
                     ],
                     'build/vendor.js': [
                         'src/libs/components/jquery/jquery.js',
