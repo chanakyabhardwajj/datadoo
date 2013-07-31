@@ -2,6 +2,7 @@
     _.extend(DataDoo, {
         // camera type
         PERSPECTIVE : 1,
+        ORTHOGRAPHIC : 1.1,
 
         // position types
         ABSOLUTE : 2,

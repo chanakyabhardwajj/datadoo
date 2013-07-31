@@ -15,13 +15,12 @@ window.DataDoo = (function () {
             grid : true,
             camera : {
                 type : DataDoo.PERSPECTIVE,
-                viewAngleP : 45,
+                fov : 45,
                 nearP : 0.1,
                 farP : 20000,
-                positionP : {x : 0, y : 150, z : 400},
-                nearO : 10,
+                nearO : -50,
                 farO : 10000,
-                positionO : {x : 0, y : 150, z : 400}
+                position : {x : 0, y : 150, z : 400}
             },
             axes : {
                 x : {
@@ -171,26 +170,23 @@ window.DataDoo = (function () {
 
         //CAMERA
         var camSettings = this.cameraConf;
+        this.camera = new THREE.CombinedCamera( this.renderer.domElement.width / 2, this.renderer.domElement.height / 2, this.cameraConf.fov, this.cameraConf.nearP, this.cameraConf.farP, this.cameraConf.nearO, this.cameraConf.farO );
+        this.camera.position.set(this.cameraConf.position.x, this.cameraConf.position.y, this.cameraConf.position.z);
+        this.camera.lookAt(this.scene.position);
+        this.scene.add(this.camera);
         if (this.cameraConf.type == DataDoo.PERSPECTIVE) {
-            this.camera = new THREE.PerspectiveCamera(this.cameraConf.viewAngleP, this.renderer.domElement.width / this.renderer.domElement.height, this.cameraConf.nearP, this.cameraConf.farP);
-            this.camera.position.set(this.cameraConf.positionP.x, this.cameraConf.positionP.y, this.cameraConf.positionP.z);
-            this.camera.lookAt(this.scene.position);
-            this.scene.add(this.camera);
+            this.camera.toPerspective();
         }
         else if (this.cameraConf.type == DataDoo.ORTHOGRAPHIC) {
-            this.camera = new THREE.OrthographicCamera(0.5 * this.renderer.domElement.width / -2, 0.5 * this.renderer.domElement.width / 2, 0.5 * this.renderer.domElement.height / 2, 0.5 * this.renderer.domElement.height / -2, this.cameraConf.nearO, this.cameraConf.farO);
-            this.camera.position.set(this.cameraConf.positionO.x, this.cameraConf.positionO.y, this.cameraConf.positionO.z);
-            this.camera.lookAt(this.scene.position);
-            this.scene.add(this.camera);
+            this.camera.toOrthographic();
         }
-
         else {
             throw new Error("DataDoo : unknown camera type");
         }
 
         //CAMERA CONTROLS
         this.cameraControls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-        this.cameraControls.maxDistance=2000;
+        this.cameraControls.maxDistance=10000;
         this.cameraControls.minDistance=5;
         this.cameraControls.autoRotate = false;
 
@@ -363,7 +359,7 @@ window.DataDoo = (function () {
     DataDoo.prototype.putLabelsToScreen = function(){
         var self = this;
 
-        self.camera.updateMatrixWorld();
+        //self.camera.updateMatrixWorld();
         _.each(self.labelsArray, function(label){
             var vector = new THREE.Vector3();
             vector.getPositionFromMatrix( label.matrixWorld );

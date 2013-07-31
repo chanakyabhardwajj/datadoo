@@ -32,13 +32,15 @@
             var dd = new DataDoo({
                 canvas: document.getElementById("canvas"),
                 camera: {
-                    //type: DataDoo.PERSPECTIVE
-                    type: DataDoo.ORTHOGRAPHIC
+                    type: DataDoo.PERSPECTIVE,
+                    //type: DataDoo.ORTHOGRAPHIC,
+                    position : {x : 200, y : 150, z : 200},
+                    fov : 70
                 },
                 axes: {
                     x: {
-                        type: DataDoo.COLUMNVALUE,
-                        column : ["dsMiso.week"/*, "dsThree.week"*/],
+                        /*type: DataDoo.COLUMNVALUE,
+                        column : ["dsMiso.week"*//*, "dsThree.week"*//*],*/
                         label : "week#",
                         length : 500,
                         withCone: false,
