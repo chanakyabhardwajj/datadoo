@@ -32,8 +32,8 @@
             var dd = new DataDoo({
                 canvas: document.getElementById("canvas"),
                 camera: {
-                    type: DataDoo.PERSPECTIVE
-                    //type: DataDoo.ORTHOGRAPHIC
+                    //type: DataDoo.PERSPECTIVE
+                    type: DataDoo.ORTHOGRAPHIC
                 },
                 axes: {
                     x: {
@@ -132,7 +132,7 @@
 
             var nodeFnMiso = function($) {
                 this.sphere = this.addSphere(this.data.commitCount, 0xffaa00, 0.7);
-                this.label = this.addLabel(this.data.week + "--" + this.data.dayName);
+                this.label = this.addLabel(this.data.week + "--" + this.data.dayName + "--" + this.data.commitCount);
                 this.position.setOnAxes(this.data.week, this.data.commitCount, this.data.dayName);
             };
 
