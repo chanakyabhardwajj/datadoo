@@ -27,8 +27,8 @@ module.exports = function(grunt) {
                         'src/NodeGenerator.js',
                         'src/Timer.js',
                         'src/Animator.js',
-                        'src/AxesHelper.js',
-                        'src/CameraControls.js'
+                        'src/AxesHelper.js'
+
                     ],
                     'build/vendor.js': [
                         'src/libs/components/jquery/jquery.js',
@@ -36,8 +36,9 @@ module.exports = function(grunt) {
                         'src/libs/components/miso.dataset/dist/miso.ds.deps.0.4.1.js',
                         'src/libs/components/moment/moment.js',
                         'src/libs/components/threejs/build/three.js',
-                        'src/libs/components/threejs/examples/js/controls/OrbitControls.js',
-                        'src/libs/components/threejs/examples/js/controls/TrackballControls.js'
+                        'src/OrbitControls.js'//,
+                        /*'src/libs/components/threejs/examples/js/controls/OrbitControls.js',*/
+                        /*'src/libs/components/threejs/examples/js/controls/TrackballControls.js'*/
                     ]
                 },
 

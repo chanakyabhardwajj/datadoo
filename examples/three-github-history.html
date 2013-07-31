@@ -39,8 +39,8 @@
                 },
                 axes: {
                     x: {
-                        type: DataDoo.COLUMNVALUE,
-                        column : ["dsMiso.week", "dsThree.week"],
+                        /*type: DataDoo.COLUMNVALUE,
+                        column : ["dsMiso.week", "dsThree.week"],*/
                         label : "week#",
                         length : 500,
                         withCone: false,
@@ -50,8 +50,8 @@
                     },
 
                     y: {
-                        type: DataDoo.COLUMNVALUE,
-                        column : ["dsMiso.commitCount", "dsThree.commitCount"],
+                        /*type: DataDoo.COLUMNVALUE,
+                        column : ["dsMiso.commitCount", "dsThree.commitCount"],*/
                         label : "count#",
                         withCone: true,
                         length : 500,
@@ -147,7 +147,7 @@
 
             var relFn = function($) {
                 var r = this.addRelation();
-                //r.addSpline($.ngMiso, 1, "0xffcc00");
+                r.addSpline($.ngMiso, 1, "0xffcc00");
                 //r.addMultiline($.ngThree, "0xfc1234");
             };
 
