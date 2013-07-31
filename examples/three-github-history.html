@@ -39,8 +39,8 @@
                 },
                 axes: {
                     x: {
-                        /*type: DataDoo.COLUMNVALUE,
-                        column : ["dsMiso.week"*//*, "dsThree.week"*//*],*/
+                        type: DataDoo.COLUMNVALUE,
+                        column : ["dsMiso.week", "dsThree.week"],
                         label : "week#",
                         length : 500,
                         withCone: false,
@@ -50,8 +50,8 @@
                     },
 
                     y: {
-                        /*type: DataDoo.COLUMNVALUE,
-                        column : ["dsMiso.commitCount", "dsThree.commitCount"],*/
+                        type: DataDoo.COLUMNVALUE,
+                        column : ["dsMiso.commitCount", "dsThree.commitCount"],
                         label : "count#",
                         withCone: true,
                         length : 500,
@@ -62,7 +62,7 @@
 
                     z: {
                         type: DataDoo.COLUMNVALUE,
-                        column : ["dsMiso.dayName"/*, "dsThree.dayName"*/],
+                        column : ["dsMiso.dayName", "dsThree.dayName"],
                         label : "dayname",
                         length : 350,
                         withCone: true,
@@ -139,8 +139,8 @@
             };
 
             var nodeFnThree = function($) {
-                this.sphere = this.addSphere(this.data.commitCount, 0xff0000, 1);
-                this.label = this.addLabel(this.data.week);
+                this.sphere = this.addSphere(this.data.commitCount, 0xff0000, 0.6);
+                this.label = this.addLabel(this.data.week + "--" + this.data.dayName + "--" + this.data.commitCount);
                 //this.label.position.setRelative(this.sphere, 0, 100, 0);
                 this.position.setOnAxes(this.data.week, this.data.commitCount, this.data.dayName);
             };
@@ -157,11 +157,11 @@
             var rg = new DataDoo.RelationGenerator(dd, "rg", [ngMiso, ngThree], relFn);
 
             //dsThree.fetch();
-            dsMiso.fetch();
 
 
-
-            dd.startVis(rg);
+            _.when(dsThree.fetch(),dsMiso.fetch() ).then(function() {
+                dd.startVis(rg)
+            });
 
         </script>
     </body>

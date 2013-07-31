@@ -290,7 +290,10 @@ window.DataDoo = (function () {
                     var split = column.split(".");
                     var dsId = split[0];
                     var colName = split[1];
-                    tempValues.push(_.pluck(self.bucket[dsId].countBy(colName).toJSON(), colName));
+                    //weird case : in the 1st iteration there is no data in the bucket, thus erring out.
+                    if(self.bucket[dsId].column(colName)){
+                        tempValues.push(_.pluck(self.bucket[dsId].countBy(colName).toJSON(), colName));
+                    }
                 });
                 values = _.unique(_.flatten(tempValues));
                 //console.log(values);
