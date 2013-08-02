@@ -44,8 +44,8 @@
 
     /**
      * This method tries to create a vector from the input.
-     * if the input is a DDObject3D then a relative RVector3 is created
-     * else if Vector3 then it is returned as such
+     * if the input is a DDObject3D then a managed RVector3 is created
+     * else if its a Vector3 then it is returned as such
      */
     DDObject3D.prototype.makeRVector = function(point) {
         if(point instanceof DataDoo.DDObject3D) {

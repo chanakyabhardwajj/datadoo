@@ -18,6 +18,19 @@ module.exports = function(grunt) {
                         'src/Constants.js',
                         'src/Utils.js',
                         'src/DDObject3D.js',
+
+                        'src/primitives/Primitive.js',
+                        'src/primitives/Line.js',
+                        'src/primitives/Cone.js',
+                        'src/primitives/Arrow.js',
+                        'src/primitives/Label.js',
+                        'src/primitives/AxesHelper.js',
+                        'src/primitives/Cube.js',
+                        'src/primitives/Sphere.js',
+                        'src/primitives/Spline.js',
+                        'src/primitives/Sprite.js',
+                        'src/primitives/PrimitiveHelpers.js',
+
                         'src/DataSet.js',
                         'src/DataFilter.js',
                         'src/Position.js',
@@ -50,7 +63,7 @@ module.exports = function(grunt) {
 
         watch: {
             scripts: {
-                files: "src/*.js",
+                files: "src/**/*.js",
                 tasks: ['default']
             }
         },
