@@ -1,12 +1,27 @@
 (function(DataDoo) {
 
+    /**
+     * DataDoo's special Object3D that supports
+     * rvectors.
+     */
     function DDObject3D() {
         THREE.Object3D.call(this);
+
+        // we update world matrix manually
+        // because an object position may be 
+        // relative and hence the world matrix computation
+        // needs to wait till all dependencies are also ready
         this.matrixAutoUpdate = false;
+
+        // an rvector position
         this.position = new DataDoo.RVector3(this);
+
+        // This is a list of rvectors that are managed by this
+        // object
         this.rVectors = [];
-        this.dependants = [];
-        this.dependencies = [];
+
+        this.dependants = []; // objects which depend on this
+        this.dependencies = []; // objects that this depends on
     }
     DDObject3D.prototype = Object.create(THREE.Object3D.prototype);
     DataDoo.DDObject3D = DDObject3D;
@@ -27,6 +42,11 @@
         }, this);
     };
 
+    /**
+     * This method tries to create a vector from the input.
+     * if the input is a DDObject3D then a relative RVector3 is created
+     * else if Vector3 then it is returned as such
+     */
     DDObject3D.prototype.makeRVector = function(point) {
         if(point instanceof DataDoo.DDObject3D) {
             var vector = new DataDoo.RVector3(this);
@@ -39,6 +59,9 @@
         throw new Error("DDObject3D : makeRVector cannot make vector from argument");
     };
 
+    /**
+     * Array/varargs version of makeRVector
+     */
     DDObject3D.prototype.makeRVectors = function() {
         var points = _.flatten(arguments);
         return _.map(points, this.makeRVector, this);
@@ -68,6 +91,21 @@
         }
     };
 
+    /**
+     * Update is called by DataDoo when objects have to
+     * compute their worldMatrix.
+     * The basic logic here is
+     * 1) Object doesnt update itself untill all its dependencies
+     *    have computed their worldMatrices
+     * 2) If all dependencies are done, then object
+     *     a) resolves its own position, relative to its parent
+     *     b) computes its worldMatrix (naturally, using the just resolved positions)
+     *     c) resolves all managed RVectors, relative to itself
+     *     d) updates geometry if required
+     *     e) Call update on all dependants, so that objects who were
+     *        waiting on this object will also start updating their matrices
+     *     c) Update matrices of all its children
+     */
     DDObject3D.prototype.update = function(axesConf) {
         if(!this.matrixWorldNeedsUpdate) {
             return;
