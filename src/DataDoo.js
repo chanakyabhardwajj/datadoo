@@ -196,6 +196,11 @@ window.DataDoo = (function () {
         //Projector
         this.projector = new THREE.Projector();
 
+        // frustum and projection matrix
+        // for manual frustum culling of html labels
+        this.frustum = new THREE.Frustum();
+        this.projScreenMatrix = new THREE.Matrix4();
+
         // update the matrix once, so that positions
         // can be calculated for the first time
         this.scene.updateMatrixWorld();
@@ -365,17 +370,22 @@ window.DataDoo = (function () {
     };
 
     DataDoo.prototype.putLabelsToScreen = function(){
-        var self = this;
+        this.projScreenMatrix.multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse);
+        this.frustum.setFromMatrix(this.projScreenMatrix);
 
-        //self.camera.updateMatrixWorld();
-        _.each(self.labelsArray, function(label){
+        _.each(this.labelsArray, function(label){
             var vector = new THREE.Vector3();
             vector.getPositionFromMatrix( label.matrixWorld );
-            var vector2 = self.projector.projectVector(vector.clone(), self.camera);
-            vector2.x = (vector2.x + 1)/2 * self.renderer.domElement.width;
-            vector2.y = -(vector2.y - 1)/2 * self.renderer.domElement.height;
-            label.updateElemPos(vector2.y, vector2.x);
-        });
+
+            if(!this.frustum.containsPoint(vector)) {
+                label.hideElem();
+            } else {
+                var vector2 = this.projector.projectVector(vector.clone(), this.camera);
+                vector2.x = (vector2.x + 1)/2 * this.renderer.domElement.width;
+                vector2.y = -(vector2.y - 1)/2 * this.renderer.domElement.height;
+                label.updateElemPos(vector2.y, vector2.x);
+            }
+        }, this);
     };
 
     DataDoo.Sort = {
