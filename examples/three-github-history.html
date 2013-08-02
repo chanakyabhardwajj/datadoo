@@ -138,13 +138,13 @@
 
             var nodeFnMiso = function($) {
                 this.sphere = this.addSphere(this.data.commitCount, 0xffaa00, 0.7);
-                this.label = this.addLabel(this.data.week + "--" + this.data.dayName + "--" + this.data.commitCount);
+                //this.label = this.addLabel(this.data.week + "--" + this.data.dayName + "--" + this.data.commitCount);
                 this.position.setOnAxes(this.data.week, this.data.commitCount, this.data.dayName);
             };
 
             var nodeFnThree = function($) {
                 this.sphere = this.addSphere(this.data.commitCount, 0xff0000, 0.6);
-                this.label = this.addLabel(this.data.week + "--" + this.data.dayName + "--" + this.data.commitCount);
+                //this.label = this.addLabel(this.data.week + "--" + this.data.dayName + "--" + this.data.commitCount);
                 //this.label.position.setRelative(this.sphere, 0, 100, 0);
                 this.position.setOnAxes(this.data.week, this.data.commitCount, this.data.dayName);
             };

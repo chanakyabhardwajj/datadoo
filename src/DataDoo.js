@@ -370,6 +370,8 @@ window.DataDoo = (function () {
     };
 
     DataDoo.prototype.putLabelsToScreen = function(){
+        this.axes.uncrowdLabels(this.camera);
+
         this.projScreenMatrix.multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse);
         this.frustum.setFromMatrix(this.projScreenMatrix);
 
@@ -377,7 +379,7 @@ window.DataDoo = (function () {
             var vector = new THREE.Vector3();
             vector.getPositionFromMatrix( label.matrixWorld );
 
-            if(!this.frustum.containsPoint(vector)) {
+            if(!label.visible || !this.frustum.containsPoint(vector)) {
                 label.hideElem();
             } else {
                 var vector2 = this.projector.projectVector(vector.clone(), this.camera);

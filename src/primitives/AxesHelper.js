@@ -202,4 +202,36 @@
             }
         }
     };
+
+    AxesHelper.prototype.uncrowdLabels = function(camera) {
+        _.each(["x", "y", "z"], function(name) {
+            var axis = this[name + "Axis"];
+            var axisObj = this[name + "Obj"];
+
+            var axisDir = new THREE.Vector3();
+            axisDir.subVectors(axis.fromPosition, axis.toPosition);
+            axisDir.normalize();
+
+            var cameraDir = new THREE.Vector3(0, 0, -1);
+            cameraDir.applyEuler(camera.rotation);
+            cameraDir.normalize();
+
+            var count = axisObj.notchLabelsArray.length;
+            var n = Math.max(Math.max(count*0.25, 3), count*(1-Math.pow(axisDir.dot(cameraDir), 2)));
+            if(n > count*0.75) {
+                n = count;
+            }
+            var step = ((count-n)/(n-1))+1;
+            var stepPos = 0;
+            _.each(axisObj.notchLabelsArray, function(label, i) {
+                if(i >= stepPos) {
+                    stepPos += step;
+                    label.visible = true;
+                } else {
+                    label.visible = false;
+                }
+            });
+        }, this);
+    };
+
 })(window.DataDoo);
