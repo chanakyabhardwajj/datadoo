@@ -288,6 +288,8 @@ window.DataDoo = (function () {
                     return column.split(".");
                 });
 
+                // check if atleast one of the dataset
+                // in column config has changed
                 var i;
                 for(i = 0;i < columns.length;i++) {
                     if(_.contains(changedDs, columns[i][0])) {
@@ -295,28 +297,19 @@ window.DataDoo = (function () {
                     }
                 }
                 if(i == columns.length) {
-                    return;
+                    return; // no columns changed so nothing to do here
                 }
 
                 var values = _.chain(columns).map(function(split) {
                     var dsId = split[0];
                     var colName = split[1];
                     //weird case : in the 1st iteration there is no data in the bucket, thus erring out.
-                    if(self.bucket[dsId].column(colName)){
-                        tempValues.push(_.pluck(self.bucket[dsId].countBy(colName).toJSON(), colName));
-                    }
-                });
-                values = _.unique(_.flatten(tempValues));
-                //console.log(values);
-               /* var values = _.chain(columns).map(function(column) {
-                    var split = column.split(".");
-                    var dsId = split[0];
-                    var colName = split[1];
-                    *//*if (!_.contains(changedDs, dsId)) {
+                    if(this.bucket[dsId].column(colName)){
+                        return _.pluck(this.bucket[dsId].countBy(colName).toJSON(), colName);
+                    } else {
                         return [];
-                    }*//*
-                    return _.pluck(this.bucket[dsId].countBy(colName).toJSON(), colName);
-                }, this).flatten().value();*/
+                    }
+                }, this).flatten().uniq().value();
 
                 if (axis.sort) {
                     var sortFunc = _.isFunction(axis.sortFunc)?axis.sortFunc:_.identity;
