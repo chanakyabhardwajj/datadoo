@@ -2,7 +2,7 @@
 //This will essentially be a wrapper around the MISO Dataset using the "where" option (http://misoproject.com/)
 
 (function (DataDoo) {
-    var DataFilter = function (/*datadooInstance*/ ddI, id, /*datasetInstance*/ dsI, /*columnName on which filter is to be applied*/ colName) {
+    var DataFilter = function (/*datadooInstance*/ ddI, id, /*datasetInstance*/ dsI, /*columnName on which filter is to be applied*/ colName, timer) {
         if (!ddI) {
             console.log("DataFilter : Could not find any DataDoo instance!");
             throw new Error("DataFilter : Could not find any DataDoo instance");
@@ -37,6 +37,7 @@
          ddI.eventBus.enqueue(0, "DATA......", newDataFilter, []);
          });*/
 
+        this.timer = timer;
         this.uniqs = uniqs;
         this.currentIndex = 0;
         this.filter = null;
@@ -59,10 +60,25 @@
             ddI.eventBus.enqueue(that, "DATA.RESET", []);
         });
 
+        if(this.timer) {
+            ddI.eventBus.subscribe(this, this.timer);
+        }
 
         return this;
     };
 
+    DataFilter.prototype.priority = 1;
+    DataFilter.prototype.collapseEvents = false;
+
+    DataFilter.prototype.handler = function(event) {
+        switch(event.eventName) {
+            case "TIMER.FIRE": 
+                // increment the filter column when
+                // timer events fire
+                this.next();
+                break;
+        }
+    };
     DataFilter.prototype.compute = function () {
         var misoDataset = this.datasource.dataset;
 

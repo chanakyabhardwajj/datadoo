@@ -35,29 +35,18 @@
                 axes: {
                     x: {
                         type: DataDoo.COLUMNVALUE,
-                        column : "ds1.one",
-                        label : "countries",
+                        column : "df1.city",
+                        label : "city",
                         length : 250,
-                        //origin : new THREE.Vector3(-10,-10,-10),
                         withCone: false,
                         notches : true,
                         notchSpacing : 50
                     },
 
                     y: {
-                        label : "hahaha",
+                        type: DataDoo.NUMBER,
                         length : 250,
-                        withCone: true,
-                        //origin : new THREE.Vector3(-120,-10,-10),
-                        notches : true,
-                        notchSpacing : 50,
-                        notchStartingFrom : 0
-                    },
-
-                    z: {
-                        label : "vever",
-                        length : 250,
-                        withCone: true,
+                        withCone: false,
                         notches : true,
                         notchSpacing : 50,
                         notchStartingFrom : 0
@@ -67,90 +56,32 @@
 
             var ds1 = new DataDoo.DataSet(dd, "ds1", {
                 data: [
-                    { one : "India", two : 10, three : 10 },
-                    { one : "Germany", two : 20, three :20 },
-                    { one : "Japan", two : 30, three : 30 },
-                    { one : "Sweden", two : 40, three : 40 }
+                    { country : "India",   city : "New Delhi",  population : 10 },
+                    { country : "India",   city : "Bangalore",  population : 20 },
+                    { country : "India",   city : "Mumbai",     population : 50 },
+                    { country : "India",   city : "Chennai",    population : 40 },
+                    { country : "India",   city : "Trivandrum", population : 5 },
+                    { country : "Germany", city : "Altena",     population : 20 },
+                    { country : "Germany", city : "Alsfed",     population : 50 },
+                    { country : "Germany", city : "Barmstedt",  population : 10 },
+                    { country : "Germany", city : "Calau",      population : 20 },
+                    { country : "Japan",   city : "Dachau",     population : 70 },
+                    { country : "Japan",   city : "Tokyo",      population : 100 },
+                    { country : "Japan",   city : "Hiroshima",  population : 30 },
+                    { country : "Sweden",  city : "Arvika",     population : 40 },
+                    { country : "Sweden",  city : "Falun",      population : 16 }
                 ]
             });
 
-            var ds2 = new DataDoo.DataSet(dd, "ds2",{
-                importer : Miso.Dataset.Importers.GoogleSpreadsheet,
-                parser : Miso.Dataset.Parsers.GoogleSpreadsheet,
-                key : "0ArX_nhRDAroJdFM3aEdDWkJKdDBja1k1UHh3WnFqRlE",
-                worksheet : "1",
-                sync:true,
-                interval : 1000
+            var df1 = new DataDoo.DataFilter(dd, "df1", ds1, "country");
+
+            var ng1 = new DataDoo.NodeGenerator(dd, "ng1", function($) {
+                this.addSphere(this.data.population, 0x33ff0c);
+                this.setOnAxes(this.city, this.population, 0);
             });
 
-            var nodeAppFn1 = function($) {
-                //var sprite = this.addSprite("http://upload.wikimedia.org/wikipedia/commons/1/1b/Sunny_Leone_2012.jpg", new DataDoo.Position(this.data.Population,this.data.Population,this.data.Population), 10);
-
-                this.sphere = this.addSphere(5, 0xffcc00, 0.3);
-                this.sphere.position.set(this.data.two*Math.random()*10,this.data.two*2.5,this.data.two*2.5);
-
-                this.cone = this.addCone(10,1,10, "0xe7676e", 0.7);
-                this.cone.position.set(-this.data.two*5,this.data.two*5,this.data.two*5);
-                //this.cone.rotation.set(this.data.two,this.data.two,this.data.two);
-                this.addLine(this.cone, this.sphere);
-
-                this.label = this.addLabel(this.data.one);
-                this.label.position.set(this.data.two - 90,this.data.two + 30,this.data.two + 60);
-                //this.label.rotation.set(this.data.two - 90,this.data.two + 30,this.data.two + 60);
-                //this.label.position.set(20,20,20);
-
-                this.addDashedLine(this.sphere, this.label);
-                this.position.set(this.data.two,this.data.two,this.data.two);
-
-            };
-
-            var nodeAppFn2 = function($) {
-                console.log(this.data);
-
-                var sphere2 = this.addSphere(this.data.Population/10, 0x767676, 0.5);
-                this.position.set(this.data.GDP*10, this.data.GDP, this.data.GDP);
-            };
-
-            var relAppFn = function($) {
-                var n1 = $.ng1[$.ng1.length-1];
-                var n2 = $.ng2[$.ng2.length-1];
-
-
-
-                if(n1 && n2) {
-                    var r = this.addRelation();
-                    r.addDashedLine(n1, n2, 0xff0000);
-
-                    var ns = [];
-                    _.each($.ng1, function(n){
-                        ns.push(n.sphere);
-                    })
-                    console.log(ns)
-                    r.addSpline(ns, "0xff0000", 12);
-                }
-
-
-            };
-
-
-            var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, nodeAppFn1);
-            var ng2 = new DataDoo.NodeGenerator(dd, "ng2", ds2, nodeAppFn2);
-
-
-
-            var rg1 = new DataDoo.RelationGenerator(dd, "rg1", [ng1, ng2], relAppFn);
             ds1.fetch();
-            ds2.fetch();
-
-            var tim1 = new DataDoo.Timer(dd, "tim1", 0.05);
-            var anim = new DataDoo.Animator(dd, "anim", [rg1, tim1], function($, time, delta, elapsedTime) {
-                _.each($.ng1, function(node) {
-                    node.sphere.setRadius(5 + elapsedTime);
-                    node.sphere.position.set(50*Math.sin(elapsedTime) ,50*Math.cos(elapsedTime) ,5 + elapsedTime%10);
-                });
-            });
-
-            dd.startVis(anim);
+            dd.startVis(ng1);
         </script>
     </body>
 </html>
