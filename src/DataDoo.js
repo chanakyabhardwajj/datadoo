@@ -283,11 +283,22 @@ window.DataDoo = (function () {
         _.each(this.axesConf, function (axis, name) {
             if (axis.type == DataDoo.COLUMNVALUE) {
                 var columns = _.isArray(axis.column)?axis.column:[axis.column];
-                var tempValues = [];
-                var values = [];
-                var self = this;
-                _.each(columns, function(column){
-                    var split = column.split(".");
+
+                columns = _.map(columns, function(column) {
+                    return column.split(".");
+                });
+
+                var i;
+                for(i = 0;i < columns.length;i++) {
+                    if(_.contains(changedDs, columns[i][0])) {
+                        break;
+                    }
+                }
+                if(i == columns.length) {
+                    return;
+                }
+
+                var values = _.chain(columns).map(function(split) {
                     var dsId = split[0];
                     var colName = split[1];
                     //weird case : in the 1st iteration there is no data in the bucket, thus erring out.
