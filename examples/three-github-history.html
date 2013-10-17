@@ -14,12 +14,14 @@
 
             .datadoo-label {
                 /*background: rgba(220, 220, 220, 0.5);*/
-                background: transparent;
+                background: #ffcc00;
                 font-size: 0.7em;
                 -webkit-user-select: none;  
                 -moz-user-select: none;    
                 -ms-user-select: none;      
                 user-select: none;
+                border:1px solid silver;
+
             }
 
             .datadoo-wrap {
@@ -114,7 +116,7 @@
             });
 
             var misoConfig = {
-                url : 'https://api.github.com/repos/misoproject/dataset/commits?per_page=100&callback=',
+                url : 'https://api.github.com/repos/misoproject/dataset/commits?per_page=10&callback=',
                 jsonp : true,
                 extract : function(response) {
                     return response.data;
@@ -124,7 +126,7 @@
             };
 
             var threeConfig = {
-                url : 'https://api.github.com/repos/mrdoob/three.js/commits?per_page=100&callback=',
+                url : 'https://api.github.com/repos/mrdoob/three.js/commits?per_page=10&callback=',
                 jsonp : true,
                 extract : function(response) {
                     return response.data;
@@ -137,22 +139,24 @@
             var dsThree = new DataDoo.DataSet(dd, "dsThree", threeConfig);
 
             var nodeFnMiso = function($) {
-                this.sphere = this.addSphere(this.data.commitCount, 0xffaa00, 0.7);
-                //this.label = this.addLabel(this.data.week + "--" + this.data.dayName + "--" + this.data.commitCount);
-                this.position.setOnAxes(this.data.week, this.data.commitCount, this.data.dayName);
+                //this.sphere = this.addSphere(this.data.commitCount, 0xffaa00, 0.7);
+                this.cube = this.addCube(25, this.data.commitCount * 25, 25, 0xffaa00, 0.7, false)
+                this.label = this.addLabel(this.data.commitCount);
+                this.position.setOnAxes(this.data.week, this.data.commitCount/2, this.data.dayName);
             };
 
             var nodeFnThree = function($) {
-                this.sphere = this.addSphere(this.data.commitCount, 0xff0000, 0.6);
-                //this.label = this.addLabel(this.data.week + "--" + this.data.dayName + "--" + this.data.commitCount);
+                //this.sphere = this.addSphere(this.data.commitCount, 0xff0000, 0.6);
+                this.cube = this.addCube(25, this.data.commitCount * 25, 25, 0xfc1234, 0.7, false)
+                this.label = this.addLabel(this.data.commitCount);
                 //this.label.position.setRelative(this.sphere, 0, 100, 0);
-                this.position.setOnAxes(this.data.week, this.data.commitCount, this.data.dayName);
+                this.position.setOnAxes(this.data.week, this.data.commitCount/2, this.data.dayName);
             };
 
             var relFn = function($) {
                 var r = this.addRelation();
                 r.addDashedLine($.ngMiso, "0xffcc00");
-                //r.addSpline($.ngMiso, 100, "0xffcc00");
+                r.addSpline($.ngMiso, 100, "0xffcc00");
                 //r.addMultiline($.ngThree, "0xfc1234");
             };
 
@@ -161,7 +165,7 @@
 
             var rg = new DataDoo.RelationGenerator(dd, "rg", [ngMiso, ngThree], relFn);
 
-            //dsThree.fetch();
+            dsThree.fetch();
 
 
             _.when(dsThree.fetch(),dsMiso.fetch() ).then(function() {
