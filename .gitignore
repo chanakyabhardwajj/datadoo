@@ -2,3 +2,5 @@ node_modules
 .idea
 src/libs/components
 build
+olderCode
+src/vendor

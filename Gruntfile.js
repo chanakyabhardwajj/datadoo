@@ -1,78 +1,50 @@
-module.exports = function(grunt) {
+module.exports = function (grunt) {
     grunt.initConfig({
-        jshint: {
-            files: ["Gruntfile.js", "src/**/*.js", "!src/libs/**"],
-            options: {
-                globals: {
-                    datadoo: true
+        jshint : {
+            files : ["Gruntfile.js", "src/**/*.js", "!src/vendor/**"],
+            options : {
+                globals : {
+                    datadoo : true
                 }
             }
         },
 
-        concat: {
-            datadoo: {
-                files: {
-                    'build/datadoo.js': [
-                        'src/DataDoo.js',
-                        'src/Eventbus.js',
-                        'src/Constants.js',
-                        'src/Utils.js',
-                        'src/DDObject3D.js',
-
-                        'src/primitives/Primitive.js',
-                        'src/primitives/Line.js',
-                        'src/primitives/Cone.js',
-                        'src/primitives/Arrow.js',
-                        'src/primitives/Label.js',
-                        'src/primitives/AxesHelper.js',
-                        'src/primitives/Cube.js',
-                        'src/primitives/Sphere.js',
-                        'src/primitives/Spline.js',
-                        'src/primitives/Sprite.js',
-                        'src/primitives/PrimitiveHelpers.js',
-
-                        'src/DataSet.js',
-                        'src/DataFilter.js',
-                        'src/Position.js',
-                        'src/Primitives.js',
-                        'src/Relation.js',
-                        'src/RelationGenerator.js',
-                        'src/NodeGenerator.js',
-                        'src/Timer.js',
-                        'src/Animator.js',
-                        'src/AxesHelper.js'
-
+        concat : {
+            datadoo : {
+                files : {
+                    'build/datadoo.js' : [
+                        'src/Three.OrbitControls.js', //CameraControls have been moved out of the main threejs repo. Have to include it manually.
+                        'src/DataDoo.js'
                     ],
-                    'build/vendor.js': [
-                        'src/libs/components/jquery/jquery.js',
-                        'src/libs/components/underscore/underscore.js',
-                        'src/libs/components/miso.dataset/dist/miso.ds.deps.0.4.1.js',
-                        'src/libs/components/moment/moment.js',
-                        'src/libs/components/threejs/build/three.js',
-                        'src/OrbitControls.js'//,
-                        /*'src/libs/components/threejs/examples/js/controls/OrbitControls.js',*/
-                        /*'src/libs/components/threejs/examples/js/controls/TrackballControls.js'*/
+                    'build/vendor.js' : [
+                        'src/vendor/three.js/index.js',
+                        'src/vendor/jquery/jquery.js',
+                        'src/vendor/underscore/underscore.js',
+                        'src/vendor/miso.dataset/dist/miso.ds.deps.0.4.0.js',
+                        'src/vendor/momentjs/moment.js'
+
                     ]
                 },
 
-                options: {
-                    stripBanners: true
+                options : {
+                    stripBanners : true
                 }
             }
         },
 
-        watch: {
-            scripts: {
-                files: "src/**/*.js",
-                tasks: ['default']
+        watch : {
+            options : { livereload : true },
+            scripts : {
+                files : ["examples/*.html", "src/**/*.js"],
+                tasks : ['default']
             }
         },
 
-        uglify: {
-            dist: {
-                files: {
-                    "dist/vendor.min.js": "build/vendor.js",
-                    "dist/datadoo.min.js": "build/datadoo.js"
+        uglify : {
+            dist : {
+                files : {
+                    "dist/vendor.min.js" : "build/vendor.js",
+                    "dist/datadoo.min.js" : "build/datadoo.js"
                 }
             }
         }

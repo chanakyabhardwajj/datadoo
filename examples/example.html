@@ -9,63 +9,15 @@
                 font-family: "Lucida Console", "Lucida Sans Typewriter", Monaco, "Bitstream Vera Sans Mono", monospace;
                 text-align:center;
             }
-
-            .datadoo-label{
-                background: rgba(220,220,220,0.5);
-                font-size:0.7em;
-            }
-
-            .datadoo-wrap{
-
-            }
         </style>
     </head>
     <body>
-        <canvas id="canvas"></canvas>
-
+        <h5>DataDoo Example</h5>
         <script src="../build/vendor.js"></script>
-        <!--<script src="http://mrdoob.github.com/three.js/examples/fonts/helvetiker_regular.typeface.js"></script>-->
         <script src="../build/datadoo.js"></script>
         <script type="text/javascript">
-            var dd = new DataDoo({
-                canvas: document.getElementById("canvas"),
-                camera: {
-                    type: DataDoo.PERSPECTIVE
-                }/*,
-                axes: {
-                    x: {
-                        type: DataDoo.COLUMNVALUE,
-                        column : "ds1.one",
-                        label : "countries",
-                        length : 250,
-                        //origin : new THREE.Vector3(-10,-10,-10),
-                        withCone: false,
-                        notches : true,
-                        notchSpacing : 50
-                    },
 
-                    y: {
-                        label : "hahaha",
-                        length : 250,
-                        withCone: true,
-                        //origin : new THREE.Vector3(-120,-10,-10),
-                        notches : true,
-                        notchSpacing : 50,
-                        notchStartingFrom : 0
-                    },
-
-                    z: {
-                        label : "vever",
-                        length : 250,
-                        withCone: true,
-                        notches : true,
-                        notchSpacing : 50,
-                        notchStartingFrom : 0
-                    }
-                }*/
-            });
-
-            var ds1 = new DataDoo.DataSet(dd, "ds1", {
+            var ds = new Miso.Dataset({
                 data: [
                     { one : "India", two : 10, three : 10 },
                     { one : "Germany", two : 20, three :20 },
@@ -74,74 +26,14 @@
                 ]
             });
 
-            /*var ds2 = new DataDoo.DataSet(dd, "ds2",{
-                importer : Miso.Dataset.Importers.GoogleSpreadsheet,
-                parser : Miso.Dataset.Parsers.GoogleSpreadsheet,
-                key : "0ArX_nhRDAroJdFM3aEdDWkJKdDBja1k1UHh3WnFqRlE",
-                worksheet : "1",
-                sync:true,
-                interval : 1000
-            });*/
-
-            var nodeAppFn1 = function($) {
-                //var sprite = this.addSprite("http://upload.wikimedia.org/wikipedia/commons/1/1b/Sunny_Leone_2012.jpg", new DataDoo.Position(this.data.Population,this.data.Population,this.data.Population), 10);
-
-                this.sphere = this.addSphere(5, 0xffcc00, 0.3);
-                //this.sphere.position.set(this.data.two*Math.random()*10,this.data.two*2.5,this.data.two*2.5);
-
-                //this.cone = this.addCone(10,1,10, "0xe7676e", 0.7);
-                //this.cone.position.set(-this.data.two*5,this.data.two*5,this.data.two*5);
-                //this.cone.rotation.set(this.data.two,this.data.two,this.data.two);
-                //this.addLine(this.cone, this.sphere);
-
-                //this.label = this.addLabel(this.data.one);
-                //this.label.position.set(this.data.two - 90,this.data.two + 30,this.data.two + 60);
-                //this.label.rotation.set(this.data.two - 90,this.data.two + 30,this.data.two + 60);
-                //this.label.position.set(20,20,20);
-
-                //this.addDashedLine(this.sphere, this.label);
-                //this.position.setOnAxes(this.data.one,this.data.two,this.data.three);
-
-            };
-
-            /*var nodeAppFn2 = function($) {
-                console.log(this.data);
-
-                var sphere2 = this.addSphere(this.data.Population/10, 0x767676, 0.5);
-                this.position.set(this.data.GDP*10, this.data.GDP, this.data.GDP);
-            };
-
-            var relAppFn = function($) {
-                var n1 = $.ng1[$.ng1.length-1];
-                var n2 = $.ng2[$.ng2.length-1];
-
-
-
-                if(n1 && n2) {
-                    var r = this.addRelation();
-                    r.addDashedLine(n1, n2, 0xff0000);
-
-                    var ns = [];
-                    _.each($.ng1, function(n){
-                        ns.push(n.sphere);
-                    })
-                    console.log(ns)
-                    r.addSpline(ns, "0xff0000", 12);
+            ds.fetch({
+                success : function() {
+                    console.log("Dataset Ready. Columns: " + this.columnNames());
+                    console.log("There are " + this.length + " rows");
+                    console.log("Available Colors: " + this.column("one").data);
                 }
+            });
 
-
-            };*/
-
-
-            var ng1 = new DataDoo.NodeGenerator(dd, "ng1", ds1, nodeAppFn1);
-            //var ng2 = new DataDoo.NodeGenerator(dd, "ng2", ds2, nodeAppFn2);
-
-
-            //var rg1 = new DataDoo.RelationGenerator(dd, "rg1", [ng1, ng2], relAppFn);
-            //ds1.fetch();
-            //ds2.fetch();
-
-            //dd.startVis(ng1);
         </script>
     </body>
 </html>
