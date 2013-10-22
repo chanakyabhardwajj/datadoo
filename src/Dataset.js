@@ -11,7 +11,7 @@
         //The builder function runs for each and every data-point/cell
         //and generates/builds the shape that you want.
         //This function is supposed to be overwritten by every instance.
-        this.builder = function(){};
+        this.builder = config.builder;
     }
 
     Dataset.prototype = new Miso.Dataset();

@@ -21,7 +21,7 @@
 //      controls.target.z = 150;
 // Simple substitute "OrbitControls" and the control should work as-is.*/
 
-THREE.OrbitControls = function ( object, domElement ) {
+THREE.OrbitControls = function ( object, domElement, ddI ) {
 
     this.object = object;
     this.domElement = ( domElement !== undefined ) ? domElement : document;
@@ -50,7 +50,7 @@ THREE.OrbitControls = function ( object, domElement ) {
     this.rotateSpeed = 1.0;
 
     // Set to true to disable this control
-    this.noPan = false;
+    this.noPan = true;
     this.keyPanSpeed = 7.0;	// pixels moved per arrow key push
 
     // Set to true to automatically rotate around the target
@@ -371,6 +371,9 @@ THREE.OrbitControls = function ( object, domElement ) {
         // Greggman fix: https://github.com/greggman/three.js/commit/fde9f9917d6d8381f06bf22cdff766029d1761be
         scope.update();
 
+        if(state === STATE.ROTATE || state === STATE.DOLLY || state === STATE.PAN){
+            ddI.renderLabels();
+        }
     }
 
     function onMouseUp( /* event */ ) {
@@ -382,6 +385,8 @@ THREE.OrbitControls = function ( object, domElement ) {
         scope.domElement.removeEventListener( 'mouseup', onMouseUp, false );
 
         state = STATE.NONE;
+
+        ddI.renderLabels();
 
     }
 
@@ -410,6 +415,8 @@ THREE.OrbitControls = function ( object, domElement ) {
             scope.dollyIn();
 
         }
+
+        ddI.renderLabels();
 
     }
 
@@ -449,6 +456,7 @@ THREE.OrbitControls = function ( object, domElement ) {
             scope.update();
 
         }
+        ddI.renderLabels();
 
     }
 
@@ -558,6 +566,8 @@ THREE.OrbitControls = function ( object, domElement ) {
 
         }
 
+        ddI.renderLabels();
+
     }
 
     function touchend( /* event */ ) {
@@ -565,6 +575,7 @@ THREE.OrbitControls = function ( object, domElement ) {
         if ( scope.enabled === false ) { return; }
 
         state = STATE.NONE;
+        ddI.renderLabels();
     }
 
     document.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );

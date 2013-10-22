@@ -18,11 +18,19 @@
 
             var ds = new DataDoo.Dataset({
                 data: [
-                    { Course : "A", Student : "AAA", Marks : -100 },
-                    { Course : "B", Student : "BBB", Marks : -200 },
-                    { Course : "C", Student : "CCC", Marks : -300 },
-                    { Course : "D", Student : "DDD", Marks : -400 }
-                ]
+                    { Course : "A", Marks : 10, Student : "Chanakya" },
+                    { Course : "B", Marks : 20, Student : "Sushant" },
+                    { Course : "C", Marks : -30, Student : "Azeem" },
+                    { Course : "D", Marks : 40, Student : "George" }
+                ],
+
+                builder : function(rowData, rowIndex){
+                    var sphere = new THREE.Mesh(new THREE.SphereGeometry(rowData.Marks/10), new THREE.MeshBasicMaterial({color:0xffcc11}));
+                    return {
+                        shape : sphere,
+                        text : rowData.Student + "'s marks in Course : " + rowData.Course
+                    }
+                }
             });
 
             /*ds.fetch({
@@ -35,11 +43,19 @@
 
             var ds2 = new DataDoo.Dataset({
                 data: [
-                    { Course : "E", Student : "AAA2", Marks : 100 },
-                    { Course : "F", Student : "BBB2", Marks : 200 },
-                    { Course : "G", Student : "CCC2", Marks : 300 },
-                    { Course : "H", Student : "DDD2", Marks : 400 }
-                ]
+                    { Course : "E", Marks : -50 , Student : "Aditya"},
+                    { Course : "F", Marks : 60 , Student : "Akash"},
+                    { Course : "G", Marks : 70 , Student : "Patro"},
+                    { Course : "H", Marks : 80 , Student : "Arefin"}
+                ],
+
+                builder : function(rowData, rowIndex){
+                    var sphere = new THREE.Mesh(new THREE.SphereGeometry(rowData.Marks/10), new THREE.MeshBasicMaterial({color:0x76caca}));
+                    return {
+                        shape : sphere,
+                        text : rowData.Student + "'s marks in Course : " + rowData.Course
+                    }
+                }
             });
 
             var d = new DataDoo([ds,ds2]/*, {theme:Math.floor(Math.random()*50)}*/);
