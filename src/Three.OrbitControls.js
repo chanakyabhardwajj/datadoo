@@ -567,16 +567,16 @@ THREE.OrbitControls = function ( object, domElement ) {
         state = STATE.NONE;
     }
 
-    this.domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
-    this.domElement.addEventListener( 'mousedown', onMouseDown, false );
-    this.domElement.addEventListener( 'mousewheel', onMouseWheel, false );
-    this.domElement.addEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
+    document.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
+    document.addEventListener( 'mousedown', onMouseDown, false );
+    document.addEventListener( 'mousewheel', onMouseWheel, false );
+    document.addEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
 
-    this.domElement.addEventListener( 'keydown', onKeyDown, false );
+    document.addEventListener( 'keydown', onKeyDown, false );
 
-    this.domElement.addEventListener( 'touchstart', touchstart, false );
-    this.domElement.addEventListener( 'touchend', touchend, false );
-    this.domElement.addEventListener( 'touchmove', touchmove, false );
+    document.addEventListener( 'touchstart', touchstart, false );
+    document.addEventListener( 'touchend', touchend, false );
+    document.addEventListener( 'touchmove', touchmove, false );
 
 };
 

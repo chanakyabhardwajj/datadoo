@@ -3,7 +3,7 @@
         <style>
             body {
                 background:#fff;
-                padding:0;
+                padding:0px;
                 margin:0;
                 overflow:hidden;
                 font-family: "Lucida Console", "Lucida Sans Typewriter", Monaco, "Bitstream Vera Sans Mono", monospace;
@@ -12,27 +12,62 @@
         </style>
     </head>
     <body>
-        <h5>DataDoo Example</h5>
         <script src="../build/vendor.js"></script>
         <script src="../build/datadoo.js"></script>
         <script type="text/javascript">
 
-            var ds = new Miso.Dataset({
+            var ds = new DataDoo.Dataset({
                 data: [
-                    { one : "India", two : 10, three : 10 },
-                    { one : "Germany", two : 20, three :20 },
-                    { one : "Japan", two : 30, three : 30 },
-                    { one : "Sweden", two : 40, three : 40 }
+                    { Course : "A", Student : "AAA", Marks : -100 },
+                    { Course : "B", Student : "BBB", Marks : -200 },
+                    { Course : "C", Student : "CCC", Marks : -300 },
+                    { Course : "D", Student : "DDD", Marks : -400 }
                 ]
             });
 
-            ds.fetch({
+            /*ds.fetch({
                 success : function() {
                     console.log("Dataset Ready. Columns: " + this.columnNames());
                     console.log("There are " + this.length + " rows");
                     console.log("Available Colors: " + this.column("one").data);
                 }
+            });*/
+
+            var ds2 = new DataDoo.Dataset({
+                data: [
+                    { Course : "E", Student : "AAA2", Marks : 100 },
+                    { Course : "F", Student : "BBB2", Marks : 200 },
+                    { Course : "G", Student : "CCC2", Marks : 300 },
+                    { Course : "H", Student : "DDD2", Marks : 400 }
+                ]
             });
+
+            var d = new DataDoo([ds,ds2]/*, {theme:Math.floor(Math.random()*50)}*/);
+            d.run();
+
+            /*var p = new THREE.Mesh(new THREE.CubeGeometry(10,10,10), new THREE.MeshBasicMaterial({color:0xff0000}));
+            var p2 = new THREE.Mesh(new THREE.CubeGeometry(10,10,10), new THREE.MeshBasicMaterial({color:0x00ff00}));
+            p.position.x=-40; p2.position.x=40;
+            d.scene.add(p); d.scene.add(p2);
+
+            var spline = new THREE.Spline( [p.position, p2.position, new THREE.Vector3(12,-35,70)] );
+            var geometry = new THREE.Geometry();
+            for (i = 0; i < 14; i++) {
+                index = i / ( 14 );
+                position = spline.getPoint(index);
+                geometry.vertices[ i ] = new THREE.Vector3(position.x, position.y, position.z);
+            };
+            geometry.dynamic = true;
+            geometry.verticesNeedUpdate = true;
+            d.scene.add(new THREE.Line(geometry, new THREE.LineBasicMaterial({color:0xffcc11})));
+
+            setInterval(function(){
+                geometry.vertices[1].x=100*Math.random();
+                geometry.vertices[9].y=100*Math.random();
+                geometry.vertices[3].z=100*Math.random();
+
+                geometry.verticesNeedUpdate = true;
+            },800);*/
 
         </script>
     </body>
