@@ -93,6 +93,9 @@ window.DataDoo = (function () {
         this.sceneConf = params.scene;
 
         //Internal Arrays
+        this._labelsDom = document.createElement("div");
+        this._labelsDom.className = "labelDom";
+        document.body.appendChild(this._labelsDom);
         this._labels = [];
         this._nodes = [];
 
@@ -102,29 +105,31 @@ window.DataDoo = (function () {
         //LIGHTS
         var dirLight = this.lightsConf.directionalLight;
         var hemiLight = this.lightsConf.hemiLight;
-        this.directionalLight = new THREE.DirectionalLight(dirLight.color, dirLight.intensity);
+        this.directionalLight = new THREE.PointLight(dirLight.color, dirLight.intensity);
         this.directionalLight.position.x = dirLight.position.x;
         this.directionalLight.position.y = dirLight.position.y;
         this.directionalLight.position.z = dirLight.position.z;
         this.scene.add(this.directionalLight);
 
-        this.hemiLight = new THREE.HemisphereLight(hemiLight.skyColor, hemiLight.groundColor, hemiLight.intensity);
+        /*var dirLight2 = this.lightsConf.directionalLight;
+        this.directionalLight2 = new THREE.PointLight(dirLight.color, dirLight.intensity);
+        this.directionalLight2.position.x = -dirLight.position.x;
+        this.directionalLight2.position.y = -dirLight.position.y;
+        this.directionalLight2.position.z = -dirLight.position.z;
+        this.scene.add(this.directionalLight2);*/
+
+        /*this.hemiLight = new THREE.HemisphereLight(hemiLight.skyColor, hemiLight.groundColor, hemiLight.intensity);
         this.hemiLight.color.setHSL(hemiLight.colorHSL.h, hemiLight.colorHSL.s, hemiLight.colorHSL.l);
         this.hemiLight.groundColor.setHSL(hemiLight.groundColorHSL.h, hemiLight.groundColorHSL.s, hemiLight.groundColorHSL.l);
         this.hemiLight.position.set(hemiLight.position.x, hemiLight.position.y, hemiLight.position.z);
-        this.scene.add(this.hemiLight);
+        this.scene.add(this.hemiLight);*/
+
 
         //SCENE
         this.scene.fog = new THREE.Fog(this.sceneConf.fog.color, this.sceneConf.fog.near, this.sceneConf.fog.far);
         this.renderer.setSize(this.renderer.domElement.width, this.renderer.domElement.height);
 
-        //AXES
-        /*this.axes = new DataDoo.AxesHelper(this.axesConf.x, this.axesConf.y, this.axesConf.z);
-         this.bucket.axes = this.axes;
-         this.scene.add(this.axes);*/
-
         //CAMERA
-        var camSettings = this.cameraConf;
         this.camera = new THREE.CombinedCamera(this.renderer.domElement.width / 2, this.renderer.domElement.height / 2, this.cameraConf.fov, this.cameraConf.nearP, this.cameraConf.farP, this.cameraConf.nearO, this.cameraConf.farO);
         this.camera.position.set(this.cameraConf.position.x, this.cameraConf.position.y, this.cameraConf.position.z);
         this.camera.lookAt(this.scene.position);
@@ -141,8 +146,8 @@ window.DataDoo = (function () {
 
         //CAMERA CONTROLS
         this.cameraControls = new THREE.OrbitControls(this.camera, this.renderer.domElement, this);
-        this.cameraControls.maxDistance = 10000;
-        this.cameraControls.minDistance = 5;
+        this.cameraControls.maxDistance = this.gridStep * 1000;
+        this.cameraControls.minDistance = this.gridStep/10;
         this.cameraControls.autoRotate = false;
 
         //Projector
@@ -192,6 +197,7 @@ window.DataDoo = (function () {
         this.xAxis.colName = colNames[0];
         this.xAxis.colType = "number";
         this.xAxis.colUniqs = [];
+        this.xAxis.positionHash = {};
 
         for (x = 0, y = this.datasets.length; x < y; x++) {
             tempArr.push(this.datasets[x].column(colNames[0]).data);
@@ -206,6 +212,7 @@ window.DataDoo = (function () {
         this.yAxis.colName = colNames[1];
         this.yAxis.colType = "number";
         this.yAxis.colUniqs = [];
+        this.yAxis.positionHash = {};
 
         for (x = 0, y = this.datasets.length; x < y; x++) {
             tempArr.push(this.datasets[x].column(colNames[1]).data);
@@ -220,6 +227,7 @@ window.DataDoo = (function () {
         this.zAxis.colName = colNames[2];
         this.zAxis.colType = "number";
         this.zAxis.colUniqs = [];
+        this.zAxis.positionHash = {};
 
         for (x = 0, y = this.datasets.length; x < y; x++) {
             tempArr.push(this.datasets[x].column(colNames[2]).data);
@@ -238,10 +246,10 @@ window.DataDoo = (function () {
         if (this.gridBoolean) {
             //the following code-block is similar to THREE.GridHelper
             //but manually coding it, to keep the customising options open
-            var size = this.goldenDim, step = this.gridStep;
+            var size = (Math.max(this.xAxis.colUniqs.length, this.zAxis.colUniqs.length) + 2) * this.gridStep, step = this.gridStep;
 
             var geometry = new THREE.Geometry();
-            var material = new THREE.LineBasicMaterial({ color : /*0xBED6E5*/ this.theme[2], opacity : 0.5, linewidth : 1 });
+            var material = new THREE.LineBasicMaterial({ color : /*0xBED6E5*/ this.theme[2], opacity : 1, linewidth : 1 });
 
             for (i = -size; i <= size; i += step) {
 
@@ -332,19 +340,20 @@ window.DataDoo = (function () {
          this.xAxis.add(this.xcone);
          */
 
-        var notchGeom = new THREE.CubeGeometry(0.2, 0.2, 0.2);
-        var notchMat = new THREE.MeshBasicMaterial({color : /*this.axesConf.x.color*/ this.theme[1], opacity : 0.4});
+        var notchGeom = new THREE.CubeGeometry(this.gridStep/100, this.gridStep/10, this.gridStep/100);
+        var notchMat = new THREE.MeshBasicMaterial({color : /*this.axesConf.x.color*/ this.theme[1], opacity : 1});
 
         for (i = 0, j = this.xAxis.length / this.gridStep; i < j; i++) {
             notchShape = new THREE.Mesh(notchGeom, notchMat);
 
             if (this.xAxis.colType === "number") {
                 notchShape.position.set((this.xAxis.from.x - (this.xAxis.from.x % this.gridStep)) + (this.gridStep * i), this.xAxis.from.y, this.xAxis.from.z);
-                notchLabel = new DataDoo.Label((this.xAxis.from.x - (this.xAxis.from.x % this.gridStep)) + (this.gridStep * i), notchShape.position, this);
+                notchLabel = new DataDoo.Label((this.xAxis.from.x - (this.xAxis.from.x % this.gridStep)) + (this.gridStep * i), new THREE.Vector3(notchShape.position.x, notchShape.position.y , notchShape.position.z), this);
             }
             else {
+                this.xAxis.positionHash[this.xAxis.colUniqs[i]] = i+1;
                 notchShape.position.set((this.xAxis.from.x - (this.xAxis.from.x % this.gridStep)) + (this.gridStep * (i + 1)), this.xAxis.from.y, this.xAxis.from.z);
-                notchLabel = new DataDoo.Label(this.xAxis.colUniqs[i], notchShape.position, this);
+                notchLabel = new DataDoo.Label(this.xAxis.colUniqs[i], new THREE.Vector3(notchShape.position.x, notchShape.position.y , notchShape.position.z), this);
             }
             this.xAxis.add(notchShape);
             this.xAxis.add(notchLabel);
@@ -356,12 +365,14 @@ window.DataDoo = (function () {
             notchShape = new THREE.Mesh(notchGeom, notchMat);
             if (this.yAxis.colType === "number") {
                 notchShape.position.set(this.yAxis.from.x, (this.yAxis.from.y - (this.yAxis.from.y % this.gridStep)) + (this.gridStep * i), this.yAxis.from.z);
-                notchLabel = new DataDoo.Label((this.yAxis.from.y - (this.yAxis.from.y % this.gridStep)) + (this.gridStep * i), notchShape.position, this);
+                notchLabel = new DataDoo.Label((this.yAxis.from.y - (this.yAxis.from.y % this.gridStep)) + (this.gridStep * i) , new THREE.Vector3(notchShape.position.x , notchShape.position.y, notchShape.position.z), this);
             }
             else {
+                this.yAxis.positionHash[this.yAxis.colUniqs[i]] = i+1;
                 notchShape.position.set(this.yAxis.from.x, (this.yAxis.from.y - (this.yAxis.from.y % this.gridStep)) + (this.gridStep * (i + 1)), this.yAxis.from.z);
-                notchLabel = new DataDoo.Label(this.yAxis.colUniqs[i], notchShape.position, this);
+                notchLabel = new DataDoo.Label(this.yAxis.colUniqs[i] , new THREE.Vector3(notchShape.position.x , notchShape.position.y, notchShape.position.z), this);
             }
+            notchShape.rotateZ(Math.PI/2);
             this.yAxis.add(notchShape);
             this.yAxis.add(notchLabel);
         }
@@ -372,11 +383,12 @@ window.DataDoo = (function () {
             notchShape = new THREE.Mesh(notchGeom, notchMat);
             if (this.zAxis.colType === "number") {
                 notchShape.position.set(this.zAxis.from.x, this.zAxis.from.y, (this.zAxis.from.z - (this.zAxis.from.z % this.gridStep)) + (this.gridStep * i));
-                notchLabel = new DataDoo.Label((this.zAxis.from.z - (this.zAxis.from.z % this.gridStep)) + (this.gridStep * i), notchShape.position, this);
+                notchLabel = new DataDoo.Label((this.zAxis.from.z - (this.zAxis.from.z % this.gridStep)) + (this.gridStep * i), new THREE.Vector3(notchShape.position.x, notchShape.position.y , notchShape.position.z), this);
             }
             else {
+                this.zAxis.positionHash[this.zAxis.colUniqs[i]] = i+1;
                 notchShape.position.set(this.zAxis.from.x, this.zAxis.from.y, (this.zAxis.from.z - (this.zAxis.from.z % this.gridStep)) + (this.gridStep * (i + 1)));
-                notchLabel = new DataDoo.Label(this.zAxis.colUniqs[i], notchShape.position, this);
+                notchLabel = new DataDoo.Label(this.zAxis.colUniqs[i], new THREE.Vector3(notchShape.position.x, notchShape.position.y , notchShape.position.z), this);
             }
             this.zAxis.add(notchShape);
             this.zAxis.add(notchLabel);
@@ -389,34 +401,60 @@ window.DataDoo = (function () {
     };
 
     DataDoo.prototype.renderLabels = function () {
-        var self = this, vector = new THREE.Vector3(), w = self.renderer.domElement.width, h = self.renderer.domElement.height, dist, zInd, op;
+        var self = this, vector = new THREE.Vector3(), w = self.renderer.domElement.width, h = self.renderer.domElement.height, dist, zInd, op, fsize;
 
         self.projScreenMatrix.multiplyMatrices(self.camera.projectionMatrix, self.camera.matrixWorldInverse);
         self.frustum.setFromMatrix(self.projScreenMatrix);
 
         _.each(self._labels, function (label) {
             vector.getPositionFromMatrix(label.matrixWorld);
+            var vector2 = self.projector.projectVector(vector.clone(), self.camera);
+            vector2.x = (vector2.x + 1) / 2 * w;
+            vector2.y = -(vector2.y - 1) / 2 * h;
 
-            if (!label.visible || !self.frustum.containsPoint(vector)) {
+            dist = vector.distanceTo(self.camera.position);
+            zInd = Math.floor(10000 - dist);
+            label._posX = vector2.x;
+            label._posY = vector2.y;
+            label._x1 = label._posX;
+            label._y1 = label._posY;
+            label._x2 = $(label.element).width() + label._x1;
+            label._y2 = $(label.element).height() + label._y1;
+            label._distance = dist;
+            label._zIndex = zInd;
+            label.visible = true;
+
+            if (!self.frustum.containsPoint(vector)) {
                 label.hide();
             }
-            else {
-                var vector2 = self.projector.projectVector(vector.clone(), self.camera);
-                vector2.x = (vector2.x + 1) / 2 * w;
-                vector2.y = -(vector2.y - 1) / 2 * h;
+        });
 
-                dist = vector.distanceTo(self.camera.position);
-                zInd = Math.floor(10000 - dist);
-                if (dist > 10 * this.goldenDim) {
-                    op = 0;
-                }
-                else {
-                    op = this.goldenDim / dist;
+        self._labels.sort(function(label1, label2){
+            return label2._zIndex - label1._zIndex;
+        });
+
+        _.each(self._labels, function (label, i) {
+            if(label.visible){
+                for(var l= i+1,m=self._labels.length; l<m;l++){
+                    var secondLabel = self._labels[l];
+                    if(secondLabel.visible){
+                        if( (label._x2 < secondLabel._x1 || label._x1 > secondLabel._x2) || (label._y2 < secondLabel._y1 || label._y1 > secondLabel._y2) ){
+                            //secondLabel.hide();
+                        }
+                        else{
+                            secondLabel.hide();
+                        }
+
+                    }
                 }
 
-                label.update({top : vector2.y, left : vector2.x}, op, zInd);
+                op = this.goldenDim / dist;
+                fsize = Math.max(Math.floor(25 - 8*dist/(this.goldenDim*0.5)), 11) + "px";
+
+                label.update({top : label._posY, left : label._posX}, 1, zInd, fsize);
                 label.show();
             }
+
         }, self);
     };
 
@@ -427,7 +465,6 @@ window.DataDoo = (function () {
             for(x = 0,y = ds.length; x<y; x++){
                 var row = ds.rowByPosition(x);
                 var returnedObj = ds.builder(row, x);
-                console.log(returnedObj);
 
                 var node = returnedObj.shape;
                 var colNames= ds.columnNames();
@@ -437,12 +474,22 @@ window.DataDoo = (function () {
                         posArr.push(row[colNames[k]]);
                     }
                     else{
-                        posArr.push(this.gridStep * (x + 1));
+                        if(k===0){
+                            posArr.push(this.gridStep * this.xAxis.positionHash[row[colNames[k]]]);
+                        }
+                        else if(k===0){
+                            posArr.push(this.gridStep * this.yAxis.positionHash[row[colNames[k]]]);
+                        }
+                        else if(k===2){
+                            posArr.push(this.gridStep * this.zAxis.positionHash[row[colNames[k]]]);
+                        }
+
+
                     }
                 }
 
                 node.position.set(posArr[0],posArr[1],posArr[2]);
-                var label = new DataDoo.Label(returnedObj.text, node.position, this);
+                var label = new DataDoo.Label(returnedObj.text, new THREE.Vector3(0,10,0), this);
                 node.add(label);
 
                 this._nodes.push(node);

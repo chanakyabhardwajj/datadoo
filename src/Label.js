@@ -12,15 +12,18 @@
         inner.className = 'datadoo-wrap';
         inner.style.position = 'relative';
         inner.style.display = 'inline-block';
-        inner.style.fontSize = '10px';
+        /*inner.style.fontSize = '11px';*/
         inner.style.left = '-50%';
         inner.style.top = '-.5em';
-        inner.style.backgroundColor = ddInstance.theme[3];
+        inner.style.padding = "1px";
+        inner.style.backgroundColor = "rgba(225, 225, 225, 0.5)";
         inner.style.border = "1px dashed #silver";
 
 
-        element.style.display = 'none'; // start as hidden. made visible only when position is set
+        element.style.display = 'block'; // start as hidden. made visible only when position is set
         element.style.position = 'absolute';
+        element.style.fontSize = '11px';
+        element.style.width = message.length * parseInt(this.fontSize, 10) + 10 + "px";
         element.style.left = 0;
         element.style.top = 0;
         element.style.opacity=1;
@@ -29,15 +32,25 @@
         this.message = (message).toString() || "empty label";
         inner.appendChild(document.createTextNode(this.message));
 
+        this.inner = inner;
         this.element = element;
-        this.element.visible = false;
+
 
         //The following position property refers to the 3d point in the scene, to which the html-label is supposed to be attached.
         //The html-label's cordinates are calculated from it (by unprojection algo).
         this.position = posn3D || new THREE.Vector3(0,0,0);
 
         this.type = "label";
-        document.body.appendChild(element);
+        ddInstance._labelsDom.appendChild(element);
+
+        //internal
+        this._posX=0;
+        this._posY=0;
+        this._width=0;
+        this._height=0;
+        this._distance = 0;
+        this._zIndex = 1;
+        this.visible = true;
 
         ddInstance._labels.push(this);
     }
@@ -49,19 +62,20 @@
 
     Label.prototype.hide = function () {
         this.element.style.display = "none";
-        this.element.visible = false;
+        this.visible = false;
     };
 
     Label.prototype.show = function () {
         this.element.style.display = "block";
-        this.element.visible = true;
+        this.visible = true;
     };
 
-    Label.prototype.update = function (pos, op, z) {
+    Label.prototype.update = function (pos, op, z, fsize) {
         this.element.style.top = pos.top + "px";
         this.element.style.left = pos.left + "px";
         this.element.style.opacity = op;
         this.element.style.zIndex = z;
+        this.element.style.fontSize = fsize;
     };
 
 

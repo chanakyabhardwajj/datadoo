@@ -50,7 +50,7 @@ THREE.OrbitControls = function ( object, domElement, ddI ) {
     this.rotateSpeed = 1.0;
 
     // Set to true to disable this control
-    this.noPan = true;
+    this.noPan = false;
     this.keyPanSpeed = 7.0;	// pixels moved per arrow key push
 
     // Set to true to automatically rotate around the target
@@ -242,7 +242,7 @@ THREE.OrbitControls = function ( object, domElement, ddI ) {
         radius = Math.max( this.minDistance, Math.min( this.maxDistance, radius ) );
 
         // move target to panned location
-        this.target.add( pan );
+        //this.target.add( pan );
 
         offset.x = radius * Math.sin( phi ) * Math.sin( theta );
         offset.y = radius * Math.cos( phi );
@@ -309,8 +309,8 @@ THREE.OrbitControls = function ( object, domElement, ddI ) {
         }
 
         // Greggman fix: https://github.com/greggman/three.js/commit/fde9f9917d6d8381f06bf22cdff766029d1761be
-        scope.domElement.addEventListener( 'mousemove', onMouseMove, false );
-        scope.domElement.addEventListener( 'mouseup', onMouseUp, false );
+        document.addEventListener( 'mousemove', onMouseMove, false );
+        document.addEventListener( 'mouseup', onMouseUp, false );
 
     }
 
@@ -372,7 +372,8 @@ THREE.OrbitControls = function ( object, domElement, ddI ) {
         scope.update();
 
         if(state === STATE.ROTATE || state === STATE.DOLLY || state === STATE.PAN){
-            ddI.renderLabels();
+            //ddI.renderLabels();
+            ddI._labelsDom.style.display = "none";
         }
     }
 
@@ -381,11 +382,12 @@ THREE.OrbitControls = function ( object, domElement, ddI ) {
         if ( scope.enabled === false ) return;
 
         // Greggman fix: https://github.com/greggman/three.js/commit/fde9f9917d6d8381f06bf22cdff766029d1761be
-        scope.domElement.removeEventListener( 'mousemove', onMouseMove, false );
-        scope.domElement.removeEventListener( 'mouseup', onMouseUp, false );
+        document.removeEventListener( 'mousemove', onMouseMove, false );
+        document.removeEventListener( 'mouseup', onMouseUp, false );
 
         state = STATE.NONE;
 
+        ddI._labelsDom.style.display = "block";
         ddI.renderLabels();
 
     }
@@ -415,9 +417,16 @@ THREE.OrbitControls = function ( object, domElement, ddI ) {
             scope.dollyIn();
 
         }
+        console.log("firing wheel");
 
-        ddI.renderLabels();
-
+        if(this.timer){
+            ddI._labelsDom.style.display = "none";
+            window.clearTimeout(this.timer);
+        }
+        this.timer = window.setTimeout(function(){
+            ddI._labelsDom.style.display = "block";
+            ddI.renderLabels.apply(ddI);
+        }, 100);
     }
 
     function onKeyDown( event ) {

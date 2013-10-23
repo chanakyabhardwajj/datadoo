@@ -3,7 +3,6 @@
         <style>
             body {
                 background:#fff;
-                padding:0px;
                 margin:0;
                 overflow:hidden;
                 font-family: "Lucida Console", "Lucida Sans Typewriter", Monaco, "Bitstream Vera Sans Mono", monospace;
@@ -25,7 +24,11 @@
                 ],
 
                 builder : function(rowData, rowIndex){
-                    var sphere = new THREE.Mesh(new THREE.SphereGeometry(rowData.Marks/10), new THREE.MeshBasicMaterial({color:0xffcc11}));
+                    var g = new THREE.SphereGeometry(rowData.Marks/10, 100, 100);
+                    var sphere = new THREE.Mesh(g, new THREE.MeshPhongMaterial( { color:0xffcc00, transparent:true, opacity:0.85, shininess:50 } ));
+                    var outline = new THREE.Mesh(g, new THREE.MeshBasicMaterial( { color:0x000000, side : THREE.BackSide} ));
+                    outline.scale.multiplyScalar(1.02);
+                    sphere.add(outline);
                     return {
                         shape : sphere,
                         text : rowData.Student + "'s marks in Course : " + rowData.Course
@@ -33,24 +36,35 @@
                 }
             });
 
-            /*ds.fetch({
-                success : function() {
-                    console.log("Dataset Ready. Columns: " + this.columnNames());
-                    console.log("There are " + this.length + " rows");
-                    console.log("Available Colors: " + this.column("one").data);
-                }
-            });*/
-
             var ds2 = new DataDoo.Dataset({
                 data: [
                     { Course : "E", Marks : -50 , Student : "Aditya"},
                     { Course : "F", Marks : 60 , Student : "Akash"},
                     { Course : "G", Marks : 70 , Student : "Patro"},
-                    { Course : "H", Marks : 80 , Student : "Arefin"}
+                    { Course : "E1", Marks : -50 , Student : "Aditya"},
+                    { Course : "F2", Marks : 60 , Student : "Akash"},
+                    { Course : "G3", Marks : 70 , Student : "Patro"},
+                    { Course : "E4", Marks : -50 , Student : "Aditya"},
+                    { Course : "F5", Marks : 60 , Student : "Akash"},
+                    { Course : "G6", Marks : 70 , Student : "Patro"},
+                    { Course : "E7", Marks : -50 , Student : "Aditya"},
+                    { Course : "F8", Marks : 60 , Student : "Akash"},
+                    { Course : "G9", Marks : 70 , Student : "Patro"},
+                    { Course : "E11", Marks : -50 , Student : "Aditya"},
+                    { Course : "F12", Marks : 60 , Student : "Akash"},
+                    { Course : "G14", Marks : 70 , Student : "Patro"},
+                    { Course : "E16", Marks : -50 , Student : "Aditya"},
+                    { Course : "F146", Marks : 60 , Student : "Akash"},
+                    { Course : "G147", Marks : 70 , Student : "Patro"},
+                    { Course : "H136", Marks : 80 , Student : "Arefin"}
                 ],
 
                 builder : function(rowData, rowIndex){
-                    var sphere = new THREE.Mesh(new THREE.SphereGeometry(rowData.Marks/10), new THREE.MeshBasicMaterial({color:0x76caca}));
+                    var g = new THREE.SphereGeometry(rowData.Marks/10, 100, 100);
+                    var sphere = new THREE.Mesh(g, new THREE.MeshPhongMaterial( { color:0x76caca, transparent:true, opacity:0.85, shininess:50 } ));
+                    var outline = new THREE.Mesh(g, new THREE.MeshBasicMaterial( { color:0x000000, side : THREE.BackSide} ));
+                    outline.scale.multiplyScalar(1.02);
+                    //sphere.add(outline);
                     return {
                         shape : sphere,
                         text : rowData.Student + "'s marks in Course : " + rowData.Course
