@@ -15,12 +15,12 @@
         /*inner.style.fontSize = '11px';*/
         inner.style.left = '-50%';
         inner.style.top = '-.5em';
-        inner.style.padding = "1px";
-        inner.style.backgroundColor = "rgba(225, 225, 225, 0.5)";
-        inner.style.border = "1px dashed #silver";
+        inner.style.padding = "5px";
+        inner.style.backgroundColor = "transparent";
+        inner.style.border = "1px dashed silver";
 
 
-        element.style.display = 'block'; // start as hidden. made visible only when position is set
+        element.style.display = 'none'; // start as hidden. made visible only when position is set
         element.style.position = 'absolute';
         element.style.fontSize = '11px';
         element.style.width = message.length * parseInt(this.fontSize, 10) + 10 + "px";
@@ -70,12 +70,18 @@
         this.visible = true;
     };
 
-    Label.prototype.update = function (pos, op, z, fsize) {
+    Label.prototype.update = function (pos, op, z, fsize, rotAngle) {
         this.element.style.top = pos.top + "px";
         this.element.style.left = pos.left + "px";
         this.element.style.opacity = op;
         this.element.style.zIndex = z;
         this.element.style.fontSize = fsize;
+
+        /*$(this.element).css({
+            "webkitTransform":"rotate(" + rotAngle + "deg)",
+            "MozTransform":"rotate(" + rotAngle + "deg)",
+            "transform":"rotate(" + rotAngle + "deg)"
+        });*/
     };
 
 

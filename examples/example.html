@@ -24,13 +24,13 @@
                 ],
 
                 builder : function(rowData, rowIndex){
-                    var g = new THREE.SphereGeometry(rowData.Marks/10, 100, 100);
-                    var sphere = new THREE.Mesh(g, new THREE.MeshPhongMaterial( { color:0xffcc00, transparent:true, opacity:0.85, shininess:50 } ));
-                    var outline = new THREE.Mesh(g, new THREE.MeshBasicMaterial( { color:0x000000, side : THREE.BackSide} ));
+                    var g = new THREE.CubeGeometry(10,Math.abs(rowData.Marks),10);
+                    var cube = new THREE.Mesh(g, new THREE.MeshPhongMaterial( { color:0xffcc00, transparent:true, opacity:0.65, shininess:10,shading: THREE.FlatShading } ));
+                    var outline = new THREE.Mesh(g, new THREE.MeshBasicMaterial( { color:0x000000, transparent:true, opacity:0.65, side : THREE.BackSide} ));
                     outline.scale.multiplyScalar(1.02);
-                    sphere.add(outline);
+                    cube.add(outline);
                     return {
-                        shape : sphere,
+                        shape : cube,
                         text : rowData.Student + "'s marks in Course : " + rowData.Course
                     }
                 }
@@ -60,8 +60,9 @@
                 ],
 
                 builder : function(rowData, rowIndex){
-                    var g = new THREE.SphereGeometry(rowData.Marks/10, 100, 100);
-                    var sphere = new THREE.Mesh(g, new THREE.MeshPhongMaterial( { color:0x76caca, transparent:true, opacity:0.85, shininess:50 } ));
+                    //var g = new THREE.SphereGeometry(Math.abs(rowData.Marks/10), 100, 100);
+                    var g = new THREE.CubeGeometry(10,Math.abs(rowData.Marks),10);
+                    var sphere = new THREE.Mesh(g, new THREE.MeshPhongMaterial( { color:0xace123, transparent:true, opacity:0.85, shininess:50 } ));
                     var outline = new THREE.Mesh(g, new THREE.MeshBasicMaterial( { color:0x000000, side : THREE.BackSide} ));
                     outline.scale.multiplyScalar(1.02);
                     //sphere.add(outline);

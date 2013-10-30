@@ -104,25 +104,25 @@ window.DataDoo = (function () {
     DataDoo.prototype.prepareScene = function () {
         //LIGHTS
         var dirLight = this.lightsConf.directionalLight;
-        var hemiLight = this.lightsConf.hemiLight;
         this.directionalLight = new THREE.PointLight(dirLight.color, dirLight.intensity);
         this.directionalLight.position.x = dirLight.position.x;
         this.directionalLight.position.y = dirLight.position.y;
         this.directionalLight.position.z = dirLight.position.z;
         this.scene.add(this.directionalLight);
 
-        /*var dirLight2 = this.lightsConf.directionalLight;
+        var dirLight2 = this.lightsConf.directionalLight;
         this.directionalLight2 = new THREE.PointLight(dirLight.color, dirLight.intensity);
         this.directionalLight2.position.x = -dirLight.position.x;
         this.directionalLight2.position.y = -dirLight.position.y;
         this.directionalLight2.position.z = -dirLight.position.z;
-        this.scene.add(this.directionalLight2);*/
+        this.scene.add(this.directionalLight2);
 
-        /*this.hemiLight = new THREE.HemisphereLight(hemiLight.skyColor, hemiLight.groundColor, hemiLight.intensity);
+        var hemiLight = this.lightsConf.hemiLight;
+        this.hemiLight = new THREE.HemisphereLight(hemiLight.skyColor, hemiLight.groundColor, hemiLight.intensity);
         this.hemiLight.color.setHSL(hemiLight.colorHSL.h, hemiLight.colorHSL.s, hemiLight.colorHSL.l);
         this.hemiLight.groundColor.setHSL(hemiLight.groundColorHSL.h, hemiLight.groundColorHSL.s, hemiLight.groundColorHSL.l);
         this.hemiLight.position.set(hemiLight.position.x, hemiLight.position.y, hemiLight.position.z);
-        this.scene.add(this.hemiLight);*/
+        this.scene.add(this.hemiLight);
 
 
         //SCENE
@@ -164,247 +164,22 @@ window.DataDoo = (function () {
     };
 
     DataDoo.prototype.prepareAxes = function () {
-        //First of all, we need to make sure that all the datasets are compatible
-        //i.e. all the column names and type, match!
-        //Note : Columns need to be ordered similarly as well.
-
-        //Stuff all the column-name-arrays in this super-array.
-        var allColNames = [], colNames, i, j, x, y, tempArr = [], label;
-        for (i = 0, j = this.datasets.length; i < j; i++) {
-            allColNames.push(this.datasets[i].columnNames());
-        }
-
-        //Check if all the column-name-arrays have the same length i.e. same number of columns
-        var numOfCols = allColNames[0].length;
-        for (i = 0, j = allColNames.length; i < j; i++) {
-            if (allColNames[i].length !== numOfCols) {
-                throw new Error("Number of Columns Mismatch : " + allColNames[i]);
-            }
-        }
-
-        if (numOfCols !== 3) {
-            throw new Error("As of now, DataDoo only works with 3 columns in a dataset. The number of columns in your dataset is : " + numOfCols + ", which is clearly not 3. I will be adding support for 2 and 4 columns but for now re-model your data or break it into smaller sets to use DataDoo.");
-        }
-
-        //Now check if all the column-names are the same
-        if (_.union.apply(_, allColNames).length !== numOfCols) {
-            throw new Error("Columns Name Mismatch!");
-        }
-
-        colNames = allColNames[0];
-
-        this.xAxis = new THREE.Object3D();
-        this.xAxis.colName = colNames[0];
-        this.xAxis.colType = "number";
-        this.xAxis.colUniqs = [];
-        this.xAxis.positionHash = {};
-
-        for (x = 0, y = this.datasets.length; x < y; x++) {
-            tempArr.push(this.datasets[x].column(colNames[0]).data);
-            if (this.datasets[x].column(colNames[0]).type !== "number") {
-                this.xAxis.colType = "mixed";
-            }
-        }
-        this.xAxis.colUniqs = _.chain(tempArr).flatten().uniq().value();
-        tempArr = [];
-
-        this.yAxis = new THREE.Object3D();
-        this.yAxis.colName = colNames[1];
-        this.yAxis.colType = "number";
-        this.yAxis.colUniqs = [];
-        this.yAxis.positionHash = {};
-
-        for (x = 0, y = this.datasets.length; x < y; x++) {
-            tempArr.push(this.datasets[x].column(colNames[1]).data);
-            if (this.datasets[x].column(colNames[1]).type !== "number") {
-                this.yAxis.colType = "mixed";
-            }
-        }
-        this.yAxis.colUniqs = _.chain(tempArr).flatten().uniq().value();
-        tempArr = [];
-
-        this.zAxis = new THREE.Object3D();
-        this.zAxis.colName = colNames[2];
-        this.zAxis.colType = "number";
-        this.zAxis.colUniqs = [];
-        this.zAxis.positionHash = {};
-
-        for (x = 0, y = this.datasets.length; x < y; x++) {
-            tempArr.push(this.datasets[x].column(colNames[2]).data);
-            if (this.datasets[x].column(colNames[2]).type !== "number") {
-                this.zAxis.colType = "mixed";
-            }
-        }
-        this.zAxis.colUniqs = _.chain(tempArr).flatten().uniq().value();
-        tempArr = [];
-
-        this.xObj = this.axesConf.x;
-        this.yObj = this.axesConf.y;
-        this.zObj = this.axesConf.z;
-
-        //GRID
-        if (this.gridBoolean) {
-            //the following code-block is similar to THREE.GridHelper
-            //but manually coding it, to keep the customising options open
-            var size = (Math.max(this.xAxis.colUniqs.length, this.zAxis.colUniqs.length) + 2) * this.gridStep, step = this.gridStep;
-
-            var geometry = new THREE.Geometry();
-            var material = new THREE.LineBasicMaterial({ color : /*0xBED6E5*/ this.theme[2], opacity : 1, linewidth : 1 });
-
-            for (i = -size; i <= size; i += step) {
-
-                geometry.vertices.push(new THREE.Vector3(-size, 0, i));
-                geometry.vertices.push(new THREE.Vector3(size, 0, i));
-
-                geometry.vertices.push(new THREE.Vector3(i, 0, -size));
-                geometry.vertices.push(new THREE.Vector3(i, 0, size));
-
-            }
-
-            this.grid = new THREE.Line(geometry, material, THREE.LinePieces);
-            this.grid.position.y = -0.1;
-            this.scene.add(this.grid);
-        }
-
-        var notchLabel, notchShape;
-        var xline, xlineGeometry = new THREE.Geometry();
-        var yline, ylineGeometry = new THREE.Geometry();
-        var zline, zlineGeometry = new THREE.Geometry();
-
-        if (this.xAxis.colType === "number") {
-            this.xAxis.length = Math.max(_.max(this.xAxis.colUniqs), 0) - Math.min(_.min(this.xAxis.colUniqs), 0) + this.gridStep;
-            this.xAxis.from = new THREE.Vector3(Math.min(_.min(this.xAxis.colUniqs), 0), 0, 0);
-            this.xAxis.to = new THREE.Vector3(Math.max(_.max(this.xAxis.colUniqs), 0), 0, 0);
-        }
-        else {
-            this.xAxis.length = this.xAxis.colUniqs.length * this.gridStep;
-            this.xAxis.from = new THREE.Vector3(0, 0, 0);
-            this.xAxis.to = new THREE.Vector3((this.xAxis.colUniqs.length + 1) * this.gridStep, 0, 0);
-        }
-
-        if (this.yAxis.colType === "number") {
-            this.yAxis.length = Math.max(_.max(this.yAxis.colUniqs), 0) - Math.min(_.min(this.yAxis.colUniqs), 0) + this.gridStep;
-            this.yAxis.from = new THREE.Vector3(0, Math.min(_.min(this.yAxis.colUniqs), 0), 0);
-            this.yAxis.to = new THREE.Vector3(0, Math.max(_.max(this.yAxis.colUniqs), 0), 0);
-        }
-        else {
-            this.yAxis.length = this.yAxis.colUniqs.length * this.gridStep;
-            this.yAxis.from = new THREE.Vector3(0, 0, 0);
-            this.yAxis.to = new THREE.Vector3(0, (this.yAxis.colUniqs.length + 1) * this.gridStep, 0);
-        }
-
-        if (this.zAxis.colType === "number") {
-            this.zAxis.length = Math.max(_.max(this.zAxis.colUniqs), 0) - Math.min(_.min(this.zAxis.colUniqs), 0) + this.gridStep;
-            this.zAxis.from = new THREE.Vector3(0, 0, Math.min(_.min(this.zAxis.colUniqs), 0));
-            this.zAxis.to = new THREE.Vector3(0, 0, Math.max(_.max(this.zAxis.colUniqs), 0));
-        }
-        else {
-            this.zAxis.length = this.zAxis.colUniqs.length * this.gridStep;
-            this.zAxis.from = new THREE.Vector3(0, 0, 0);
-            this.zAxis.to = new THREE.Vector3(0, 0, (this.zAxis.colUniqs.length + 1) * this.gridStep);
-        }
-
-        xlineGeometry.vertices.push(this.xAxis.from);
-        xlineGeometry.vertices.push(this.xAxis.to);
-        xlineGeometry.computeLineDistances();
-        label = new DataDoo.Label(this.xAxis.colName, new THREE.Vector3(this.xAxis.length + Math.max(this.xAxis.length / 10, 10), 1, 0), this);
-        xline = new THREE.Line(xlineGeometry, new THREE.LineDashedMaterial({ dashSize : this.gridStep / 4, linewidth : 2, color : /*this.axesConf.x.color*/ this.theme[0] }), THREE.LinePieces);
-        xline.matrixAutoUpdate = false;
-        this.xAxis.add(label);
-        this.xAxis.add(xline);
-
-        ylineGeometry.vertices.push(this.yAxis.from);
-        ylineGeometry.vertices.push(this.yAxis.to);
-        ylineGeometry.computeLineDistances();
-        label = new DataDoo.Label(this.yAxis.colName, new THREE.Vector3(1, this.yAxis.length + Math.max(this.yAxis.length / 10, 10), 0), this);
-        yline = new THREE.Line(ylineGeometry, new THREE.LineDashedMaterial({ dashSize : this.gridStep / 4, linewidth : 2, color : /*this.axesConf.y.color*/ this.theme[0] }), THREE.LinePieces);
-        yline.matrixAutoUpdate = false;
-        this.yAxis.add(label);
-        this.yAxis.add(yline);
-
-        zlineGeometry.vertices.push(this.zAxis.from);
-        zlineGeometry.vertices.push(this.zAxis.to);
-        zlineGeometry.computeLineDistances();
-        label = new DataDoo.Label(this.zAxis.colName, new THREE.Vector3(0, 1, this.zAxis.length + Math.max(this.zAxis.length / 10, 10)), this);
-        zline = new THREE.Line(zlineGeometry, new THREE.LineDashedMaterial({ dashSize : this.gridStep / 4, linewidth : 2, color : /*this.axesConf.z.color*/ this.theme[0] }), THREE.LinePieces);
-        zline.matrixAutoUpdate = false;
-        this.zAxis.add(label);
-        this.zAxis.add(zline);
-
-        /*
-         var xconeGeometry = new THREE.CylinderGeometry( 0, 5, 10, 25, 5 );
-         this.xcone = new THREE.Mesh( xconeGeometry, new THREE.MeshBasicMaterial( { color: this.xObj.color } ) );
-         //this.xcone.matrixAutoUpdate = false;
-         this.xcone.rotateZ(-Math.PI/2);
-         this.xcone.position = new THREE.Vector3( this.xObj.length, 0, 0 );
-         this.xAxis.add(this.xcone);
-         */
-
-        var notchGeom = new THREE.CubeGeometry(this.gridStep/100, this.gridStep/10, this.gridStep/100);
-        var notchMat = new THREE.MeshBasicMaterial({color : /*this.axesConf.x.color*/ this.theme[1], opacity : 1});
-
-        for (i = 0, j = this.xAxis.length / this.gridStep; i < j; i++) {
-            notchShape = new THREE.Mesh(notchGeom, notchMat);
-
-            if (this.xAxis.colType === "number") {
-                notchShape.position.set((this.xAxis.from.x - (this.xAxis.from.x % this.gridStep)) + (this.gridStep * i), this.xAxis.from.y, this.xAxis.from.z);
-                notchLabel = new DataDoo.Label((this.xAxis.from.x - (this.xAxis.from.x % this.gridStep)) + (this.gridStep * i), new THREE.Vector3(notchShape.position.x, notchShape.position.y , notchShape.position.z), this);
-            }
-            else {
-                this.xAxis.positionHash[this.xAxis.colUniqs[i]] = i+1;
-                notchShape.position.set((this.xAxis.from.x - (this.xAxis.from.x % this.gridStep)) + (this.gridStep * (i + 1)), this.xAxis.from.y, this.xAxis.from.z);
-                notchLabel = new DataDoo.Label(this.xAxis.colUniqs[i], new THREE.Vector3(notchShape.position.x, notchShape.position.y , notchShape.position.z), this);
-            }
-            this.xAxis.add(notchShape);
-            this.xAxis.add(notchLabel);
-        }
-
-        notchMat = new THREE.MeshBasicMaterial({color : /*this.axesConf.y.color*/ this.theme[1], opacity : 0.4});
-
-        for (i = 0, j = this.yAxis.length / this.gridStep; i < j; i++) {
-            notchShape = new THREE.Mesh(notchGeom, notchMat);
-            if (this.yAxis.colType === "number") {
-                notchShape.position.set(this.yAxis.from.x, (this.yAxis.from.y - (this.yAxis.from.y % this.gridStep)) + (this.gridStep * i), this.yAxis.from.z);
-                notchLabel = new DataDoo.Label((this.yAxis.from.y - (this.yAxis.from.y % this.gridStep)) + (this.gridStep * i) , new THREE.Vector3(notchShape.position.x , notchShape.position.y, notchShape.position.z), this);
-            }
-            else {
-                this.yAxis.positionHash[this.yAxis.colUniqs[i]] = i+1;
-                notchShape.position.set(this.yAxis.from.x, (this.yAxis.from.y - (this.yAxis.from.y % this.gridStep)) + (this.gridStep * (i + 1)), this.yAxis.from.z);
-                notchLabel = new DataDoo.Label(this.yAxis.colUniqs[i] , new THREE.Vector3(notchShape.position.x , notchShape.position.y, notchShape.position.z), this);
-            }
-            notchShape.rotateZ(Math.PI/2);
-            this.yAxis.add(notchShape);
-            this.yAxis.add(notchLabel);
-        }
-
-        notchMat = new THREE.MeshBasicMaterial({color : /*this.axesConf.z.color*/ this.theme[1], opacity : 0.4});
-
-        for (i = 0, j = this.zAxis.length / this.gridStep; i < j; i++) {
-            notchShape = new THREE.Mesh(notchGeom, notchMat);
-            if (this.zAxis.colType === "number") {
-                notchShape.position.set(this.zAxis.from.x, this.zAxis.from.y, (this.zAxis.from.z - (this.zAxis.from.z % this.gridStep)) + (this.gridStep * i));
-                notchLabel = new DataDoo.Label((this.zAxis.from.z - (this.zAxis.from.z % this.gridStep)) + (this.gridStep * i), new THREE.Vector3(notchShape.position.x, notchShape.position.y , notchShape.position.z), this);
-            }
-            else {
-                this.zAxis.positionHash[this.zAxis.colUniqs[i]] = i+1;
-                notchShape.position.set(this.zAxis.from.x, this.zAxis.from.y, (this.zAxis.from.z - (this.zAxis.from.z % this.gridStep)) + (this.gridStep * (i + 1)));
-                notchLabel = new DataDoo.Label(this.zAxis.colUniqs[i], new THREE.Vector3(notchShape.position.x, notchShape.position.y , notchShape.position.z), this);
-            }
-            this.zAxis.add(notchShape);
-            this.zAxis.add(notchLabel);
-        }
-
-        this.scene.add(this.xAxis);
-        this.scene.add(this.yAxis);
-        this.scene.add(this.zAxis);
-
+        this.axes = new DataDoo.AxesHelper(this);
+        this.scene.add(this.axes);
+    };
+    DataDoo.prototype.prepareGrid = function () {
+        this.grid = new DataDoo.GridHelper(this);
+        this.scene.add(this.grid);
     };
 
     DataDoo.prototype.renderLabels = function () {
-        var self = this, vector = new THREE.Vector3(), w = self.renderer.domElement.width, h = self.renderer.domElement.height, dist, zInd, op, fsize;
+        var self = this, vector = new THREE.Vector3(), w = self.renderer.domElement.width, h = self.renderer.domElement.height, dist, zInd, op, fsize, rotAngle;
 
         self.projScreenMatrix.multiplyMatrices(self.camera.projectionMatrix, self.camera.matrixWorldInverse);
         self.frustum.setFromMatrix(self.projScreenMatrix);
+        var originVector = self.projector.projectVector(new THREE.Vector3(0,0,0), self.camera);
+        originVector.x = (originVector.x + 1) / 2 * w;
+        originVector.y = -(originVector.y - 1) / 2 * h;
 
         _.each(self._labels, function (label) {
             vector.getPositionFromMatrix(label.matrixWorld);
@@ -414,6 +189,8 @@ window.DataDoo = (function () {
 
             dist = vector.distanceTo(self.camera.position);
             zInd = Math.floor(10000 - dist);
+            rotAngle = Math.atan((vector2.y-originVector.y)/ (vector2.x-originVector.x)) * 180 / Math.PI;
+
             label._posX = vector2.x;
             label._posY = vector2.y;
             label._x1 = label._posX;
@@ -439,7 +216,7 @@ window.DataDoo = (function () {
                     var secondLabel = self._labels[l];
                     if(secondLabel.visible){
                         if( (label._x2 < secondLabel._x1 || label._x1 > secondLabel._x2) || (label._y2 < secondLabel._y1 || label._y1 > secondLabel._y2) ){
-                            //secondLabel.hide();
+
                         }
                         else{
                             secondLabel.hide();
@@ -451,7 +228,7 @@ window.DataDoo = (function () {
                 op = this.goldenDim / dist;
                 fsize = Math.max(Math.floor(25 - 8*dist/(this.goldenDim*0.5)), 11) + "px";
 
-                label.update({top : label._posY, left : label._posX}, 1, zInd, fsize);
+                label.update({top : label._posY, left : label._posX}, 1, zInd, fsize, rotAngle);
                 label.show();
             }
 
@@ -475,13 +252,13 @@ window.DataDoo = (function () {
                     }
                     else{
                         if(k===0){
-                            posArr.push(this.gridStep * this.xAxis.positionHash[row[colNames[k]]]);
+                            posArr.push(this.gridStep * this.axes.xAxis.positionHash[row[colNames[k]]]);
                         }
                         else if(k===0){
-                            posArr.push(this.gridStep * this.yAxis.positionHash[row[colNames[k]]]);
+                            posArr.push(this.gridStep * this.axes.yAxis.positionHash[row[colNames[k]]]);
                         }
                         else if(k===2){
-                            posArr.push(this.gridStep * this.zAxis.positionHash[row[colNames[k]]]);
+                            posArr.push(this.gridStep * this.axes.zAxis.positionHash[row[colNames[k]]]);
                         }
 
 
@@ -530,6 +307,7 @@ window.DataDoo = (function () {
 
             _.when(promises).then(function () {
                 self.prepareAxes();
+                self.prepareGrid();
                 self.build();
             });
         }
@@ -578,13 +356,13 @@ window.DataDoo = (function () {
         },
         lights : {
             directionalLight : {
-                color : 0xffffff,
+                color : 0xcccccc,
                 intensity : 1.475,
-                position : {x : 100, y : 100, z : 100}
+                position : {x : 0, y : 100, z : 0}
             },
             hemiLight : {
                 skyColor : 0xffffff,
-                groundColor : 0xffffff,
+                groundColor : 0xcccccc,
                 intensity : 1.25,
                 colorHSL : {h : 0.6, s : 1, l : 0.75},
                 groundColorHSL : {h : 0.1, s : 0.8, l : 0.7},

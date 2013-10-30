@@ -417,7 +417,6 @@ THREE.OrbitControls = function ( object, domElement, ddI ) {
             scope.dollyIn();
 
         }
-        console.log("firing wheel");
 
         if(this.timer){
             ddI._labelsDom.style.display = "none";
