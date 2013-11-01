@@ -72,6 +72,7 @@ window.DataDoo = (function () {
         this.canvas = params.canvas;
 
         this.scene = new THREE.Scene();
+        this.scene2 = new THREE.Scene();
         this.renderer = new THREE.WebGLRenderer({
             canvas : this.canvas,
             antialias : true,
@@ -83,6 +84,9 @@ window.DataDoo = (function () {
             shadowMapEnabled : true,
             shadowMapSoft : true
         });
+        //this.renderer.sortObjects = false;
+        this.renderer.autoClear = false;
+
         /*this.renderer.setClearColor(0xffffff, 1);*/
         this.renderer.setClearColor(this.theme[4], 1);
 
@@ -97,7 +101,9 @@ window.DataDoo = (function () {
         this._labelsDom.className = "labelDom";
         document.body.appendChild(this._labelsDom);
         this._labels = [];
+        this._sprites = [];
         this._nodes = [];
+        this._intersectables = [];
 
     }
 
@@ -124,6 +130,7 @@ window.DataDoo = (function () {
         this.hemiLight.position.set(hemiLight.position.x, hemiLight.position.y, hemiLight.position.z);
         this.scene.add(this.hemiLight);
 
+        this.scene2.add(new THREE.AmbientLight({color : this.theme[2]}));
 
         //SCENE
         this.scene.fog = new THREE.Fog(this.sceneConf.fog.color, this.sceneConf.fog.near, this.sceneConf.fog.far);
@@ -145,13 +152,15 @@ window.DataDoo = (function () {
         }
 
         //CAMERA CONTROLS
-        this.cameraControls = new THREE.OrbitControls(this.camera, this.renderer.domElement, this);
+        this.cameraControls = new DataDoo.OrbitControls(this.camera, this.renderer.domElement, this);
         this.cameraControls.maxDistance = this.gridStep * 1000;
-        this.cameraControls.minDistance = this.gridStep/10;
+        this.cameraControls.minDistance = this.gridStep / 10;
         this.cameraControls.autoRotate = false;
 
         //Projector
         this.projector = new THREE.Projector();
+        //RayCatser
+        this.raycaster = new THREE.Raycaster();
 
         // frustum and projection matrix
         // for manual frustum culling of html labels
@@ -167,9 +176,25 @@ window.DataDoo = (function () {
         this.axes = new DataDoo.AxesHelper(this);
         this.scene.add(this.axes);
     };
+
+    DataDoo.prototype.prepareGuides = function () {
+        this.guides = new DataDoo.GuideHelper(this);
+        this.scene2.add(this.guides);
+    };
+
     DataDoo.prototype.prepareGrid = function () {
         this.grid = new DataDoo.GridHelper(this);
         this.scene.add(this.grid);
+    };
+
+    DataDoo.prototype.renderSprites = function () {
+        var self = this, dist;
+        _.each(self._sprites, function (sprite) {
+            dist = sprite.position.distanceTo(self.camera.position);
+            var sc = 300/dist;
+            sprite.scale.x = 120 + self.gridStep * (sc);
+            sprite.scale.y = 50 + self.gridStep * (sc);
+        });
     };
 
     DataDoo.prototype.renderLabels = function () {
@@ -177,7 +202,7 @@ window.DataDoo = (function () {
 
         self.projScreenMatrix.multiplyMatrices(self.camera.projectionMatrix, self.camera.matrixWorldInverse);
         self.frustum.setFromMatrix(self.projScreenMatrix);
-        var originVector = self.projector.projectVector(new THREE.Vector3(0,0,0), self.camera);
+        var originVector = self.projector.projectVector(new THREE.Vector3(0, 0, 0), self.camera);
         originVector.x = (originVector.x + 1) / 2 * w;
         originVector.y = -(originVector.y - 1) / 2 * h;
 
@@ -189,7 +214,7 @@ window.DataDoo = (function () {
 
             dist = vector.distanceTo(self.camera.position);
             zInd = Math.floor(10000 - dist);
-            rotAngle = Math.atan((vector2.y-originVector.y)/ (vector2.x-originVector.x)) * 180 / Math.PI;
+            rotAngle = Math.atan((vector2.y - originVector.y) / (vector2.x - originVector.x)) * 180 / Math.PI;
 
             label._posX = vector2.x;
             label._posY = vector2.y;
@@ -206,19 +231,19 @@ window.DataDoo = (function () {
             }
         });
 
-        self._labels.sort(function(label1, label2){
+        self._labels.sort(function (label1, label2) {
             return label2._zIndex - label1._zIndex;
         });
 
         _.each(self._labels, function (label, i) {
-            if(label.visible){
-                for(var l= i+1,m=self._labels.length; l<m;l++){
+            if (label.visible) {
+                for (var l = i + 1, m = self._labels.length; l < m; l++) {
                     var secondLabel = self._labels[l];
-                    if(secondLabel.visible){
-                        if( (label._x2 < secondLabel._x1 || label._x1 > secondLabel._x2) || (label._y2 < secondLabel._y1 || label._y1 > secondLabel._y2) ){
+                    if (secondLabel.visible) {
+                        if ((label._x2 < secondLabel._x1 || label._x1 > secondLabel._x2) || (label._y2 < secondLabel._y1 || label._y1 > secondLabel._y2)) {
 
                         }
-                        else{
+                        else {
                             secondLabel.hide();
                         }
 
@@ -226,7 +251,7 @@ window.DataDoo = (function () {
                 }
 
                 op = this.goldenDim / dist;
-                fsize = Math.max(Math.floor(25 - 8*dist/(this.goldenDim*0.5)), 11) + "px";
+                fsize = Math.max(Math.floor(25 - 8 * dist / (this.goldenDim * 0.5)), 11) + "px";
 
                 label.update({top : label._posY, left : label._posX}, 1, zInd, fsize, rotAngle);
                 label.show();
@@ -236,41 +261,44 @@ window.DataDoo = (function () {
     };
 
     DataDoo.prototype.build = function () {
-        var i, j, x,y;
-        for(i=0,j=this.datasets.length; i<j; i++){
+        var i, j, x, y;
+        for (i = 0, j = this.datasets.length; i < j; i++) {
             var ds = this.datasets[i];
-            for(x = 0,y = ds.length; x<y; x++){
+            for (x = 0, y = ds.length; x < y; x++) {
                 var row = ds.rowByPosition(x);
                 var returnedObj = ds.builder(row, x);
 
-                var node = returnedObj.shape;
-                var colNames= ds.columnNames();
+                var primitive = new DataDoo.Primitive(returnedObj, row, this);
+
+                var posSupplied = returnedObj.position || {};
+
+                var colNames = ds.columnNames();
                 var posArr = [];
-                for(var k= 0,l=colNames.length; k<l; k++){
-                    if(ds.column(colNames[k]).type === "number"){
+
+                for (var k = 0, l = colNames.length; k < l; k++) {
+                    if (ds.column(colNames[k]).type === "number") {
                         posArr.push(row[colNames[k]]);
                     }
-                    else{
-                        if(k===0){
+                    else {
+                        if (k === 0) {
                             posArr.push(this.gridStep * this.axes.xAxis.positionHash[row[colNames[k]]]);
                         }
-                        else if(k===0){
+                        else if (k === 1) {
                             posArr.push(this.gridStep * this.axes.yAxis.positionHash[row[colNames[k]]]);
                         }
-                        else if(k===2){
+                        else if (k === 2) {
                             posArr.push(this.gridStep * this.axes.zAxis.positionHash[row[colNames[k]]]);
                         }
-
-
                     }
                 }
+                primitive.position.set(posSupplied.x || posArr[0], posSupplied.y || posArr[1], posSupplied.z || posArr[2]);
+                primitive.shape.geometry.computeBoundingBox();
+                var label = new DataDoo.Label(primitive.text, new THREE.Vector3(0, 0, 0), this);
+                primitive.add(label);
 
-                node.position.set(posArr[0],posArr[1],posArr[2]);
-                var label = new DataDoo.Label(returnedObj.text, new THREE.Vector3(0,10,0), this);
-                node.add(label);
-
-                this._nodes.push(node);
-                this.scene.add(node);
+                this._nodes.push(primitive);
+                this._intersectables.push(primitive.shape);
+                this.scene.add(primitive);
             }
         }
     };
@@ -307,6 +335,7 @@ window.DataDoo = (function () {
 
             _.when(promises).then(function () {
                 self.prepareAxes();
+                self.prepareGuides();
                 self.prepareGrid();
                 self.build();
             });
@@ -314,14 +343,19 @@ window.DataDoo = (function () {
 
         function renderFrame() {
             raf(renderFrame);
+            self.renderer.clear();
             self.renderer.render(self.scene, self.camera);
+            self.renderer.clear(false, true, false);
+            self.renderer.render(self.scene2, self.camera);
+
             self.cameraControls.update();
-            //self.renderLabels();
+
         }
 
         raf(renderFrame);
         setTimeout(function () {
             self.renderLabels();
+            self.renderSprites();
         }, 100);
         //self.renderLabels();
     };
@@ -338,10 +372,10 @@ window.DataDoo = (function () {
             type : "PERSPECTIVE",
             fov : 45,
             nearP : 0.1,
-            farP : 20000,
-            nearO : -50,
-            farO : 10000,
-            position : {x : 100, y : 100, z : 200}
+            farP : 10000,
+            nearO : 0.1,
+            farO : 500,
+            position : {x : 200, y : 200, z : 200}
         },
         axes : {
             x : {
@@ -357,13 +391,13 @@ window.DataDoo = (function () {
         lights : {
             directionalLight : {
                 color : 0xcccccc,
-                intensity : 1.475,
+                intensity : 0.475,
                 position : {x : 0, y : 100, z : 0}
             },
             hemiLight : {
                 skyColor : 0xffffff,
                 groundColor : 0xcccccc,
-                intensity : 1.25,
+                intensity : 0.65,
                 colorHSL : {h : 0.6, s : 1, l : 0.75},
                 groundColorHSL : {h : 0.1, s : 0.8, l : 0.7},
                 position : {x : 0, y : 200, z : 0}

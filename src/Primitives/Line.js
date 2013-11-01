@@ -1,6 +1,6 @@
-(function(DataDoo){
-    function Line(pointsArr, color, thickness, opacity){
-        if(pointsArr === undefined){
+(function (DataDoo) {
+    function Line(pointsArr, color, thickness, opacity) {
+        if (pointsArr === undefined) {
             throw new Error("Line : No vertices specified!");
         }
         DataDoo.Primitive.call(this);
@@ -15,7 +15,7 @@
         this.geometry.verticesNeedUpdate = true;
 
         this.geometry.vertices = pointsArr;
-        this.material = new THREE.LineBasicMaterial({ color : this.color, linewidth : this.thickness, opacity : this.opacity, transparent:true });
+        this.material = new THREE.LineBasicMaterial({ color : this.color, linewidth : this.thickness, opacity : this.opacity, transparent : true });
         this.mesh = new THREE.Line(this.geometry, this.material);
 
         return this;
@@ -26,9 +26,8 @@
 
     DataDoo.Line = Line;
 
-
-    function DashedLine(pointsArr, color, thickness, opacity, dashSize, gapSize){
-        if(pointsArr === undefined){
+    function DashedLine(pointsArr, color, thickness, opacity, dashSize, gapSize) {
+        if (pointsArr === undefined) {
             throw new Error("DashedLine : No vertices specified!");
         }
         DataDoo.Primitive.call(this);

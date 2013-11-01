@@ -17,7 +17,7 @@
         inner.style.top = '-.5em';
         inner.style.padding = "5px";
         inner.style.backgroundColor = "transparent";
-        inner.style.border = "1px dashed silver";
+        //inner.style.border = "1px dashed silver";
 
 
         element.style.display = 'none'; // start as hidden. made visible only when position is set
@@ -71,8 +71,8 @@
     };
 
     Label.prototype.update = function (pos, op, z, fsize, rotAngle) {
-        this.element.style.top = pos.top + "px";
-        this.element.style.left = pos.left + "px";
+        this.element.style.top = pos.top + 10 +  "px";
+        this.element.style.left = pos.left + 10 + "px";
         this.element.style.opacity = op;
         this.element.style.zIndex = z;
         this.element.style.fontSize = fsize;

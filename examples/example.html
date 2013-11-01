@@ -19,56 +19,37 @@
                 data: [
                     { Course : "A", Marks : 10, Student : "Chanakya" },
                     { Course : "B", Marks : 20, Student : "Sushant" },
-                    { Course : "C", Marks : -30, Student : "Azeem" },
+                    { Course : "C", Marks : 30, Student : "Azeem" },
                     { Course : "D", Marks : 40, Student : "George" }
                 ],
 
                 builder : function(rowData, rowIndex){
                     var g = new THREE.CubeGeometry(10,Math.abs(rowData.Marks),10);
-                    var cube = new THREE.Mesh(g, new THREE.MeshPhongMaterial( { color:0xffcc00, transparent:true, opacity:0.65, shininess:10,shading: THREE.FlatShading } ));
-                    var outline = new THREE.Mesh(g, new THREE.MeshBasicMaterial( { color:0x000000, transparent:true, opacity:0.65, side : THREE.BackSide} ));
-                    outline.scale.multiplyScalar(1.02);
-                    cube.add(outline);
+                    var cube = new THREE.Mesh(g, new THREE.MeshPhongMaterial( { color:0xffcc00, transparent:true, opacity:1, shininess:10,shading: THREE.FlatShading } ));
                     return {
                         shape : cube,
-                        text : rowData.Student + "'s marks in Course : " + rowData.Course
+                        //position : {y:rowData.Marks/2},
+                        text : rowData.Marks/*rowData.Student + "'s marks in Course : " + rowData.Course*/
                     }
                 }
             });
 
             var ds2 = new DataDoo.Dataset({
                 data: [
-                    { Course : "E", Marks : -50 , Student : "Aditya"},
+                    { Course : "E", Marks : 50 , Student : "Aditya"},
                     { Course : "F", Marks : 60 , Student : "Akash"},
                     { Course : "G", Marks : 70 , Student : "Patro"},
-                    { Course : "E1", Marks : -50 , Student : "Aditya"},
-                    { Course : "F2", Marks : 60 , Student : "Akash"},
-                    { Course : "G3", Marks : 70 , Student : "Patro"},
-                    { Course : "E4", Marks : -50 , Student : "Aditya"},
-                    { Course : "F5", Marks : 60 , Student : "Akash"},
-                    { Course : "G6", Marks : 70 , Student : "Patro"},
-                    { Course : "E7", Marks : -50 , Student : "Aditya"},
-                    { Course : "F8", Marks : 60 , Student : "Akash"},
-                    { Course : "G9", Marks : 70 , Student : "Patro"},
-                    { Course : "E11", Marks : -50 , Student : "Aditya"},
-                    { Course : "F12", Marks : 60 , Student : "Akash"},
-                    { Course : "G14", Marks : 70 , Student : "Patro"},
-                    { Course : "E16", Marks : -50 , Student : "Aditya"},
-                    { Course : "F146", Marks : 60 , Student : "Akash"},
-                    { Course : "G147", Marks : 70 , Student : "Patro"},
-                    { Course : "H136", Marks : 80 , Student : "Arefin"}
+                    { Course : "H", Marks : 80 , Student : "Arefin"}
                 ],
 
                 builder : function(rowData, rowIndex){
-                    //var g = new THREE.SphereGeometry(Math.abs(rowData.Marks/10), 100, 100);
-                    var g = new THREE.CubeGeometry(10,Math.abs(rowData.Marks),10);
-                    var sphere = new THREE.Mesh(g, new THREE.MeshPhongMaterial( { color:0xace123, transparent:true, opacity:0.85, shininess:50 } ));
-                    var outline = new THREE.Mesh(g, new THREE.MeshBasicMaterial( { color:0x000000, side : THREE.BackSide} ));
-                    outline.scale.multiplyScalar(1.02);
-                    //sphere.add(outline);
+                    var g = new THREE.SphereGeometry(Math.abs(rowData.Marks)/5, 200, 200);
+                    var sphere = new THREE.Mesh(g, new THREE.MeshPhongMaterial( { color:0xace123, transparent:true, opacity:1, shininess:0 } ));
+
                     return {
                         shape : sphere,
-                        text : rowData.Student + "'s marks in Course : " + rowData.Course
+                        //position : {y:rowData.Marks/2},
+                        text : rowData.Marks/*rowData.Student + "'s marks in Course : " + rowData.Course*/
                     }
                 }
             });

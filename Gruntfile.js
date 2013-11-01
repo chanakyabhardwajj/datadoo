@@ -13,14 +13,16 @@ module.exports = function (grunt) {
             datadoo : {
                 files : {
                     'build/datadoo.js' : [
-                        'src/Three.OrbitControls.js', //CameraControls have been moved out of the main threejs repo. Have to include it manually.
                         'src/DataDoo.js',
                         'src/Dataset.js',
                         'src/AxesHelper.js',
                         'src/GridHelper.js',
-                        /*'src/Primitives/Primitive.js',
-                        'src/Primitives/Line.js',*/
-                        'src/Label.js'
+                        'src/GuideHelper.js',
+                        'src/Primitive.js',
+                        'src/OrbitControls.js',
+                        'src/Label.js',
+                        'src/Sprite.js'
+                        /*'src/Primitives/Line.js',*/
                     ],
                     'build/vendor.js' : [
                         'src/vendor/three.js/index.js',

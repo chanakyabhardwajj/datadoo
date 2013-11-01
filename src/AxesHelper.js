@@ -82,30 +82,6 @@
         this.yObj = ddI.axesConf.y;
         this.zObj = ddI.axesConf.z;
 
-        //GRID
-        if (ddI.gridBoolean) {
-            //the following code-block is similar to THREE.GridHelper
-            //but manually coding it, to keep the customising options open
-            var size = (Math.max(this.xAxis.colUniqs.length, this.zAxis.colUniqs.length) + 2) * ddI.gridStep, step = ddI.gridStep;
-
-            var geometry = new THREE.Geometry();
-            var material = new THREE.LineBasicMaterial({ color : /*0xBED6E5*/ ddI.theme[2], opacity : 1, linewidth : 1 });
-
-            for (i = -size; i <= size; i += step) {
-
-                geometry.vertices.push(new THREE.Vector3(-size, 0, i));
-                geometry.vertices.push(new THREE.Vector3(size, 0, i));
-
-                geometry.vertices.push(new THREE.Vector3(i, 0, -size));
-                geometry.vertices.push(new THREE.Vector3(i, 0, size));
-
-            }
-
-            ddI.grid = new THREE.Line(geometry, material, THREE.LinePieces);
-            ddI.grid.position.y = -0.1;
-            ddI.scene.add(ddI.grid);
-        }
-
         var notchLabel, notchShape;
         var coneGeometry = new THREE.CylinderGeometry( 0, ddI.gridStep/8, ddI.gridStep/5, 25, 5 );
         var xcone, xline, xlineGeometry = new THREE.Geometry();
@@ -148,7 +124,9 @@
         xlineGeometry.vertices.push(this.xAxis.from);
         xlineGeometry.vertices.push(this.xAxis.to);
         xlineGeometry.computeLineDistances();
-        label = new DataDoo.Label(this.xAxis.colName, new THREE.Vector3(this.xAxis.length + Math.max(this.xAxis.length / 10, 10), 1, 0), ddI);
+        //label = new DataDoo.Label(this.xAxis.colName, new THREE.Vector3(this.xAxis.length + Math.max(this.xAxis.length / 10, 10), 1, 0), ddI);
+        label = new DataDoo.Sprite(this.xAxis.colName, {}, ddI);
+        label.position = new THREE.Vector3(this.xAxis.to.x + ddI.gridStep/2, this.xAxis.to.y+ ddI.gridStep/4 , this.xAxis.to.z+ ddI.gridStep/4);
         xline = new THREE.Line(xlineGeometry, new THREE.LineDashedMaterial({ dashSize : ddI.gridStep / 4, linewidth : 2, color : /*this.axesConf.x.color*/ ddI.theme[0] }), THREE.LinePieces);
         xline.matrixAutoUpdate = false;
 
@@ -162,7 +140,9 @@
         ylineGeometry.vertices.push(this.yAxis.from);
         ylineGeometry.vertices.push(this.yAxis.to);
         ylineGeometry.computeLineDistances();
-        label = new DataDoo.Label(this.yAxis.colName, new THREE.Vector3(1, this.yAxis.length + Math.max(this.yAxis.length / 10, 10), 0), ddI);
+        //label = new DataDoo.Label(this.yAxis.colName, new THREE.Vector3(1, this.yAxis.length + Math.max(this.yAxis.length / 10, 10), 0), ddI);
+        label = new DataDoo.Sprite(this.yAxis.colName, {}, ddI);
+        label.position = new THREE.Vector3(this.yAxis.to.x + ddI.gridStep/4, this.yAxis.to.y + ddI.gridStep/2, this.yAxis.to.z+ ddI.gridStep/4);
         yline = new THREE.Line(ylineGeometry, new THREE.LineDashedMaterial({ dashSize : ddI.gridStep / 4, linewidth : 2, color : /*this.axesConf.y.color*/ ddI.theme[0] }), THREE.LinePieces);
         yline.matrixAutoUpdate = false;
 
@@ -176,7 +156,9 @@
         zlineGeometry.vertices.push(this.zAxis.from);
         zlineGeometry.vertices.push(this.zAxis.to);
         zlineGeometry.computeLineDistances();
-        label = new DataDoo.Label(this.zAxis.colName, new THREE.Vector3(0, 1, this.zAxis.length + Math.max(this.zAxis.length / 10, 10)), ddI);
+        //label = new DataDoo.Label(this.zAxis.colName, new THREE.Vector3(0, 1, this.zAxis.length + Math.max(this.zAxis.length / 10, 10)), ddI);
+        label = new DataDoo.Sprite(this.zAxis.colName, {}, ddI);
+        label.position = new THREE.Vector3(this.zAxis.to.x + ddI.gridStep/4, this.zAxis.to.y+ ddI.gridStep/4 , this.zAxis.to.z+ ddI.gridStep/2);
         zline = new THREE.Line(zlineGeometry, new THREE.LineDashedMaterial({ dashSize : ddI.gridStep / 4, linewidth : 2, color : /*this.axesConf.z.color*/ ddI.theme[0] }), THREE.LinePieces);
         zline.matrixAutoUpdate = false;
 
@@ -187,9 +169,6 @@
         this.zAxis.add(label);
         this.zAxis.add(zline);
 
-
-
-
         var notchGeom = new THREE.CubeGeometry(ddI.gridStep/100, ddI.gridStep/10, ddI.gridStep/100);
         var notchMat = new THREE.MeshBasicMaterial({color : /*this.axesConf.x.color*/ ddI.theme[1], opacity : 1});
 
@@ -198,12 +177,16 @@
 
             if (this.xAxis.colType === "number") {
                 notchShape.position.set((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * i), this.xAxis.from.y, this.xAxis.from.z);
-                notchLabel = new DataDoo.Label((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * i), new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z), ddI);
+                //notchLabel = new DataDoo.Label((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * i), new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z), ddI);
+                notchLabel = new DataDoo.Sprite((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * i), {}, ddI);
+                notchLabel.position = new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z);
             }
             else {
                 this.xAxis.positionHash[this.xAxis.colUniqs[i]] = i+1;
                 notchShape.position.set((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * (i + 1)), this.xAxis.from.y, this.xAxis.from.z);
-                notchLabel = new DataDoo.Label(this.xAxis.colUniqs[i], new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z), ddI);
+                //notchLabel = new DataDoo.Label(this.xAxis.colUniqs[i], new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z), ddI);
+                notchLabel = new DataDoo.Sprite(this.xAxis.colUniqs[i], {}, ddI);
+                notchLabel.position = new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z);
             }
             this.xAxis.add(notchShape);
             this.xAxis.add(notchLabel);
@@ -215,12 +198,17 @@
             notchShape = new THREE.Mesh(notchGeom, notchMat);
             if (this.yAxis.colType === "number") {
                 notchShape.position.set(this.yAxis.from.x, (this.yAxis.from.y - (this.yAxis.from.y % ddI.gridStep)) + (ddI.gridStep * i), this.yAxis.from.z);
-                notchLabel = new DataDoo.Label((this.yAxis.from.y - (this.yAxis.from.y % ddI.gridStep)) + (ddI.gridStep * i) , new THREE.Vector3(notchShape.position.x  + ddI.gridStep/5, notchShape.position.y, notchShape.position.z), ddI);
+                //notchLabel = new DataDoo.Label((this.yAxis.from.y - (this.yAxis.from.y % ddI.gridStep)) + (ddI.gridStep * i) , new THREE.Vector3(notchShape.position.x  + ddI.gridStep/5, notchShape.position.y, notchShape.position.z), ddI);
+                notchLabel = new DataDoo.Sprite((this.yAxis.from.y - (this.yAxis.from.y % ddI.gridStep)) + (ddI.gridStep * i) , {}, ddI);
+                notchLabel.position = new THREE.Vector3(notchShape.position.x  + ddI.gridStep/5, notchShape.position.y, notchShape.position.z);
             }
             else {
                 this.yAxis.positionHash[this.yAxis.colUniqs[i]] = i+1;
                 notchShape.position.set(this.yAxis.from.x, (this.yAxis.from.y - (this.yAxis.from.y % ddI.gridStep)) + (ddI.gridStep * (i + 1)), this.yAxis.from.z);
-                notchLabel = new DataDoo.Label(this.yAxis.colUniqs[i] , new THREE.Vector3(notchShape.position.x  + ddI.gridStep/5, notchShape.position.y, notchShape.position.z), ddI);
+                //notchLabel = new DataDoo.Label(this.yAxis.colUniqs[i] , new THREE.Vector3(notchShape.position.x  + ddI.gridStep/5, notchShape.position.y, notchShape.position.z), ddI);
+
+                notchLabel = new DataDoo.Sprite(this.yAxis.colUniqs[i] , {}, ddI);
+                notchLabel.position = new THREE.Vector3(notchShape.position.x  + ddI.gridStep/5, notchShape.position.y, notchShape.position.z);
             }
             notchShape.rotateZ(Math.PI/2);
             this.yAxis.add(notchShape);
@@ -233,12 +221,18 @@
             notchShape = new THREE.Mesh(notchGeom, notchMat);
             if (this.zAxis.colType === "number") {
                 notchShape.position.set(this.zAxis.from.x, this.zAxis.from.y, (this.zAxis.from.z - (this.zAxis.from.z % ddI.gridStep)) + (ddI.gridStep * i));
-                notchLabel = new DataDoo.Label((this.zAxis.from.z - (this.zAxis.from.z % ddI.gridStep)) + (ddI.gridStep * i), new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z), ddI);
+                //notchLabel = new DataDoo.Label((this.zAxis.from.z - (this.zAxis.from.z % ddI.gridStep)) + (ddI.gridStep * i), new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z), ddI);
+
+                notchLabel = new DataDoo.Sprite((this.zAxis.from.z - (this.zAxis.from.z % ddI.gridStep)) + (ddI.gridStep * i) , {}, ddI);
+                notchLabel.position = new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z);
             }
             else {
                 this.zAxis.positionHash[this.zAxis.colUniqs[i]] = i+1;
                 notchShape.position.set(this.zAxis.from.x, this.zAxis.from.y, (this.zAxis.from.z - (this.zAxis.from.z % ddI.gridStep)) + (ddI.gridStep * (i + 1)));
-                notchLabel = new DataDoo.Label(this.zAxis.colUniqs[i], new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z), ddI);
+                //notchLabel = new DataDoo.Label(this.zAxis.colUniqs[i], new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z), ddI);
+
+                notchLabel = new DataDoo.Sprite(this.zAxis.colUniqs[i] , {}, ddI);
+                notchLabel.position = new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z);
             }
             this.zAxis.add(notchShape);
             this.zAxis.add(notchLabel);
@@ -259,4 +253,5 @@
     AxesHelper.prototype.updateGeometry = function () {
 
     };
+
 })(window.DataDoo);
