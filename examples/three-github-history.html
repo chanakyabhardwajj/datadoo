@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>DataDoo : Three.js activity on Github</title>
+        <style>
+            body {
+                background: #fff;
+                padding: 0;
+                margin: 0;
+                overflow: hidden;
+                font-family: "Lucida Console", "Lucida Sans Typewriter", Monaco, "Bitstream Vera Sans Mono", monospace;
+                text-align: center;
+            }
+
+            .datadoo-label {
+                /*background: rgba(220, 220, 220, 0.5);*/
+                background: #ffcc00;
+                font-size: 0.7em;
+                -webkit-user-select: none;  
+                -moz-user-select: none;    
+                -ms-user-select: none;      
+                user-select: none;
+                border:1px solid silver;
+
+            }
+
+            .datadoo-wrap {
+
+            }
+        </style>
+    </head>
+    <body>
+        <script src="http://localhost:35729/livereload.js"></script>
+        <canvas id="canvas"></canvas>
+        <script src="../build/vendor.js"></script>
+        <script src="../build/datadoo.js"></script>
+
+        <script type="text/javascript">
+            var dd = new DataDoo({
+                canvas: document.getElementById("canvas"),
+                camera: {
+                    type: DataDoo.PERSPECTIVE,
+                    //type: DataDoo.ORTHOGRAPHIC,
+                    position : {x : 200, y : 150, z : 200},
+                    fov : 70
+                },
+                axes: {
+                    x: {
+                        /*type: DataDoo.COLUMNVALUE,
+                        column : ["dsMiso.week", "dsThree.week"],*/
+                        label : "week#",
+                        length : 500,
+                        withCone: false,
+                        notches : true,
+                        notchSpacing : 50,
+                        sort: true
+                    },
+
+                    y: {
+                        /*type: DataDoo.COLUMNVALUE,
+                        column : ["dsMiso.commitCount", "dsThree.commitCount"],*/
+                        label : "count#",
+                        withCone: true,
+                        length : 500,
+                        notches : true,
+                        notchSpacing : 25,
+                        sort: true
+                    },
+
+                    z: {
+                        type: DataDoo.COLUMNVALUE,
+                        column : ["dsMiso.dayName", "dsThree.dayName"],
+                        label : "dayname",
+                        length : 350,
+                        withCone: true,
+                        notches : true,
+                        notchSpacing : 50,
+                        sort: true,
+                        sortFunc: DataDoo.Sort.Week
+                    }
+                }
+            });
+
+            var GH = {};
+            GH.CommitsParser = function (options) {};
+            _.extend(GH.CommitsParser.prototype, Miso.Dataset.Parsers.prototype, {
+                parse : function (data) {
+                    var columns = ['week', 'dayName', 'dayNumber', 'commitCount'];
+                    var dataColumns = { week : [], dayName : [], dayNumber : [], commitCount : [] };
+
+                    _.each(data, function (c) {
+                        var d = moment(c.commit.committer.date);
+                        var week = d.week();
+                        var dayName = d.format("dddd");
+                        var dayNumber = d.dayOfYear();
+
+                        //Find if an entry for this commit exists already by checking the dayNumber array
+                        var indx = _.indexOf(dataColumns.dayNumber, dayNumber);
+
+                        if(indx!==-1){
+                            dataColumns.commitCount[indx]++;
+                        }
+                        else{
+                            //dataColumns.week.push(week);
+                            dataColumns.week.push(parseInt(Math.random()*10)+1);
+                            dataColumns.dayName.push(dayName);
+                            dataColumns.dayNumber.push(dayNumber);
+                            dataColumns.commitCount.push(1);
+                        }
+                    });
+
+                    return {
+                        columns : columns,
+                        data : dataColumns
+                    };
+                }
+            });
+
+            var misoConfig = {
+                url : 'https://api.github.com/repos/misoproject/dataset/commits?per_page=100&callback=',
+                jsonp : true,
+                extract : function(response) {
+                    return response.data;
+                },
+                parser : GH.CommitsParser,
+                sync:true
+            };
+
+            var threeConfig = {
+                url : 'https://api.github.com/repos/mrdoob/three.js/commits?per_page=100&callback=',
+                jsonp : true,
+                extract : function(response) {
+                    return response.data;
+                },
+                parser : GH.CommitsParser,
+                sync:true
+            };
+
+            var dsMiso = new DataDoo.DataSet(dd, "dsMiso", misoConfig);
+            var dsThree = new DataDoo.DataSet(dd, "dsThree", threeConfig);
+
+            var nodeFnMiso = function($) {
+                //this.sphere = this.addSphere(this.data.commitCount, 0xffaa00, 0.7);
+                this.cube = this.addCube(25, this.data.commitCount * 25, 25, 0xffaa00, 1, false)
+                this.label = this.addLabel(this.data.commitCount);
+                this.position.setOnAxes(this.data.week, this.data.commitCount/2, this.data.dayName);
+            };
+
+            var nodeFnThree = function($) {
+                //this.sphere = this.addSphere(this.data.commitCount, 0xff0000, 0.6);
+                this.cube = this.addCube(25, this.data.commitCount * 25, 25, 0xfc1234, 1, false)
+                this.label = this.addLabel(this.data.commitCount);
+                //this.label.position.setRelative(this.sphere, 0, 100, 0);
+                this.position.setOnAxes(this.data.week, this.data.commitCount/2, this.data.dayName);
+            };
+
+            var relFn = function($) {
+                var r = this.addRelation();
+                r.addDashedLine($.ngMiso, "0xffcc00");
+                r.addSpline($.ngMiso, 100, "0xffcc00");
+                //r.addMultiline($.ngThree, "0xfc1234");
+            };
+
+            var ngMiso = new DataDoo.NodeGenerator(dd, "ngMiso", dsMiso, nodeFnMiso);
+            var ngThree = new DataDoo.NodeGenerator(dd, "ngThree", dsThree, nodeFnThree);
+
+            var rg = new DataDoo.RelationGenerator(dd, "rg", [ngMiso, ngThree], relFn);
+
+            _.when(dsThree.fetch(),dsMiso.fetch() ).then(function() {
+                dd.startVis(rg)
+            });
+
+        </script>
+    </body>
+</html>

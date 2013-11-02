@@ -1,0 +1,87 @@
+<html>
+    <head>
+        <style>
+            body {
+                background:#fff;
+                margin:0;
+                overflow:hidden;
+                font-family: "Lucida Console", "Lucida Sans Typewriter", Monaco, "Bitstream Vera Sans Mono", monospace;
+                text-align:center;
+            }
+        </style>
+    </head>
+    <body>
+        <script src="../build/vendor.js"></script>
+        <script src="../build/datadoo.js"></script>
+        <script src="http://threejs.org/examples/fonts/helvetiker_bold.typeface.js"></script>
+        <script type="text/javascript">
+
+            var ds = new DataDoo.Dataset({
+                data: [
+                    { Course : "A", Marks : 15, Student : "Chanakya" },
+                    { Course : "B", Marks : 25, Student : "Sushant" },
+                    { Course : "C", Marks : 35, Student : "Azeem" },
+                    { Course : "D", Marks : 45, Student : "George" }
+                ],
+
+                builder : function(rowData, rowIndex){
+                    var g = new THREE.CubeGeometry(10,Math.abs(rowData.Marks),10);
+                    var cube = new THREE.Mesh(g, new THREE.MeshPhongMaterial( { color:0xffcc00, transparent:true, opacity:1, shininess:10,shading: THREE.FlatShading } ));
+                    return {
+                        shape : cube,
+                        //position : {y:rowData.Marks/2},
+                        text : rowData.Marks/*rowData.Student + "'s marks in Course : " + rowData.Course*/
+                    }
+                }
+            });
+
+            var ds2 = new DataDoo.Dataset({
+                data: [
+                    { Course : "E", Marks : 55 , Student : "Aditya"},
+                    { Course : "F", Marks : 65 , Student : "Akash"},
+                    { Course : "G", Marks : 75 , Student : "Patro"},
+                    { Course : "H", Marks : 85 , Student : "Arefin"}
+                ],
+
+                builder : function(rowData, rowIndex){
+                    var g = new THREE.SphereGeometry(Math.abs(rowData.Marks)/5, 200, 200);
+                    var sphere = new THREE.Mesh(g, new THREE.MeshPhongMaterial( { color:0xace123, transparent:true, opacity:1, shininess:0 } ));
+
+                    return {
+                        shape : sphere,
+                        //position : {y:rowData.Marks/2},
+                        text : rowData.Marks/*rowData.Student + "'s marks in Course : " + rowData.Course*/
+                    }
+                }
+            });
+
+            var d = new DataDoo([ds,ds2]/*, {theme:Math.floor(Math.random()*50)}*/);
+            d.run();
+
+            /*var p = new THREE.Mesh(new THREE.CubeGeometry(10,10,10), new THREE.MeshBasicMaterial({color:0xff0000}));
+            var p2 = new THREE.Mesh(new THREE.CubeGeometry(10,10,10), new THREE.MeshBasicMaterial({color:0x00ff00}));
+            p.position.x=-40; p2.position.x=40;
+            d.scene.add(p); d.scene.add(p2);
+
+            var spline = new THREE.Spline( [p.position, p2.position, new THREE.Vector3(12,-35,70)] );
+            var geometry = new THREE.Geometry();
+            for (i = 0; i < 14; i++) {
+                index = i / ( 14 );
+                position = spline.getPoint(index);
+                geometry.vertices[ i ] = new THREE.Vector3(position.x, position.y, position.z);
+            };
+            geometry.dynamic = true;
+            geometry.verticesNeedUpdate = true;
+            d.scene.add(new THREE.Line(geometry, new THREE.LineBasicMaterial({color:0xffcc11})));
+
+            setInterval(function(){
+                geometry.vertices[1].x=100*Math.random();
+                geometry.vertices[9].y=100*Math.random();
+                geometry.vertices[3].z=100*Math.random();
+
+                geometry.verticesNeedUpdate = true;
+            },800);*/
+
+        </script>
+    </body>
+</html>

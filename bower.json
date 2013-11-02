@@ -1,0 +1,19 @@
+{
+    "name" : "datadoo",
+    "version" : "1.0.0",
+    "ignore" : [
+        "**/.*",
+        "node_modules",
+        "components",
+        "bower_components",
+        "test",
+        "tests"
+    ],
+    "dependencies" : {
+        "jquery" : "git://github.com/components/jquery.git",
+        "underscore" : "git://github.com/jashkenas/underscore.git",
+        "miso.dataset" : "0.4.0",
+        "three.js" : "https://raw.github.com/mrdoob/three.js/master/build/three.js",
+        "momentjs" : "git://github.com/moment/moment"
+    }
+}
