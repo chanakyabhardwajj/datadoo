@@ -1,0 +1,14 @@
+{
+  "name": "miso.dataset",
+  "homepage": "https://github.com/misoproject/dataset",
+  "version": "0.4.0",
+  "_release": "0.4.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.4.0",
+    "commit": "5d38ef49ce4f67d3ad26f6997bf7003fa9f5c6ca"
+  },
+  "_source": "git://github.com/misoproject/dataset.git",
+  "_target": "0.4.0",
+  "_originalSource": "miso.dataset"
+}

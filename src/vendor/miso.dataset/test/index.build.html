@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>Dataset Test Suite</title>
+        <link rel="stylesheet" href="vendor/qunit.css" type="text/css" media="screen"/>
+
+        <!-- Dataset source files -->
+        <script type='text/javascript'>
+            window.Miso = window.Miso || (window.Miso = {});
+            window.Miso.Tester = {
+                foo : function () {
+                    return 44;
+                },
+            };
+        </script>
+        <script src="../dist/miso.ds.deps.0.3.0.js"></script>
+
+        <!-- Vendor deps, non-lib -->
+        <script src="vendor/jquery.js"></script>
+        <script src="vendor/qunit.js"></script>
+        <script src="vendor/jslitmus.js"></script>
+
+        <!-- Load data sets -->
+        <script src="data/short_obj.js"></script>
+        <script src="data/alphabet_obj.js"></script>
+        <script src="data/alphabet_strict.js"></script>
+        <script src="data/alphabet_csv.js"></script>
+        <script src="data/alphabet_customseparator.js"></script>
+        <script src="data/google_spreadsheet_strict.js"></script>
+
+        <script src="unit/helpers.js"></script>
+
+        <!-- load test modules -->
+        <script src="unit/events.js"></script>
+        <script src="unit/types.js"></script>
+        <script src="unit/core.js"></script>
+        <script src="unit/events.js"></script>
+        <script src="unit/dataset.js"></script>
+        <script src="unit/views.js"></script>
+        <script src="unit/importers.js"></script>
+        <script src="unit/products.js"></script>
+        <script src="unit/speed.js"></script>
+        <script src="unit/derived.js"></script>
+
+
+    </head>
+    <body>
+        <div class="dataset-test">
+            <h1 id="qunit-header">Dataset Test Suite</h1>
+
+            <h2 id="qunit-banner"></h2>
+
+            <h2 id="qunit-userAgent"></h2>
+            <ol id="qunit-tests"></ol>
+            <br/>
+
+            <h1 class="qunit-header">Speed Suite</h1>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>Dataset Test Suite</title>
+        <link rel="stylesheet" href="vendor/qunit.css" type="text/css" media="screen"/>
+
+        <!-- Dataset source files -->
+        <script src="../lib/json2.js"></script>
+        <script src="../lib/lodash.js"></script>
+        <script src="../lib/underscore.math.js"></script>
+        <script src="../lib/underscore.deferred.js"></script>
+        <script src="../lib/moment.js"></script>
+        <script src="../lib/miso.events.js"></script>
+        <!-- test script for checking the namespace isn't overwritten -->
+
+        <script type='text/javascript'>
+            window.Miso = window.Miso || (window.Miso = {});
+            window.Miso.Tester = {
+                foo : function () {
+                    return 44;
+                },
+            };
+        </script>
+        <script src="../src/constructor.js"></script>
+        <script src="../src/types.js"></script>
+        <script src="../src/sync.js"></script>
+        <script src="../src/builder.js"></script>
+        <script src="../src/view.js"></script>
+        <script src="../src/product.js"></script>
+        <script src="../src/dataset.js"></script>
+        <script src="../src/importer.js"></script>
+        <script src="../src/importers/local.js"></script>
+        <script src="../src/importers/remote.js"></script>
+        <script src="../src/importers/polling.js"></script>
+        <script src="../src/importers/google_spreadsheet.js"></script>
+        <script src="../src/parser.js"></script>
+        <script src="../src/parsers/strict.js"></script>
+        <script src="../src/parsers/object.js"></script>
+        <script src="../src/parsers/google_spreadsheet.js"></script>
+        <script src="../src/parsers/delimited.js"></script>
+        <script src="../src/derived.js"></script>
+
+        <!-- Load data sets -->
+        <script src="data/short_obj.js"></script>
+        <script src="data/alphabet_obj.js"></script>
+        <script src="data/alphabet_strict.js"></script>
+        <script src="data/alphabet_csv.js"></script>
+        <script src="data/alphabet_customseparator.js"></script>
+        <script src="data/google_spreadsheet_strict.js"></script>
+
+        <!-- Vendor deps, non-lib -->
+        <script src="vendor/jquery.js"></script>
+        <script src="vendor/qunit.js"></script>
+        <script src="vendor/jslitmus.js"></script>
+
+        <script src="unit/helpers.js"></script>
+
+
+    </head>
+    <body>
+
+        <div class="dataset-test">
+            <h1 id="qunit-header">Dataset Test Suite</h1>
+
+            <h2 id="qunit-banner"></h2>
+
+            <h2 id="qunit-userAgent"></h2>
+            <ol id="qunit-tests"></ol>
+            <br/>
+
+            <h1 class="qunit-header">Speed Suite</h1>
+        </div>
+
+        <!-- load test modules -->
+        <script src="unit/events.js"></script>
+        <script src="unit/types.js"></script>
+        <script src="unit/core.js"></script>
+        <script src="unit/dataset.js"></script>
+        <script src="unit/views.js"></script>
+        <script src="unit/importers.js"></script>
+        <script src="unit/products.js"></script>
+        <script src="unit/speed.js"></script>
+        <script src="unit/derived.js"></script>
+        <script src="unit/bugs.js"></script>
+    </body>
+</html>
