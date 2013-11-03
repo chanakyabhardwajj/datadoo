@@ -78,7 +78,11 @@ window.DataDoo = (function () {
             antialias : true,
             alpha : false,
             clearAlpha : 1,
-            preserveDrawingBuffer : true
+            gammaInput : true,
+            gammaOutput : true,
+            physicallyBasedShading : true,
+            shadowMapEnabled : true,
+            shadowMapSoft : true
         });
         //this.renderer.sortObjects = false;
         this.renderer.autoClear = false;
@@ -97,7 +101,6 @@ window.DataDoo = (function () {
         this._labelsDom.className = "labelDom";
         document.body.appendChild(this._labelsDom);
         this._labels = [];
-        this._3Dlabels = [];
         this._sprites = [];
         this._nodes = [];
         this._intersectables = [];
@@ -185,27 +188,23 @@ window.DataDoo = (function () {
     };
 
     DataDoo.prototype.render3DLabels = function () {
-        var self = this, dist;
+        /*var self = this, dist, sc;
+        dist = self.camera.position.distanceTo(self.cameraControls.target);
+        sc = Math.max(0.25, Math.min(dist/self.goldenDim, 1.25));
         _.each(self._3Dlabels, function (label) {
             label.lookAt(self.camera.position);
-
-            //dist = label.position.distanceTo(self.camera.position);
-            //var sc = dist > self.gridStep * 1000 ? 0 : dist/(3*self.goldenDim);
-            //var sc = 0 + (0.01 * dist/self.gridStep);
-
-            //label.scale.multiplyScalar( Math.max(sc, 0.8));
-            //console.log(sc);
-        });
+            label.scale.set(sc,sc,sc);
+        });*/
     };
 
     DataDoo.prototype.renderSprites = function () {
-        /*var self = this, dist;
+        var self = this, dist;
         _.each(self._sprites, function (sprite) {
             dist = sprite.position.distanceTo(self.camera.position);
             var sc = 300/dist;
             sprite.scale.x = 120 + self.gridStep * (sc);
             sprite.scale.y = 50 + self.gridStep * (sc);
-        });*/
+        });
     };
 
     DataDoo.prototype.renderLabels = function () {
@@ -218,37 +217,32 @@ window.DataDoo = (function () {
         originVector.y = -(originVector.y - 1) / 2 * h;
 
         _.each(self._labels, function (label) {
+            vector.getPositionFromMatrix(label.matrixWorld);
+            var vector2 = self.projector.projectVector(vector.clone(), self.camera);
+            vector2.x = (vector2.x + 1) / 2 * w;
+            vector2.y = -(vector2.y - 1) / 2 * h;
 
-                vector.getPositionFromMatrix(label.matrixWorld);
-                var vector2 = self.projector.projectVector(vector.clone(), self.camera);
-                vector2.x = (vector2.x + 1) / 2 * w;
-                vector2.y = -(vector2.y - 1) / 2 * h;
+            dist = vector.distanceTo(self.camera.position);
+            zInd = Math.floor(10000 - dist);
+            rotAngle = Math.atan((vector2.y - originVector.y) / (vector2.x - originVector.x)) * 180 / Math.PI;
 
-                dist = vector.distanceTo(self.camera.position);
-                zInd = Math.floor(10000 - dist);
-                rotAngle = Math.atan((vector2.y - originVector.y) / (vector2.x - originVector.x)) * 180 / Math.PI;
+            label._posX = vector2.x;
+            label._posY = vector2.y;
+            label._x1 = label._posX;
+            label._y1 = label._posY;
+            label._x2 = $(label.element).width() + label._x1;
+            label._y2 = $(label.element).height() + label._y1;
+            label._distance = dist;
+            label._zIndex = zInd;
+            label.visible = true;
 
-                label._posX = vector2.x;
-                label._posY = vector2.y;
-                label._x1 = label._posX;
-                label._y1 = label._posY;
-                label._x2 = $(label.element).width() + label._x1;
-                label._y2 = $(label.element).height() + label._y1;
-                label._distance = dist;
-                label._zIndex = zInd;
-                label.visible = true;
-
-                if (!self.frustum.containsPoint(vector)) {
-                    label.hide();
-                }
-
-
+            if (!self.frustum.containsPoint(vector)) {
+                label.hide();
+            }
         });
 
         self._labels.sort(function (label1, label2) {
-
             return label2._zIndex - label1._zIndex;
-
         });
 
         _.each(self._labels, function (label, i) {
@@ -269,10 +263,10 @@ window.DataDoo = (function () {
                 op = this.goldenDim / dist;
                 fsize = Math.max(Math.floor(25 - 8 * dist / (this.goldenDim * 0.5)), 11) + "px";
 
-                    label.update({top : label._posY, left : label._posX}, 1, zInd, fsize, rotAngle);
-                    label.show();
-
+                label.update({top : label._posY, left : label._posX}, 1, zInd, fsize, rotAngle);
+                label.show();
             }
+
         }, self);
     };
 
@@ -292,6 +286,7 @@ window.DataDoo = (function () {
                 var posArr = [];
 
                 for (var k = 0, l = colNames.length; k < l; k++) {
+
                     if (ds.column(colNames[k]).type === "number") {
                         posArr.push(row[colNames[k]]);
                     }
@@ -371,7 +366,6 @@ window.DataDoo = (function () {
         raf(renderFrame);
         setTimeout(function () {
             self.renderLabels();
-            self.render3DLabels();
             self.renderSprites();
         }, 100);
         //self.renderLabels();
@@ -602,10 +596,10 @@ window.DataDoo = (function () {
     DataDoo.Dataset = Dataset;
 
 })(window.DataDoo);
-(function(DataDoo) {
+(function (DataDoo) {
     function AxesHelper(ddI) {
         THREE.Object3D.call(this, ddI);
-
+        this.ddI = ddI;
         this.datasets = ddI.datasets;
 
         //First of all, we need to make sure that all the datasets are compatible
@@ -642,6 +636,7 @@ window.DataDoo = (function () {
         this.xAxis.colType = "number";
         this.xAxis.colUniqs = [];
         this.xAxis.positionHash = {};
+        this.xAxis.notchLabelsArray = [];
 
         for (x = 0, y = this.datasets.length; x < y; x++) {
             tempArr.push(this.datasets[x].column(colNames[0]).data);
@@ -657,6 +652,7 @@ window.DataDoo = (function () {
         this.yAxis.colType = "number";
         this.yAxis.colUniqs = [];
         this.yAxis.positionHash = {};
+        this.yAxis.notchLabelsArray = [];
 
         for (x = 0, y = this.datasets.length; x < y; x++) {
             tempArr.push(this.datasets[x].column(colNames[1]).data);
@@ -672,6 +668,7 @@ window.DataDoo = (function () {
         this.zAxis.colType = "number";
         this.zAxis.colUniqs = [];
         this.zAxis.positionHash = {};
+        this.zAxis.notchLabelsArray = [];
 
         for (x = 0, y = this.datasets.length; x < y; x++) {
             tempArr.push(this.datasets[x].column(colNames[2]).data);
@@ -687,12 +684,12 @@ window.DataDoo = (function () {
         this.zObj = ddI.axesConf.z;
 
         var notchLabel, notchShape;
-        var coneGeometry = new THREE.CylinderGeometry( 0, ddI.gridStep/8, ddI.gridStep/5, 25, 5 );
+        var coneGeometry = new THREE.CylinderGeometry(0, ddI.gridStep / 8, ddI.gridStep / 5, 25, 5);
         var xcone, xline, xlineGeometry = new THREE.Geometry();
         var ycone, yline, ylineGeometry = new THREE.Geometry();
         var zcone, zline, zlineGeometry = new THREE.Geometry();
-        var labelGeom, labelMaterial= new THREE.MeshBasicMaterial( { color: ddI.theme[0], overdraw: true } );
-        var labelConfig = {size: 2.5, height: 0.1, curveSegments: 10, font: "helvetiker"};
+        var labelGeom, labelMaterial = new THREE.MeshBasicMaterial({ color : 0x666666, overdraw : true });
+        var labelConfig = {size : 2.5, height : 0.1, curveSegments : 10, font : "helvetiker"};
 
         if (this.xAxis.colType === "number") {
             this.xAxis.length = Math.max(_.max(this.xAxis.colUniqs), 0) - Math.min(_.min(this.xAxis.colUniqs), 0) + ddI.gridStep;
@@ -731,27 +728,18 @@ window.DataDoo = (function () {
         xlineGeometry.vertices.push(this.xAxis.to);
         xlineGeometry.computeLineDistances();
 
-
-        //label = new DataDoo.Label(this.xAxis.colName, new THREE.Vector3(this.xAxis.length + Math.max(this.xAxis.length / 10, 10), 1, 0), ddI);
-        //label = new DataDoo.Sprite(this.xAxis.colName, {}, ddI);
-        //label.position = new THREE.Vector3(this.xAxis.to.x + ddI.gridStep/2, this.xAxis.to.y+ ddI.gridStep/4 , this.xAxis.to.z+ ddI.gridStep/4);
-
-
-
-
-        //labelGeom.computeBoundingBox();
-        //var centerOffset = -0.5 * ( labelGeom.boundingBox.max.x - labelGeom.boundingBox.min.x );
-
         labelGeom = new THREE.TextGeometry(this.xAxis.colName, labelConfig);
-        label = new THREE.Mesh( labelGeom, labelMaterial );
-        label.position = new THREE.Vector3(this.xAxis.to.x + ddI.gridStep/2, this.xAxis.to.y+ ddI.gridStep/4 , this.xAxis.to.z+ ddI.gridStep/4);
+        label = new THREE.Mesh(labelGeom, labelMaterial);
+        label.position = new THREE.Vector3(this.xAxis.to.x + ddI.gridStep / 2, this.xAxis.to.y, this.xAxis.to.z + ddI.gridStep / 2);
+        label.rotateX(-Math.PI / 2);
+        label.rotateZ(Math.PI / 2);
         ddI._3Dlabels.push(label);
 
         xline = new THREE.Line(xlineGeometry, new THREE.LineDashedMaterial({ dashSize : ddI.gridStep / 4, linewidth : 2, color : /*this.axesConf.x.color*/ ddI.theme[0] }), THREE.LinePieces);
         xline.matrixAutoUpdate = false;
 
-        xcone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: ddI.theme[0] } ) );
-        xcone.rotateZ(-Math.PI/2);
+        xcone = new THREE.Mesh(coneGeometry, new THREE.MeshBasicMaterial({ color : ddI.theme[0] }));
+        xcone.rotateZ(-Math.PI / 2);
         xcone.position = this.xAxis.to;
         this.xAxis.add(xcone);
         this.xAxis.add(label);
@@ -760,18 +748,16 @@ window.DataDoo = (function () {
         ylineGeometry.vertices.push(this.yAxis.from);
         ylineGeometry.vertices.push(this.yAxis.to);
         ylineGeometry.computeLineDistances();
-        //label = new DataDoo.Label(this.yAxis.colName, new THREE.Vector3(1, this.yAxis.length + Math.max(this.yAxis.length / 10, 10), 0), ddI);
-        //label = new DataDoo.Sprite(this.yAxis.colName, {}, ddI);
 
         labelGeom = new THREE.TextGeometry(this.yAxis.colName, labelConfig);
-        label = new THREE.Mesh( labelGeom, labelMaterial );
+        label = new THREE.Mesh(labelGeom, labelMaterial);
+        label.position = new THREE.Vector3(this.yAxis.to.x + ddI.gridStep / 4, this.yAxis.to.y + ddI.gridStep / 2, this.yAxis.to.z + ddI.gridStep / 4);
         ddI._3Dlabels.push(label);
-        label.position = new THREE.Vector3(this.yAxis.to.x + ddI.gridStep/4, this.yAxis.to.y + ddI.gridStep/2, this.yAxis.to.z+ ddI.gridStep/4);
 
         yline = new THREE.Line(ylineGeometry, new THREE.LineDashedMaterial({ dashSize : ddI.gridStep / 4, linewidth : 2, color : /*this.axesConf.y.color*/ ddI.theme[0] }), THREE.LinePieces);
         yline.matrixAutoUpdate = false;
 
-        ycone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: ddI.theme[0] } ) );
+        ycone = new THREE.Mesh(coneGeometry, new THREE.MeshBasicMaterial({ color : ddI.theme[0] }));
         ycone.rotateZ(0);
         ycone.position = this.yAxis.to;
         this.yAxis.add(ycone);
@@ -781,51 +767,48 @@ window.DataDoo = (function () {
         zlineGeometry.vertices.push(this.zAxis.from);
         zlineGeometry.vertices.push(this.zAxis.to);
         zlineGeometry.computeLineDistances();
-        //label = new DataDoo.Label(this.zAxis.colName, new THREE.Vector3(0, 1, this.zAxis.length + Math.max(this.zAxis.length / 10, 10)), ddI);
-        //label = new DataDoo.Sprite(this.zAxis.colName, {}, ddI);
 
         labelGeom = new THREE.TextGeometry(this.zAxis.colName, labelConfig);
-        label = new THREE.Mesh( labelGeom, labelMaterial );
+        label = new THREE.Mesh(labelGeom, labelMaterial);
+        label.position = new THREE.Vector3(this.zAxis.to.x, this.zAxis.to.y, this.zAxis.to.z + ddI.gridStep / 2);
+        label.rotateX(-Math.PI/2);
         ddI._3Dlabels.push(label);
 
-        label.position = new THREE.Vector3(this.zAxis.to.x + ddI.gridStep/4, this.zAxis.to.y+ ddI.gridStep/4 , this.zAxis.to.z+ ddI.gridStep/2);
         zline = new THREE.Line(zlineGeometry, new THREE.LineDashedMaterial({ dashSize : ddI.gridStep / 4, linewidth : 2, color : /*this.axesConf.z.color*/ ddI.theme[0] }), THREE.LinePieces);
         zline.matrixAutoUpdate = false;
 
-        zcone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: ddI.theme[0] } ) );
-        zcone.rotateX(Math.PI/2);
+        zcone = new THREE.Mesh(coneGeometry, new THREE.MeshBasicMaterial({ color : ddI.theme[0] }));
+        zcone.rotateX(Math.PI / 2);
         zcone.position = this.zAxis.to;
         this.zAxis.add(zcone);
         this.zAxis.add(label);
         this.zAxis.add(zline);
 
-        var notchGeom = new THREE.CubeGeometry(ddI.gridStep/100, ddI.gridStep/10, ddI.gridStep/100);
-        var notchMat = new THREE.MeshBasicMaterial({color : /*this.axesConf.x.color*/ ddI.theme[1], opacity : 1});
+        var notchGeom = new THREE.CubeGeometry(ddI.gridStep / 100, ddI.gridStep / 10, ddI.gridStep / 100);
+        var notchMat = new THREE.MeshBasicMaterial({color : /*this.axesConf.x.color*/ 0x666666, opacity : 1});
 
         for (i = 0, j = this.xAxis.length / ddI.gridStep; i < j; i++) {
             notchShape = new THREE.Mesh(notchGeom, notchMat);
 
             if (this.xAxis.colType === "number") {
                 notchShape.position.set((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * i), this.xAxis.from.y, this.xAxis.from.z);
-                //notchLabel = new DataDoo.Label((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * i), new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z), ddI);
-                //notchLabel = new DataDoo.Sprite((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * i), {}, ddI);
-                notchLabelGeom = new THREE.TextGeometry((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * i), labelConfig);
-                notchLabel = new THREE.Mesh( notchLabelGeom, labelMaterial );
-                ddI._3Dlabels.push(notchLabel);
-                notchLabel.position = new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z);
+                notchLabel = new THREE.Mesh(notchLabelGeom, labelMaterial);
             }
             else {
-                this.xAxis.positionHash[this.xAxis.colUniqs[i]] = i+1;
                 notchShape.position.set((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * (i + 1)), this.xAxis.from.y, this.xAxis.from.z);
-                //notchLabel = new DataDoo.Label(this.xAxis.colUniqs[i], new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z), ddI);
-                //notchLabel = new DataDoo.Sprite(this.xAxis.colUniqs[i], {}, ddI);
                 notchLabelGeom = new THREE.TextGeometry(this.xAxis.colUniqs[i], labelConfig);
-                notchLabel = new THREE.Mesh( notchLabelGeom, labelMaterial );
-                ddI._3Dlabels.push(notchLabel);
-                notchLabel.position = new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z);
             }
+
+            this.xAxis.positionHash[this.xAxis.colUniqs[i]] = i + 1;
+            notchLabel = new THREE.Mesh(notchLabelGeom, labelMaterial);
+            ddI._3Dlabels.push(notchLabel);
+            notchLabel.position = new THREE.Vector3(notchShape.position.x, notchShape.position.y, notchShape.position.z - ddI.gridStep / 5);
+
+            notchLabel.rotateX(-Math.PI / 2);
+            notchLabel.rotateZ(Math.PI / 2);
             this.xAxis.add(notchShape);
             this.xAxis.add(notchLabel);
+            this.xAxis.notchLabelsArray.push(notchLabel);
         }
 
         notchMat = new THREE.MeshBasicMaterial({color : /*this.axesConf.y.color*/ ddI.theme[1], opacity : 0.4});
@@ -834,27 +817,21 @@ window.DataDoo = (function () {
             notchShape = new THREE.Mesh(notchGeom, notchMat);
             if (this.yAxis.colType === "number") {
                 notchShape.position.set(this.yAxis.from.x, (this.yAxis.from.y - (this.yAxis.from.y % ddI.gridStep)) + (ddI.gridStep * i), this.yAxis.from.z);
-                //notchLabel = new DataDoo.Label((this.yAxis.from.y - (this.yAxis.from.y % ddI.gridStep)) + (ddI.gridStep * i) , new THREE.Vector3(notchShape.position.x  + ddI.gridStep/5, notchShape.position.y, notchShape.position.z), ddI);
-                //notchLabel = new DataDoo.Sprite((this.yAxis.from.y - (this.yAxis.from.y % ddI.gridStep)) + (ddI.gridStep * i) , {}, ddI);
                 notchLabelGeom = new THREE.TextGeometry((this.yAxis.from.y - (this.yAxis.from.y % ddI.gridStep)) + (ddI.gridStep * i), labelConfig);
-                notchLabel = new THREE.Mesh( notchLabelGeom, labelMaterial );
-                ddI._3Dlabels.push(notchLabel);
-                notchLabel.position = new THREE.Vector3(notchShape.position.x  + ddI.gridStep/5, notchShape.position.y, notchShape.position.z);
             }
             else {
-                this.yAxis.positionHash[this.yAxis.colUniqs[i]] = i+1;
                 notchShape.position.set(this.yAxis.from.x, (this.yAxis.from.y - (this.yAxis.from.y % ddI.gridStep)) + (ddI.gridStep * (i + 1)), this.yAxis.from.z);
-                //notchLabel = new DataDoo.Label(this.yAxis.colUniqs[i] , new THREE.Vector3(notchShape.position.x  + ddI.gridStep/5, notchShape.position.y, notchShape.position.z), ddI);
-
-                //notchLabel = new DataDoo.Sprite(this.yAxis.colUniqs[i] , {}, ddI);
                 notchLabelGeom = new THREE.TextGeometry(this.yAxis.colUniqs[i], labelConfig);
-                notchLabel = new THREE.Mesh( notchLabelGeom, labelMaterial );
-                ddI._3Dlabels.push(notchLabel);
-                notchLabel.position = new THREE.Vector3(notchShape.position.x  + ddI.gridStep/5, notchShape.position.y, notchShape.position.z);
             }
-            notchShape.rotateZ(Math.PI/2);
+            this.yAxis.positionHash[this.yAxis.colUniqs[i]] = i + 1;
+
+            notchShape.rotateZ(Math.PI / 2);
+            notchLabel = new THREE.Mesh(notchLabelGeom, labelMaterial);
+            ddI._3Dlabels.push(notchLabel);
+            notchLabel.position = new THREE.Vector3(notchShape.position.x + ddI.gridStep / 5, notchShape.position.y, notchShape.position.z);
             this.yAxis.add(notchShape);
             this.yAxis.add(notchLabel);
+            this.yAxis.notchLabelsArray.push(notchLabel);
         }
 
         notchMat = new THREE.MeshBasicMaterial({color : /*this.axesConf.z.color*/ ddI.theme[1], opacity : 0.4});
@@ -863,28 +840,21 @@ window.DataDoo = (function () {
             notchShape = new THREE.Mesh(notchGeom, notchMat);
             if (this.zAxis.colType === "number") {
                 notchShape.position.set(this.zAxis.from.x, this.zAxis.from.y, (this.zAxis.from.z - (this.zAxis.from.z % ddI.gridStep)) + (ddI.gridStep * i));
-                //notchLabel = new DataDoo.Label((this.zAxis.from.z - (this.zAxis.from.z % ddI.gridStep)) + (ddI.gridStep * i), new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z), ddI);
-
-                //notchLabel = new DataDoo.Sprite((this.zAxis.from.z - (this.zAxis.from.z % ddI.gridStep)) + (ddI.gridStep * i) , {}, ddI);
                 notchLabelGeom = new THREE.TextGeometry((this.zAxis.from.z - (this.zAxis.from.z % ddI.gridStep)) + (ddI.gridStep * i), labelConfig);
-                notchLabel = new THREE.Mesh( notchLabelGeom, labelMaterial );
-                ddI._3Dlabels.push(notchLabel);
-
-                notchLabel.position = new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z);
             }
             else {
-                this.zAxis.positionHash[this.zAxis.colUniqs[i]] = i+1;
                 notchShape.position.set(this.zAxis.from.x, this.zAxis.from.y, (this.zAxis.from.z - (this.zAxis.from.z % ddI.gridStep)) + (ddI.gridStep * (i + 1)));
-                //notchLabel = new DataDoo.Label(this.zAxis.colUniqs[i], new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z), ddI);
-
-                //notchLabel = new DataDoo.Sprite(this.zAxis.colUniqs[i] , {}, ddI);
                 notchLabelGeom = new THREE.TextGeometry(this.zAxis.colUniqs[i], labelConfig);
-                notchLabel = new THREE.Mesh( notchLabelGeom, labelMaterial );
-                ddI._3Dlabels.push(notchLabel);
-                notchLabel.position = new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z);
             }
+            notchLabelGeom.computeBoundingBox();
+            notchLabel = new THREE.Mesh(notchLabelGeom, labelMaterial);
+            ddI._3Dlabels.push(notchLabel);
+            this.zAxis.positionHash[this.zAxis.colUniqs[i]] = i + 1;
+            notchLabel.rotateX(-Math.PI/2);
+            notchLabel.position = new THREE.Vector3(notchLabelGeom.boundingBox.min.x - notchLabelGeom.boundingBox.max.x - ddI.gridStep / 5, notchShape.position.y, notchShape.position.z);
             this.zAxis.add(notchShape);
             this.zAxis.add(notchLabel);
+            this.zAxis.notchLabelsArray.push(notchLabel);
         }
 
         this.add(this.xAxis);
@@ -899,7 +869,16 @@ window.DataDoo = (function () {
 
     DataDoo.AxesHelper = AxesHelper;
 
-    AxesHelper.prototype.updateGeometry = function () {
+    AxesHelper.prototype.highlightLabels = function (xLabelIndex, yLabelIndex, zLabelIndex) {
+        this.xAxis.notchLabelsArray[xLabelIndex].scale.set(1.6,1.6,3.2);
+        this.yAxis.notchLabelsArray[yLabelIndex].scale.set(1.6,1.6,3.2);
+        this.zAxis.notchLabelsArray[zLabelIndex].scale.set(1.6,1.6,3.2);
+    };
+
+    AxesHelper.prototype.unhighlightLabels = function (xLabelIndex, yLabelIndex, zLabelIndex) {
+        this.xAxis.notchLabelsArray[xLabelIndex].scale.set(1,1,1);
+        this.yAxis.notchLabelsArray[yLabelIndex].scale.set(1,1,1);
+        this.zAxis.notchLabelsArray[zLabelIndex].scale.set(1,1,1);
 
     };
 
@@ -992,13 +971,7 @@ window.DataDoo = (function () {
         this.add(this.zGuide);
 
         var horPlaneMat = new THREE.MeshBasicMaterial({ color : 0x377c97, transparent : true, opacity : 0.4, side : THREE.DoubleSide, overdraw : true });
-
         var horPlaneGeom = new THREE.PlaneGeometry(100,100,1,1);
-/*        horPlaneGeom.vertices.push(new THREE.Vector3(0, 0, 0));
-        horPlaneGeom.vertices.push(new THREE.Vector3(100, 0, 0));
-        horPlaneGeom.vertices.push(new THREE.Vector3(100, 0, 100));
-        horPlaneGeom.vertices.push(new THREE.Vector3(0, 0, 100));*/
-
         horPlaneGeom.dynamic = true;
         horPlaneGeom.verticesNeedUpdate = true;
 
@@ -1082,13 +1055,23 @@ window.DataDoo = (function () {
         //default properties of every primitive
         this.ddI = ddI;
         this.row = rowData;
+
+        this.myxVal = this.row[this.ddI.axes.xAxis.colName];
+        this.myxIndex = this.ddI.axes.xAxis.positionHash[this.myxVal] - 1;
+
+        this.myyVal = this.row[this.ddI.axes.yAxis.colName];
+        this.myyIndex = this.ddI.axes.yAxis.positionHash[this.myyVal] - 1;
+
+        this.myzVal = this.row[this.ddI.axes.zAxis.colName];
+        this.myzIndex = this.ddI.axes.zAxis.positionHash[this.myzVal] - 1;
+
         this.shape = configObj.shape || null;
         this.text = configObj.text || null;
         this.add(this.shape);
 
 
-        this.hoverOutline = new THREE.Mesh(this.shape.geometry, new THREE.MeshBasicMaterial( { color:0x000000, transparent:true, opacity:0.7, side:THREE.BackSide} ));
-        this.hoverOutline.scale.multiplyScalar(1.02);
+        this.hoverOutline = new THREE.Mesh(this.shape.geometry, new THREE.MeshBasicMaterial( { color:0x000000, transparent:true, opacity:1, side:THREE.BackSide} ));
+        this.hoverOutline.scale.multiplyScalar(1.04);
 
         /*this.boundingBox = new THREE.BoxHelper(this.shape);
         this.boundingBox.scale.multiplyScalar(1.05);
@@ -1103,10 +1086,12 @@ window.DataDoo = (function () {
     Primitive.prototype.constructor = Primitive;
 
     Primitive.prototype.onHoverIn = function(){
-        this.shape.scale.multiplyScalar(1.02);
+        this.shape.scale.multiplyScalar(1.03);
         this.shape.add(this.hoverOutline);
 
         this.ddI.guides.drawGuides(this.position);
+
+        this.ddI.axes.highlightLabels(this.myxIndex, this.myyIndex, this.myzIndex);
     };
 
     Primitive.prototype.onHoverOut = function(){
@@ -1114,6 +1099,7 @@ window.DataDoo = (function () {
         this.shape.remove(this.hoverOutline);
 
         this.ddI.guides.hideGuides();
+        this.ddI.axes.unhighlightLabels(this.myxIndex, this.myyIndex, this.myzIndex);
     };
 
     DataDoo.Primitive = Primitive;
@@ -1377,7 +1363,6 @@ window.DataDoo = (function () {
             var intersects = ddI.raycaster.intersectObjects(ddI._intersectables);
 
             if (intersects.length > 0) {
-                ddI.renderer.domElement.style.cursor="pointer";
                 if (INTERSECTED != intersects[ 0 ].object) {
                     if (INTERSECTED)INTERSECTED.parent.onHoverOut();
                     INTERSECTED = intersects[ 0 ].object;
@@ -1385,7 +1370,6 @@ window.DataDoo = (function () {
                 }
             }
             else {
-                ddI.renderer.domElement.style.cursor="default";
                 if (INTERSECTED) INTERSECTED.parent.onHoverOut();
                 INTERSECTED = null;
             }
@@ -1468,8 +1452,6 @@ window.DataDoo = (function () {
 
                 rotateStart.copy(rotateEnd);
                 $(ddI._labelsDom).fadeOut(100);
-
-                ddI.render3DLabels();
             }
             else if (state === STATE.DOLLY) {
 
@@ -1491,8 +1473,6 @@ window.DataDoo = (function () {
 
                 dollyStart.copy(dollyEnd);
                 $(ddI._labelsDom).fadeOut(100);
-
-                ddI.render3DLabels();
             }
             else if (state === STATE.PAN) {
 
@@ -1505,11 +1485,8 @@ window.DataDoo = (function () {
 
                 panStart.copy(panEnd);
                 $(ddI._labelsDom).fadeOut(100);
-
-                ddI.render3DLabels();
             }
             scope.update();
-
 
         }
 
@@ -1518,7 +1495,6 @@ window.DataDoo = (function () {
             state = STATE.NONE;
             $(ddI._labelsDom).fadeIn(100);
             ddI.renderLabels();
-            ddI.render3DLabels();
             ddI.renderSprites();
         }
 
@@ -1550,8 +1526,6 @@ window.DataDoo = (function () {
 
             }
 
-            ddI.render3DLabels();
-
             if (this.timer) {
                 $(ddI._labelsDom).fadeOut(100);
                 window.clearTimeout(this.timer);
@@ -1559,7 +1533,6 @@ window.DataDoo = (function () {
             this.timer = window.setTimeout(function () {
                 $(ddI._labelsDom).fadeIn(100);
                 ddI.renderLabels.apply(ddI);
-                ddI.render3DLabels.apply(ddI);
                 ddI.renderSprites.apply(ddI);
             }, 100);
         }
@@ -1607,7 +1580,6 @@ window.DataDoo = (function () {
 
             }
             ddI.renderLabels();
-            ddI.render3DLabels();
             ddI.renderSprites();
 
         }
@@ -1742,7 +1714,6 @@ window.DataDoo = (function () {
             }
 
             ddI.renderLabels();
-            ddI.render3DLabels();
             ddI.renderSprites();
 
         }
@@ -1755,7 +1726,6 @@ window.DataDoo = (function () {
 
             state = STATE.NONE;
             ddI.renderLabels();
-            ddI.render3DLabels();
             ddI.renderSprites();
         }
 
@@ -1877,25 +1847,29 @@ window.DataDoo = (function () {
 
         var fontface = parameters.hasOwnProperty("fontface") ? parameters.fontface : "Arial";
 
-        var fontsize = 4 * (parameters.hasOwnProperty("fontsize") ? parameters.fontsize : 15);
+        var fontsize = 4 * (parameters.hasOwnProperty("fontsize") ? parameters.fontsize : 12);
 
         var textColor = parameters.hasOwnProperty("textColor") ? parameters.textColor : "rgba(0, 0, 0, 1.0)";
 
         var backgroundColor = parameters.hasOwnProperty("backgroundColor") ? parameters.backgroundColor : { r : 255, g : 255, b : 255, a : 1.0 };
 
-        var spriteAlignment = THREE.SpriteAlignment.centerLeft;
+        var spriteAlignment = THREE.SpriteAlignment.topLeft;
 
         var canvas = document.getElementById("helperCanvas");
         if (!canvas) {
             canvas = document.createElement('canvas');
             canvas.setAttribute("id", "helperCanvas");
-            canvas.width = 1000;
-            canvas.height = 100;
+            canvas.width = 400;
+            canvas.height = 200;
+            canvas.style.width = 400 + "px";
+            canvas.style.height = 200 + "px";
         }
 
         var context = canvas.getContext('2d');
-        context.clearRect(0,0,1000,100);
+        context.clearRect(0,0,400,200);
 
+        /*context.fillStyle ="rgba{155,155,255,1.0}";
+        context.fillRect(0,0,400,200);*/
 
         context.font = fontsize + "px " + fontface;
         // get size data (height depends only on font size)
@@ -1909,20 +1883,6 @@ window.DataDoo = (function () {
         // text color
         var tColor = new THREE.Color(textColor);
 
-        //context.fillStyle ="rgba{155,155,255,1.0}";
-        /*context.beginPath();
-         context.moveTo(x + r, y);
-         context.lineTo(x + w - r, y);
-         context.quadraticCurveTo(x + w, y, x + w, y + r);
-         context.lineTo(x + w, y + h - r);
-         context.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-         context.lineTo(x + r, y + h);
-         context.quadraticCurveTo(x, y + h, x, y + h - r);
-         context.lineTo(x, y + r);
-         context.quadraticCurveTo(x, y, x + r, y);
-         context.closePath();*/
-        //context.fillRect(0,0,1000,100);
-
         //context.fillStyle = "rgba(" + tColor.r * 255 + "," + tColor.g * 255 + "," + tColor.b * 255 + "," + " 1.0)";
         context.fillStyle = "rgba(0, 0, 0, 1.0)";
 
@@ -1931,19 +1891,22 @@ window.DataDoo = (function () {
         // canvas contents will be used for a texture
         var texture = new THREE.Texture(canvas);
         texture.needsUpdate = true;
+        //texture.magFilter = THREE.NearestFilter;
+        //texture.minFilter = THREE.NearestMipMapLinearFilter;
 
-        var spriteMaterial = new THREE.SpriteMaterial({ map : texture, useScreenCoordinates : false, sizeAttenuation : true, alignment : spriteAlignment });
-        //spriteMaterial.transparent = true;
+        var spriteMaterial = new THREE.SpriteMaterial({ map : texture, useScreenCoordinates : false,sizeAttenuation : false, alignment : spriteAlignment });
+        spriteMaterial.transparent = true;
 
 
         var textObject = new THREE.Object3D();
         var sprite = new THREE.Sprite(spriteMaterial);
         textObject.textHeight = fontsize;
         textObject.textWidth = (textWidth / textHeight) * textObject.textHeight;
-        sprite.scale.set(50,5, 1);
-        //sprite.scale.multiplyScalar(20);
+        sprite.scale.set(120,50, 1);
+        //sprite.scale.multiplyScalar(10);
 
         sprite.type = "sprite";
+        console.log(this);
         ddInstance._sprites.push(sprite);
         return sprite;
     }
