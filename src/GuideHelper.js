@@ -48,13 +48,7 @@
         this.add(this.zGuide);
 
         var horPlaneMat = new THREE.MeshBasicMaterial({ color : 0x377c97, transparent : true, opacity : 0.4, side : THREE.DoubleSide, overdraw : true });
-
         var horPlaneGeom = new THREE.PlaneGeometry(100,100,1,1);
-/*        horPlaneGeom.vertices.push(new THREE.Vector3(0, 0, 0));
-        horPlaneGeom.vertices.push(new THREE.Vector3(100, 0, 0));
-        horPlaneGeom.vertices.push(new THREE.Vector3(100, 0, 100));
-        horPlaneGeom.vertices.push(new THREE.Vector3(0, 0, 100));*/
-
         horPlaneGeom.dynamic = true;
         horPlaneGeom.verticesNeedUpdate = true;
 

@@ -187,6 +187,16 @@ window.DataDoo = (function () {
         this.scene.add(this.grid);
     };
 
+    DataDoo.prototype.render3DLabels = function () {
+        /*var self = this, dist, sc;
+        dist = self.camera.position.distanceTo(self.cameraControls.target);
+        sc = Math.max(0.25, Math.min(dist/self.goldenDim, 1.25));
+        _.each(self._3Dlabels, function (label) {
+            label.lookAt(self.camera.position);
+            label.scale.set(sc,sc,sc);
+        });*/
+    };
+
     DataDoo.prototype.renderSprites = function () {
         var self = this, dist;
         _.each(self._sprites, function (sprite) {
@@ -276,6 +286,7 @@ window.DataDoo = (function () {
                 var posArr = [];
 
                 for (var k = 0, l = colNames.length; k < l; k++) {
+
                     if (ds.column(colNames[k]).type === "number") {
                         posArr.push(row[colNames[k]]);
                     }
