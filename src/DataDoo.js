@@ -93,6 +93,7 @@ window.DataDoo = (function () {
         this.axesConf = params.axes;
         this.cameraConf = params.camera;
 
+        
         this.lightsConf = params.lights;
         this.sceneConf = params.scene;
 
@@ -101,6 +102,7 @@ window.DataDoo = (function () {
         this._labelsDom.className = "labelDom";
         document.body.appendChild(this._labelsDom);
         this._labels = [];
+        this._3Dlabels = [];
         this._sprites = [];
         this._nodes = [];
         this._intersectables = [];
