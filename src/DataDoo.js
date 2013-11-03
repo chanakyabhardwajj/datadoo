@@ -78,7 +78,11 @@ window.DataDoo = (function () {
             antialias : true,
             alpha : false,
             clearAlpha : 1,
-            preserveDrawingBuffer : true
+            gammaInput : true,
+            gammaOutput : true,
+            physicallyBasedShading : true,
+            shadowMapEnabled : true,
+            shadowMapSoft : true
         });
         //this.renderer.sortObjects = false;
         this.renderer.autoClear = false;
@@ -97,7 +101,6 @@ window.DataDoo = (function () {
         this._labelsDom.className = "labelDom";
         document.body.appendChild(this._labelsDom);
         this._labels = [];
-        this._3Dlabels = [];
         this._sprites = [];
         this._nodes = [];
         this._intersectables = [];
@@ -185,27 +188,23 @@ window.DataDoo = (function () {
     };
 
     DataDoo.prototype.render3DLabels = function () {
-        var self = this, dist;
+        /*var self = this, dist, sc;
+        dist = self.camera.position.distanceTo(self.cameraControls.target);
+        sc = Math.max(0.25, Math.min(dist/self.goldenDim, 1.25));
         _.each(self._3Dlabels, function (label) {
             label.lookAt(self.camera.position);
-
-            //dist = label.position.distanceTo(self.camera.position);
-            //var sc = dist > self.gridStep * 1000 ? 0 : dist/(3*self.goldenDim);
-            //var sc = 0 + (0.01 * dist/self.gridStep);
-
-            //label.scale.multiplyScalar( Math.max(sc, 0.8));
-            //console.log(sc);
-        });
+            label.scale.set(sc,sc,sc);
+        });*/
     };
 
     DataDoo.prototype.renderSprites = function () {
-        /*var self = this, dist;
+        var self = this, dist;
         _.each(self._sprites, function (sprite) {
             dist = sprite.position.distanceTo(self.camera.position);
             var sc = 300/dist;
             sprite.scale.x = 120 + self.gridStep * (sc);
             sprite.scale.y = 50 + self.gridStep * (sc);
-        });*/
+        });
     };
 
     DataDoo.prototype.renderLabels = function () {
@@ -218,37 +217,32 @@ window.DataDoo = (function () {
         originVector.y = -(originVector.y - 1) / 2 * h;
 
         _.each(self._labels, function (label) {
+            vector.getPositionFromMatrix(label.matrixWorld);
+            var vector2 = self.projector.projectVector(vector.clone(), self.camera);
+            vector2.x = (vector2.x + 1) / 2 * w;
+            vector2.y = -(vector2.y - 1) / 2 * h;
 
-                vector.getPositionFromMatrix(label.matrixWorld);
-                var vector2 = self.projector.projectVector(vector.clone(), self.camera);
-                vector2.x = (vector2.x + 1) / 2 * w;
-                vector2.y = -(vector2.y - 1) / 2 * h;
+            dist = vector.distanceTo(self.camera.position);
+            zInd = Math.floor(10000 - dist);
+            rotAngle = Math.atan((vector2.y - originVector.y) / (vector2.x - originVector.x)) * 180 / Math.PI;
 
-                dist = vector.distanceTo(self.camera.position);
-                zInd = Math.floor(10000 - dist);
-                rotAngle = Math.atan((vector2.y - originVector.y) / (vector2.x - originVector.x)) * 180 / Math.PI;
+            label._posX = vector2.x;
+            label._posY = vector2.y;
+            label._x1 = label._posX;
+            label._y1 = label._posY;
+            label._x2 = $(label.element).width() + label._x1;
+            label._y2 = $(label.element).height() + label._y1;
+            label._distance = dist;
+            label._zIndex = zInd;
+            label.visible = true;
 
-                label._posX = vector2.x;
-                label._posY = vector2.y;
-                label._x1 = label._posX;
-                label._y1 = label._posY;
-                label._x2 = $(label.element).width() + label._x1;
-                label._y2 = $(label.element).height() + label._y1;
-                label._distance = dist;
-                label._zIndex = zInd;
-                label.visible = true;
-
-                if (!self.frustum.containsPoint(vector)) {
-                    label.hide();
-                }
-
-
+            if (!self.frustum.containsPoint(vector)) {
+                label.hide();
+            }
         });
 
         self._labels.sort(function (label1, label2) {
-
             return label2._zIndex - label1._zIndex;
-
         });
 
         _.each(self._labels, function (label, i) {
@@ -269,10 +263,10 @@ window.DataDoo = (function () {
                 op = this.goldenDim / dist;
                 fsize = Math.max(Math.floor(25 - 8 * dist / (this.goldenDim * 0.5)), 11) + "px";
 
-                    label.update({top : label._posY, left : label._posX}, 1, zInd, fsize, rotAngle);
-                    label.show();
-
+                label.update({top : label._posY, left : label._posX}, 1, zInd, fsize, rotAngle);
+                label.show();
             }
+
         }, self);
     };
 
@@ -292,6 +286,7 @@ window.DataDoo = (function () {
                 var posArr = [];
 
                 for (var k = 0, l = colNames.length; k < l; k++) {
+
                     if (ds.column(colNames[k]).type === "number") {
                         posArr.push(row[colNames[k]]);
                     }
@@ -371,7 +366,6 @@ window.DataDoo = (function () {
         raf(renderFrame);
         setTimeout(function () {
             self.renderLabels();
-            self.render3DLabels();
             self.renderSprites();
         }, 100);
         //self.renderLabels();

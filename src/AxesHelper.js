@@ -1,7 +1,7 @@
-(function(DataDoo) {
+(function (DataDoo) {
     function AxesHelper(ddI) {
         THREE.Object3D.call(this, ddI);
-
+        this.ddI = ddI;
         this.datasets = ddI.datasets;
 
         //First of all, we need to make sure that all the datasets are compatible
@@ -38,6 +38,7 @@
         this.xAxis.colType = "number";
         this.xAxis.colUniqs = [];
         this.xAxis.positionHash = {};
+        this.xAxis.notchLabelsArray = [];
 
         for (x = 0, y = this.datasets.length; x < y; x++) {
             tempArr.push(this.datasets[x].column(colNames[0]).data);
@@ -53,6 +54,7 @@
         this.yAxis.colType = "number";
         this.yAxis.colUniqs = [];
         this.yAxis.positionHash = {};
+        this.yAxis.notchLabelsArray = [];
 
         for (x = 0, y = this.datasets.length; x < y; x++) {
             tempArr.push(this.datasets[x].column(colNames[1]).data);
@@ -68,6 +70,7 @@
         this.zAxis.colType = "number";
         this.zAxis.colUniqs = [];
         this.zAxis.positionHash = {};
+        this.zAxis.notchLabelsArray = [];
 
         for (x = 0, y = this.datasets.length; x < y; x++) {
             tempArr.push(this.datasets[x].column(colNames[2]).data);
@@ -83,12 +86,12 @@
         this.zObj = ddI.axesConf.z;
 
         var notchLabel, notchShape;
-        var coneGeometry = new THREE.CylinderGeometry( 0, ddI.gridStep/8, ddI.gridStep/5, 25, 5 );
+        var coneGeometry = new THREE.CylinderGeometry(0, ddI.gridStep / 8, ddI.gridStep / 5, 25, 5);
         var xcone, xline, xlineGeometry = new THREE.Geometry();
         var ycone, yline, ylineGeometry = new THREE.Geometry();
         var zcone, zline, zlineGeometry = new THREE.Geometry();
-        var labelGeom, labelMaterial= new THREE.MeshBasicMaterial( { color: ddI.theme[0], overdraw: true } );
-        var labelConfig = {size: 2.5, height: 0.1, curveSegments: 10, font: "helvetiker"};
+        var labelGeom, labelMaterial = new THREE.MeshBasicMaterial({ color : 0x666666, overdraw : true });
+        var labelConfig = {size : 2.5, height : 0.1, curveSegments : 10, font : "helvetiker"};
 
         if (this.xAxis.colType === "number") {
             this.xAxis.length = Math.max(_.max(this.xAxis.colUniqs), 0) - Math.min(_.min(this.xAxis.colUniqs), 0) + ddI.gridStep;
@@ -127,27 +130,18 @@
         xlineGeometry.vertices.push(this.xAxis.to);
         xlineGeometry.computeLineDistances();
 
-
-        //label = new DataDoo.Label(this.xAxis.colName, new THREE.Vector3(this.xAxis.length + Math.max(this.xAxis.length / 10, 10), 1, 0), ddI);
-        //label = new DataDoo.Sprite(this.xAxis.colName, {}, ddI);
-        //label.position = new THREE.Vector3(this.xAxis.to.x + ddI.gridStep/2, this.xAxis.to.y+ ddI.gridStep/4 , this.xAxis.to.z+ ddI.gridStep/4);
-
-
-
-
-        //labelGeom.computeBoundingBox();
-        //var centerOffset = -0.5 * ( labelGeom.boundingBox.max.x - labelGeom.boundingBox.min.x );
-
         labelGeom = new THREE.TextGeometry(this.xAxis.colName, labelConfig);
-        label = new THREE.Mesh( labelGeom, labelMaterial );
-        label.position = new THREE.Vector3(this.xAxis.to.x + ddI.gridStep/2, this.xAxis.to.y+ ddI.gridStep/4 , this.xAxis.to.z+ ddI.gridStep/4);
+        label = new THREE.Mesh(labelGeom, labelMaterial);
+        label.position = new THREE.Vector3(this.xAxis.to.x + ddI.gridStep / 2, this.xAxis.to.y, this.xAxis.to.z + ddI.gridStep / 2);
+        label.rotateX(-Math.PI / 2);
+        label.rotateZ(Math.PI / 2);
         ddI._3Dlabels.push(label);
 
         xline = new THREE.Line(xlineGeometry, new THREE.LineDashedMaterial({ dashSize : ddI.gridStep / 4, linewidth : 2, color : /*this.axesConf.x.color*/ ddI.theme[0] }), THREE.LinePieces);
         xline.matrixAutoUpdate = false;
 
-        xcone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: ddI.theme[0] } ) );
-        xcone.rotateZ(-Math.PI/2);
+        xcone = new THREE.Mesh(coneGeometry, new THREE.MeshBasicMaterial({ color : ddI.theme[0] }));
+        xcone.rotateZ(-Math.PI / 2);
         xcone.position = this.xAxis.to;
         this.xAxis.add(xcone);
         this.xAxis.add(label);
@@ -156,18 +150,16 @@
         ylineGeometry.vertices.push(this.yAxis.from);
         ylineGeometry.vertices.push(this.yAxis.to);
         ylineGeometry.computeLineDistances();
-        //label = new DataDoo.Label(this.yAxis.colName, new THREE.Vector3(1, this.yAxis.length + Math.max(this.yAxis.length / 10, 10), 0), ddI);
-        //label = new DataDoo.Sprite(this.yAxis.colName, {}, ddI);
 
         labelGeom = new THREE.TextGeometry(this.yAxis.colName, labelConfig);
-        label = new THREE.Mesh( labelGeom, labelMaterial );
+        label = new THREE.Mesh(labelGeom, labelMaterial);
+        label.position = new THREE.Vector3(this.yAxis.to.x + ddI.gridStep / 4, this.yAxis.to.y + ddI.gridStep / 2, this.yAxis.to.z + ddI.gridStep / 4);
         ddI._3Dlabels.push(label);
-        label.position = new THREE.Vector3(this.yAxis.to.x + ddI.gridStep/4, this.yAxis.to.y + ddI.gridStep/2, this.yAxis.to.z+ ddI.gridStep/4);
 
         yline = new THREE.Line(ylineGeometry, new THREE.LineDashedMaterial({ dashSize : ddI.gridStep / 4, linewidth : 2, color : /*this.axesConf.y.color*/ ddI.theme[0] }), THREE.LinePieces);
         yline.matrixAutoUpdate = false;
 
-        ycone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: ddI.theme[0] } ) );
+        ycone = new THREE.Mesh(coneGeometry, new THREE.MeshBasicMaterial({ color : ddI.theme[0] }));
         ycone.rotateZ(0);
         ycone.position = this.yAxis.to;
         this.yAxis.add(ycone);
@@ -177,51 +169,48 @@
         zlineGeometry.vertices.push(this.zAxis.from);
         zlineGeometry.vertices.push(this.zAxis.to);
         zlineGeometry.computeLineDistances();
-        //label = new DataDoo.Label(this.zAxis.colName, new THREE.Vector3(0, 1, this.zAxis.length + Math.max(this.zAxis.length / 10, 10)), ddI);
-        //label = new DataDoo.Sprite(this.zAxis.colName, {}, ddI);
 
         labelGeom = new THREE.TextGeometry(this.zAxis.colName, labelConfig);
-        label = new THREE.Mesh( labelGeom, labelMaterial );
+        label = new THREE.Mesh(labelGeom, labelMaterial);
+        label.position = new THREE.Vector3(this.zAxis.to.x, this.zAxis.to.y, this.zAxis.to.z + ddI.gridStep / 2);
+        label.rotateX(-Math.PI/2);
         ddI._3Dlabels.push(label);
 
-        label.position = new THREE.Vector3(this.zAxis.to.x + ddI.gridStep/4, this.zAxis.to.y+ ddI.gridStep/4 , this.zAxis.to.z+ ddI.gridStep/2);
         zline = new THREE.Line(zlineGeometry, new THREE.LineDashedMaterial({ dashSize : ddI.gridStep / 4, linewidth : 2, color : /*this.axesConf.z.color*/ ddI.theme[0] }), THREE.LinePieces);
         zline.matrixAutoUpdate = false;
 
-        zcone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: ddI.theme[0] } ) );
-        zcone.rotateX(Math.PI/2);
+        zcone = new THREE.Mesh(coneGeometry, new THREE.MeshBasicMaterial({ color : ddI.theme[0] }));
+        zcone.rotateX(Math.PI / 2);
         zcone.position = this.zAxis.to;
         this.zAxis.add(zcone);
         this.zAxis.add(label);
         this.zAxis.add(zline);
 
-        var notchGeom = new THREE.CubeGeometry(ddI.gridStep/100, ddI.gridStep/10, ddI.gridStep/100);
-        var notchMat = new THREE.MeshBasicMaterial({color : /*this.axesConf.x.color*/ ddI.theme[1], opacity : 1});
+        var notchGeom = new THREE.CubeGeometry(ddI.gridStep / 100, ddI.gridStep / 10, ddI.gridStep / 100);
+        var notchMat = new THREE.MeshBasicMaterial({color : /*this.axesConf.x.color*/ 0x666666, opacity : 1});
 
         for (i = 0, j = this.xAxis.length / ddI.gridStep; i < j; i++) {
             notchShape = new THREE.Mesh(notchGeom, notchMat);
 
             if (this.xAxis.colType === "number") {
                 notchShape.position.set((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * i), this.xAxis.from.y, this.xAxis.from.z);
-                //notchLabel = new DataDoo.Label((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * i), new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z), ddI);
-                //notchLabel = new DataDoo.Sprite((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * i), {}, ddI);
-                notchLabelGeom = new THREE.TextGeometry((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * i), labelConfig);
-                notchLabel = new THREE.Mesh( notchLabelGeom, labelMaterial );
-                ddI._3Dlabels.push(notchLabel);
-                notchLabel.position = new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z);
+                notchLabel = new THREE.Mesh(notchLabelGeom, labelMaterial);
             }
             else {
-                this.xAxis.positionHash[this.xAxis.colUniqs[i]] = i+1;
                 notchShape.position.set((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * (i + 1)), this.xAxis.from.y, this.xAxis.from.z);
-                //notchLabel = new DataDoo.Label(this.xAxis.colUniqs[i], new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z), ddI);
-                //notchLabel = new DataDoo.Sprite(this.xAxis.colUniqs[i], {}, ddI);
                 notchLabelGeom = new THREE.TextGeometry(this.xAxis.colUniqs[i], labelConfig);
-                notchLabel = new THREE.Mesh( notchLabelGeom, labelMaterial );
-                ddI._3Dlabels.push(notchLabel);
-                notchLabel.position = new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z);
             }
+
+            this.xAxis.positionHash[this.xAxis.colUniqs[i]] = i + 1;
+            notchLabel = new THREE.Mesh(notchLabelGeom, labelMaterial);
+            ddI._3Dlabels.push(notchLabel);
+            notchLabel.position = new THREE.Vector3(notchShape.position.x, notchShape.position.y, notchShape.position.z - ddI.gridStep / 5);
+
+            notchLabel.rotateX(-Math.PI / 2);
+            notchLabel.rotateZ(Math.PI / 2);
             this.xAxis.add(notchShape);
             this.xAxis.add(notchLabel);
+            this.xAxis.notchLabelsArray.push(notchLabel);
         }
 
         notchMat = new THREE.MeshBasicMaterial({color : /*this.axesConf.y.color*/ ddI.theme[1], opacity : 0.4});
@@ -230,27 +219,21 @@
             notchShape = new THREE.Mesh(notchGeom, notchMat);
             if (this.yAxis.colType === "number") {
                 notchShape.position.set(this.yAxis.from.x, (this.yAxis.from.y - (this.yAxis.from.y % ddI.gridStep)) + (ddI.gridStep * i), this.yAxis.from.z);
-                //notchLabel = new DataDoo.Label((this.yAxis.from.y - (this.yAxis.from.y % ddI.gridStep)) + (ddI.gridStep * i) , new THREE.Vector3(notchShape.position.x  + ddI.gridStep/5, notchShape.position.y, notchShape.position.z), ddI);
-                //notchLabel = new DataDoo.Sprite((this.yAxis.from.y - (this.yAxis.from.y % ddI.gridStep)) + (ddI.gridStep * i) , {}, ddI);
                 notchLabelGeom = new THREE.TextGeometry((this.yAxis.from.y - (this.yAxis.from.y % ddI.gridStep)) + (ddI.gridStep * i), labelConfig);
-                notchLabel = new THREE.Mesh( notchLabelGeom, labelMaterial );
-                ddI._3Dlabels.push(notchLabel);
-                notchLabel.position = new THREE.Vector3(notchShape.position.x  + ddI.gridStep/5, notchShape.position.y, notchShape.position.z);
             }
             else {
-                this.yAxis.positionHash[this.yAxis.colUniqs[i]] = i+1;
                 notchShape.position.set(this.yAxis.from.x, (this.yAxis.from.y - (this.yAxis.from.y % ddI.gridStep)) + (ddI.gridStep * (i + 1)), this.yAxis.from.z);
-                //notchLabel = new DataDoo.Label(this.yAxis.colUniqs[i] , new THREE.Vector3(notchShape.position.x  + ddI.gridStep/5, notchShape.position.y, notchShape.position.z), ddI);
-
-                //notchLabel = new DataDoo.Sprite(this.yAxis.colUniqs[i] , {}, ddI);
                 notchLabelGeom = new THREE.TextGeometry(this.yAxis.colUniqs[i], labelConfig);
-                notchLabel = new THREE.Mesh( notchLabelGeom, labelMaterial );
-                ddI._3Dlabels.push(notchLabel);
-                notchLabel.position = new THREE.Vector3(notchShape.position.x  + ddI.gridStep/5, notchShape.position.y, notchShape.position.z);
             }
-            notchShape.rotateZ(Math.PI/2);
+            this.yAxis.positionHash[this.yAxis.colUniqs[i]] = i + 1;
+
+            notchShape.rotateZ(Math.PI / 2);
+            notchLabel = new THREE.Mesh(notchLabelGeom, labelMaterial);
+            ddI._3Dlabels.push(notchLabel);
+            notchLabel.position = new THREE.Vector3(notchShape.position.x + ddI.gridStep / 5, notchShape.position.y, notchShape.position.z);
             this.yAxis.add(notchShape);
             this.yAxis.add(notchLabel);
+            this.yAxis.notchLabelsArray.push(notchLabel);
         }
 
         notchMat = new THREE.MeshBasicMaterial({color : /*this.axesConf.z.color*/ ddI.theme[1], opacity : 0.4});
@@ -259,28 +242,21 @@
             notchShape = new THREE.Mesh(notchGeom, notchMat);
             if (this.zAxis.colType === "number") {
                 notchShape.position.set(this.zAxis.from.x, this.zAxis.from.y, (this.zAxis.from.z - (this.zAxis.from.z % ddI.gridStep)) + (ddI.gridStep * i));
-                //notchLabel = new DataDoo.Label((this.zAxis.from.z - (this.zAxis.from.z % ddI.gridStep)) + (ddI.gridStep * i), new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z), ddI);
-
-                //notchLabel = new DataDoo.Sprite((this.zAxis.from.z - (this.zAxis.from.z % ddI.gridStep)) + (ddI.gridStep * i) , {}, ddI);
                 notchLabelGeom = new THREE.TextGeometry((this.zAxis.from.z - (this.zAxis.from.z % ddI.gridStep)) + (ddI.gridStep * i), labelConfig);
-                notchLabel = new THREE.Mesh( notchLabelGeom, labelMaterial );
-                ddI._3Dlabels.push(notchLabel);
-
-                notchLabel.position = new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z);
             }
             else {
-                this.zAxis.positionHash[this.zAxis.colUniqs[i]] = i+1;
                 notchShape.position.set(this.zAxis.from.x, this.zAxis.from.y, (this.zAxis.from.z - (this.zAxis.from.z % ddI.gridStep)) + (ddI.gridStep * (i + 1)));
-                //notchLabel = new DataDoo.Label(this.zAxis.colUniqs[i], new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z), ddI);
-
-                //notchLabel = new DataDoo.Sprite(this.zAxis.colUniqs[i] , {}, ddI);
                 notchLabelGeom = new THREE.TextGeometry(this.zAxis.colUniqs[i], labelConfig);
-                notchLabel = new THREE.Mesh( notchLabelGeom, labelMaterial );
-                ddI._3Dlabels.push(notchLabel);
-                notchLabel.position = new THREE.Vector3(notchShape.position.x, notchShape.position.y + ddI.gridStep/5 , notchShape.position.z);
             }
+            notchLabelGeom.computeBoundingBox();
+            notchLabel = new THREE.Mesh(notchLabelGeom, labelMaterial);
+            ddI._3Dlabels.push(notchLabel);
+            this.zAxis.positionHash[this.zAxis.colUniqs[i]] = i + 1;
+            notchLabel.rotateX(-Math.PI/2);
+            notchLabel.position = new THREE.Vector3(notchLabelGeom.boundingBox.min.x - notchLabelGeom.boundingBox.max.x - ddI.gridStep / 5, notchShape.position.y, notchShape.position.z);
             this.zAxis.add(notchShape);
             this.zAxis.add(notchLabel);
+            this.zAxis.notchLabelsArray.push(notchLabel);
         }
 
         this.add(this.xAxis);
@@ -295,7 +271,16 @@
 
     DataDoo.AxesHelper = AxesHelper;
 
-    AxesHelper.prototype.updateGeometry = function () {
+    AxesHelper.prototype.highlightLabels = function (xLabelIndex, yLabelIndex, zLabelIndex) {
+        this.xAxis.notchLabelsArray[xLabelIndex].scale.set(1.6,1.6,3.2);
+        this.yAxis.notchLabelsArray[yLabelIndex].scale.set(1.6,1.6,3.2);
+        this.zAxis.notchLabelsArray[zLabelIndex].scale.set(1.6,1.6,3.2);
+    };
+
+    AxesHelper.prototype.unhighlightLabels = function (xLabelIndex, yLabelIndex, zLabelIndex) {
+        this.xAxis.notchLabelsArray[xLabelIndex].scale.set(1,1,1);
+        this.yAxis.notchLabelsArray[yLabelIndex].scale.set(1,1,1);
+        this.zAxis.notchLabelsArray[zLabelIndex].scale.set(1,1,1);
 
     };
 

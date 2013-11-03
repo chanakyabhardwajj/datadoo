@@ -264,7 +264,6 @@
             var intersects = ddI.raycaster.intersectObjects(ddI._intersectables);
 
             if (intersects.length > 0) {
-                ddI.renderer.domElement.style.cursor="pointer";
                 if (INTERSECTED != intersects[ 0 ].object) {
                     if (INTERSECTED)INTERSECTED.parent.onHoverOut();
                     INTERSECTED = intersects[ 0 ].object;
@@ -272,7 +271,6 @@
                 }
             }
             else {
-                ddI.renderer.domElement.style.cursor="default";
                 if (INTERSECTED) INTERSECTED.parent.onHoverOut();
                 INTERSECTED = null;
             }
@@ -355,8 +353,6 @@
 
                 rotateStart.copy(rotateEnd);
                 $(ddI._labelsDom).fadeOut(100);
-
-                ddI.render3DLabels();
             }
             else if (state === STATE.DOLLY) {
 
@@ -378,8 +374,6 @@
 
                 dollyStart.copy(dollyEnd);
                 $(ddI._labelsDom).fadeOut(100);
-
-                ddI.render3DLabels();
             }
             else if (state === STATE.PAN) {
 
@@ -392,11 +386,8 @@
 
                 panStart.copy(panEnd);
                 $(ddI._labelsDom).fadeOut(100);
-
-                ddI.render3DLabels();
             }
             scope.update();
-
 
         }
 
@@ -405,7 +396,6 @@
             state = STATE.NONE;
             $(ddI._labelsDom).fadeIn(100);
             ddI.renderLabels();
-            ddI.render3DLabels();
             ddI.renderSprites();
         }
 
@@ -437,8 +427,6 @@
 
             }
 
-            ddI.render3DLabels();
-
             if (this.timer) {
                 $(ddI._labelsDom).fadeOut(100);
                 window.clearTimeout(this.timer);
@@ -446,7 +434,6 @@
             this.timer = window.setTimeout(function () {
                 $(ddI._labelsDom).fadeIn(100);
                 ddI.renderLabels.apply(ddI);
-                ddI.render3DLabels.apply(ddI);
                 ddI.renderSprites.apply(ddI);
             }, 100);
         }
@@ -494,7 +481,6 @@
 
             }
             ddI.renderLabels();
-            ddI.render3DLabels();
             ddI.renderSprites();
 
         }
@@ -629,7 +615,6 @@
             }
 
             ddI.renderLabels();
-            ddI.render3DLabels();
             ddI.renderSprites();
 
         }
@@ -642,7 +627,6 @@
 
             state = STATE.NONE;
             ddI.renderLabels();
-            ddI.render3DLabels();
             ddI.renderSprites();
         }
 
