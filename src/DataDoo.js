@@ -93,7 +93,7 @@ window.DataDoo = (function () {
         this.axesConf = params.axes;
         this.cameraConf = params.camera;
 
-        
+
         this.lightsConf = params.lights;
         this.sceneConf = params.scene;
 
