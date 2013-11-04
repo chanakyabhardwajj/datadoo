@@ -16,7 +16,7 @@
         inner.style.left = '-50%';
         inner.style.top = '-.5em';
         inner.style.padding = "5px";
-        inner.style.backgroundColor = "transparent";
+        inner.style.backgroundColor = "rgba(220,220,220,0.6)";
         //inner.style.border = "1px dashed silver";
 
 

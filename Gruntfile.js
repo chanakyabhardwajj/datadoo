@@ -26,11 +26,12 @@ module.exports = function (grunt) {
                     ],
                     'build/vendor.js' : [
                         'src/vendor/three.js/index.js',
-                        'src/vendor/three.js/helvetiker.js',
+                        'src/vendor/helvetiker/index.js',
                         'src/vendor/jquery/jquery.js',
                         'src/vendor/underscore/underscore.js',
                         'src/vendor/miso.dataset/dist/miso.ds.deps.0.4.0.js',
-                        'src/vendor/momentjs/moment.js'
+                        'src/vendor/momentjs/moment.js',
+                        'src/vendor/tweenjs/index.js'
 
                     ]
                 },

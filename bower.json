@@ -14,6 +14,8 @@
         "underscore" : "git://github.com/jashkenas/underscore.git",
         "miso.dataset" : "0.4.0",
         "three.js" : "https://raw.github.com/mrdoob/three.js/master/build/three.js",
-        "momentjs" : "git://github.com/moment/moment"
+        "helvetiker" : "http://threejs.org/examples/fonts/helvetiker_regular.typeface.js",
+        "momentjs" : "git://github.com/moment/moment",
+        "tweenjs" : "https://raw.github.com/sole/tween.js/master/build/tween.min.js"
     }
 }

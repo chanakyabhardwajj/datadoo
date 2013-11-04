@@ -6,7 +6,7 @@
         if (ddI.gridBoolean) {
             //the following code-block is similar to THREE.GridHelper
             //but manually coding it, to keep the customising options open
-            var size = (Math.max(ddI.axes.xAxis.colUniqs.length, ddI.axes.zAxis.colUniqs.length) + 2) * ddI.gridStep, step = ddI.gridStep;
+            var size = (Math.max(ddI.axes.xAxis.notchLabelsArray.length, ddI.axes.zAxis.notchLabelsArray.length) + 2) * ddI.gridStep, step = ddI.gridStep;
 
             var geometry = new THREE.Geometry();
             var material = new THREE.LineBasicMaterial({ color : /*0xBED6E5*/ ddI.theme[2], opacity : 1, linewidth : 1 });
