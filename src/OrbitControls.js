@@ -34,7 +34,7 @@
         this.rotateSpeed = 1.0;
 
         // Set to true to disable this control
-        this.noPan = false;
+        this.noPan = true;
         this.keyPanSpeed = 7.0;	// pixels moved per arrow key push
 
         // Set to true to automatically rotate around the target
@@ -634,8 +634,9 @@
         document.addEventListener('contextmenu', function (event) {
             event.preventDefault();
         }, false);
+
         document.addEventListener('mousedown', onMouseDown, false);
-        document.addEventListener('mousemove', onMouseMove, false);
+        domElement.addEventListener('mousemove', onMouseMove, false);
         document.addEventListener('mouseup', onMouseUp, false);
         document.addEventListener('mousewheel', onMouseWheel, false);
         document.addEventListener('DOMMouseScroll', onMouseWheel, false); // firefox

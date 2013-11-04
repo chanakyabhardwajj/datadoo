@@ -99,36 +99,36 @@
         var labelConfig = {size : 2.5, height : 0.1, curveSegments : 10, font : "helvetiker"};
 
         if (this.xAxis.colType === "number") {
-            this.xAxis.length = Math.max(_.max(this.xAxis.colUniqs), 0) - Math.min(_.min(this.xAxis.colUniqs), 0) + ddI.gridStep;
+            this.xAxis.length = Math.max(_.max(this.xAxis.colUniqs), 0) - Math.min(_.min(this.xAxis.colUniqs), 0) + this.ddI.gridStep;
             this.xAxis.from = new THREE.Vector3(Math.min(_.min(this.xAxis.colUniqs), 0), 0, 0);
-            this.xAxis.to = new THREE.Vector3(Math.max(_.max(this.xAxis.colUniqs), 0), 0, 0);
+            this.xAxis.to = new THREE.Vector3(Math.max(_.max(this.xAxis.colUniqs)+ this.ddI.gridStep, 0), 0, 0);
         }
         else {
             this.xAxis.length = this.xAxis.colUniqs.length * ddI.gridStep;
             this.xAxis.from = new THREE.Vector3(0, 0, 0);
-            this.xAxis.to = new THREE.Vector3((this.xAxis.colUniqs.length + 1) * ddI.gridStep, 0, 0);
+            this.xAxis.to = new THREE.Vector3(this.ddI.gridStep + (this.xAxis.colUniqs.length + 1) * ddI.gridStep, 0, 0);
         }
 
         if (this.yAxis.colType === "number") {
-            this.yAxis.length = Math.max(_.max(this.yAxis.colUniqs), 0) - Math.min(_.min(this.yAxis.colUniqs), 0) + ddI.gridStep;
+            this.yAxis.length = Math.max(_.max(this.yAxis.colUniqs), 0) - Math.min(_.min(this.yAxis.colUniqs), 0) + this.ddI.gridStep;
             this.yAxis.from = new THREE.Vector3(0, Math.min(_.min(this.yAxis.colUniqs), 0), 0);
-            this.yAxis.to = new THREE.Vector3(0, Math.max(_.max(this.yAxis.colUniqs), 0), 0);
+            this.yAxis.to = new THREE.Vector3(0, Math.max(_.max(this.yAxis.colUniqs)+ this.ddI.gridStep, 0), 0);
         }
         else {
-            this.yAxis.length = this.yAxis.colUniqs.length * ddI.gridStep;
+            this.yAxis.length = this.yAxis.colUniqs.length * this.ddI.gridStep;
             this.yAxis.from = new THREE.Vector3(0, 0, 0);
-            this.yAxis.to = new THREE.Vector3(0, (this.yAxis.colUniqs.length + 1) * ddI.gridStep, 0);
+            this.yAxis.to = new THREE.Vector3(0, this.ddI.gridStep + (this.yAxis.colUniqs.length + 1) * ddI.gridStep, 0);
         }
 
         if (this.zAxis.colType === "number") {
-            this.zAxis.length = Math.max(_.max(this.zAxis.colUniqs), 0) - Math.min(_.min(this.zAxis.colUniqs), 0) + ddI.gridStep;
+            this.zAxis.length = Math.max(_.max(this.zAxis.colUniqs), 0) - Math.min(_.min(this.zAxis.colUniqs), 0) + this.ddI.gridStep;
             this.zAxis.from = new THREE.Vector3(0, 0, Math.min(_.min(this.zAxis.colUniqs), 0));
-            this.zAxis.to = new THREE.Vector3(0, 0, Math.max(_.max(this.zAxis.colUniqs), 0));
+            this.zAxis.to = new THREE.Vector3(0, 0, Math.max(_.max(this.zAxis.colUniqs) + this.ddI.gridStep, 0));
         }
         else {
             this.zAxis.length = this.zAxis.colUniqs.length * ddI.gridStep;
             this.zAxis.from = new THREE.Vector3(0, 0, 0);
-            this.zAxis.to = new THREE.Vector3(0, 0, (this.zAxis.colUniqs.length + 1) * ddI.gridStep);
+            this.zAxis.to = new THREE.Vector3(0, 0, this.ddI.gridStep + (this.zAxis.colUniqs.length + 1) * ddI.gridStep);
         }
 
         xlineGeometry.vertices.push(this.xAxis.from);
@@ -213,6 +213,10 @@
 
             notchLabel.rotateX(-Math.PI / 2);
             notchLabel.rotateZ(Math.PI / 2);
+
+            notchLabel.myAxis = "X";
+
+
             this.xAxis.add(notchShape);
             this.xAxis.add(notchLabel);
             this.xAxis.notchLabelsArray.push(notchLabel);
@@ -236,6 +240,9 @@
             notchLabel = new THREE.Mesh(notchLabelGeom, labelMaterial);
             ddI._3Dlabels.push(notchLabel);
             notchLabel.position = new THREE.Vector3(notchShape.position.x + ddI.gridStep / 5, notchShape.position.y, notchShape.position.z);
+
+            notchLabel.myAxis = "Y";
+
             this.yAxis.add(notchShape);
             this.yAxis.add(notchLabel);
             this.yAxis.notchLabelsArray.push(notchLabel);
@@ -259,6 +266,9 @@
             this.zAxis.positionHash[this.zAxis.colUniqs[i]] = i + 1;
             notchLabel.rotateX(-Math.PI/2);
             notchLabel.position = new THREE.Vector3(notchLabelGeom.boundingBox.min.x - notchLabelGeom.boundingBox.max.x - ddI.gridStep / 5, notchShape.position.y, notchShape.position.z);
+
+            notchLabel.myAxis = "Z";
+
             this.zAxis.add(notchShape);
             this.zAxis.add(notchLabel);
             this.zAxis.notchLabelsArray.push(notchLabel);
@@ -276,16 +286,58 @@
 
     DataDoo.AxesHelper = AxesHelper;
 
+    AxesHelper.prototype.hideAllLabels = function(){
+        _.each(this.xAxis.notchLabelsArray, function(o){o.visible = false;});
+        _.each(this.yAxis.notchLabelsArray, function(o){o.visible = false;});
+        _.each(this.zAxis.notchLabelsArray, function(o){o.visible = false;});
+    };
+
+    AxesHelper.prototype.showAllLabels = function(){
+        _.each(this.xAxis.notchLabelsArray, function(o){o.visible = true;});
+        _.each(this.yAxis.notchLabelsArray, function(o){o.visible = true;});
+        _.each(this.zAxis.notchLabelsArray, function(o){o.visible = true;});
+    };
+
     AxesHelper.prototype.highlightLabels = function (xLabelIndex, yLabelIndex, zLabelIndex) {
-        this.xAxis.notchLabelsArray[xLabelIndex].scale.set(1.6,1.6,3.2);
-        this.yAxis.notchLabelsArray[yLabelIndex].scale.set(1.6,1.6,3.2);
-        this.zAxis.notchLabelsArray[zLabelIndex].scale.set(1.6,1.6,3.2);
+        if(xLabelIndex && this.xAxis.notchLabelsArray[xLabelIndex]) {
+            this.xAxis.notchLabelsArray[xLabelIndex].visible = true;
+            this.xAxis.notchLabelsArray[xLabelIndex].scale.set(1.6,1.6,3.2);
+            //this.xAxis.notchLabelsArray[xLabelIndex].lookAtCam = true;
+        }
+        if(yLabelIndex && this.yAxis.notchLabelsArray[yLabelIndex]) {
+            this.yAxis.notchLabelsArray[yLabelIndex].scale.set(1.6,1.6,3.2);
+            this.yAxis.notchLabelsArray[yLabelIndex].visible = true;
+            //this.yAxis.notchLabelsArray[yLabelIndex].lookAtCam = true;
+        }
+        if(zLabelIndex && this.zAxis.notchLabelsArray[zLabelIndex]) {
+            this.zAxis.notchLabelsArray[zLabelIndex].scale.set(1.6,1.6,3.2);
+            this.zAxis.notchLabelsArray[zLabelIndex].visible = true;
+            //this.zAxis.notchLabelsArray[zLabelIndex].lookAtCam = true;
+        }
     };
 
     AxesHelper.prototype.unhighlightLabels = function (xLabelIndex, yLabelIndex, zLabelIndex) {
-        this.xAxis.notchLabelsArray[xLabelIndex].scale.set(1,1,1);
-        this.yAxis.notchLabelsArray[yLabelIndex].scale.set(1,1,1);
-        this.zAxis.notchLabelsArray[zLabelIndex].scale.set(1,1,1);
+        if(xLabelIndex && this.xAxis.notchLabelsArray[xLabelIndex]) {
+            this.xAxis.notchLabelsArray[xLabelIndex].scale.set(1,1,1);
+            //this.xAxis.notchLabelsArray[xLabelIndex].lookAtCam = false;
+            /*this.xAxis.notchLabelsArray[xLabelIndex].rotation.x = -Math.PI/2;
+            this.xAxis.notchLabelsArray[xLabelIndex].rotation.y = 0;
+            this.xAxis.notchLabelsArray[xLabelIndex].rotation.z = Math.PI/2;*/
+        }
+        if(yLabelIndex && this.yAxis.notchLabelsArray[yLabelIndex]) {
+            this.yAxis.notchLabelsArray[yLabelIndex].scale.set(1,1,1);
+            //this.yAxis.notchLabelsArray[yLabelIndex].lookAtCam = false;
+            /*this.yAxis.notchLabelsArray[yLabelIndex].rotation.x = 0;
+            this.yAxis.notchLabelsArray[yLabelIndex].rotation.y = 0;
+            this.yAxis.notchLabelsArray[yLabelIndex].rotation.z = 0;*/
+        }
+        if(zLabelIndex && this.zAxis.notchLabelsArray[zLabelIndex]) {
+            this.zAxis.notchLabelsArray[zLabelIndex].scale.set(1,1,1);
+            //this.zAxis.notchLabelsArray[zLabelIndex].lookAtCam = false;
+            /*this.zAxis.notchLabelsArray[zLabelIndex].rotation.x = -Math.PI/2;
+            this.zAxis.notchLabelsArray[zLabelIndex].rotation.y = 0;
+            this.zAxis.notchLabelsArray[zLabelIndex].rotation.z = 0;*/
+        }
 
     };
 

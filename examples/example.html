@@ -51,7 +51,7 @@
             });
 
             var misoConfig = {
-                url : 'https://api.github.com/repos/misoproject/dataset/commits?per_page=10&callback=',
+                url : 'https://api.github.com/repos/misoproject/dataset/commits?per_page=2&callback=',
                 jsonp : true,
                 extract : function (response) {
                     return response.data;
@@ -60,8 +60,8 @@
                 sync : true,
 
                 builder : function (rowData, rowIndex) {
-                    var g = new THREE.CubeGeometry(10, Math.abs(rowData.commitCount), 10);
-                    var cube = new THREE.Mesh(g, new THREE.MeshPhongMaterial({ color : 0xffcc00, transparent : true, opacity : 1, shininess : 10, shading : THREE.FlatShading }));
+                    var g = new THREE.CubeGeometry(4, Math.abs(rowData.commitCount), 4);
+                    var cube = new THREE.Mesh(g, new THREE.MeshPhongMaterial({ color : 0x337e77, transparent : true, opacity : 0.75, shininess : 10, shading : THREE.FlatShading }));
                     return {
                         shape : cube,
                         text : rowData.commitCount
@@ -79,8 +79,8 @@
                 sync : true,
 
                 builder : function (rowData, rowIndex) {
-                    var g = new THREE.CubeGeometry(10, Math.abs(rowData.commitCount), 10);
-                    var cube = new THREE.Mesh(g, new THREE.MeshPhongMaterial({ color : 0x00ffcc, transparent : true, opacity : 1, shininess : 10, shading : THREE.FlatShading }));
+                    var g = new THREE.CubeGeometry(4, Math.abs(rowData.commitCount), 4);
+                    var cube = new THREE.Mesh(g, new THREE.MeshPhongMaterial({ color : 0xf76eaea, transparent : true, opacity : 0.75, shininess : 10, shading : THREE.FlatShading }));
                     return {
                         shape : cube,
                         text : rowData.commitCount
@@ -91,16 +91,15 @@
             var dsMiso = new DataDoo.Dataset(misoConfig);
             var dsThree = new DataDoo.Dataset(threeConfig);
 
-            //var d = new DataDoo([dsMiso,dsThree]);
-            //d.run();
+            //var d0 = new DataDoo([dsMiso,dsThree]);
 
             var ds = new DataDoo.Dataset({
                 data : [
-                    { Marks : 15, /*Course : "A",*/ Year : "A191", Student : "Chanakya" },
-                    { Marks : 25, /*Course : "B",*/ Year : "A192", Student : "Sushant" },
-                    { Marks : 35, /*Course : "B",*/ Year : "A193", Student : "Vivek" },
-                    { Marks : 35, /*Course : "C",*/ Year : "A194", Student : "Azeem" },
-                    { Marks : 45, /*Course : "D",*/ Year : "A195", Student : "George" }
+                    { Marks : 15 , Student : "Chanakya" ,  Year : 1910},
+                    { Marks : 25 , Student : "Sushant"  ,  Year : 1920},
+                    { Marks : 35 , Student : "Vivek"    ,  Year : 1930},
+                    { Marks : 35 , Student : "Azeem"    ,  Year : 1940},
+                    { Marks : 45 , Student : "George"   ,  Year : 1950}
                 ],
 
                 builder : function (rowData, rowIndex) {
@@ -116,10 +115,10 @@
 
             var ds2 = new DataDoo.Dataset({
                 data : [
-                    { Marks : 50, /*Course : "E",*/ Year : "A196", Student : "Aditya"},
-                    { Marks : 60, /*Course : "F",*/ Year : "A197", Student : "Akash"},
-                    { Marks : 70, /*Course : "G",*/ Year : "A198", Student : "Patro"},
-                    { Marks : 80, /*Course : "H",*/ Year : "A199", Student : "Arefin"}
+                    { Marks : 50 , Student : "Aditya",  Year : 1960},
+                    { Marks : 60 , Student : "Akash" ,  Year : 1970},
+                    { Marks : 70 , Student : "Patro" ,  Year : 1980},
+                    { Marks : 80 , Student : "Arefin",  Year : 1990}
                 ],
 
                 builder : function (rowData, rowIndex) {
@@ -134,8 +133,8 @@
                 }
             });
 
-            var d = new DataDoo([ds, ds2], {axes:{y:{type:"mixed"}}});
-            d.run();
+            var d1 = new DataDoo([ds, ds2], {axes:{z:{type:"mixed"}}});
+
 
             /*var p = new THREE.Mesh(new THREE.CubeGeometry(10,10,10), new THREE.MeshBasicMaterial({color:0xff0000}));
              var p2 = new THREE.Mesh(new THREE.CubeGeometry(10,10,10), new THREE.MeshBasicMaterial({color:0x00ff00}));

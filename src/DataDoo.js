@@ -39,7 +39,7 @@ window.DataDoo = (function () {
         //    theme : 11
         //}
         params = params || {};
-        this.params = DataDoo.sceneDefaultParams;
+        this.params = JSON.parse(JSON.stringify(DataDoo.sceneDefaultParams));
         DataDoo.simpleDeepExtend(this.params, params);
 
 
@@ -107,6 +107,8 @@ window.DataDoo = (function () {
         this._sprites = [];
         this._nodes = [];
         this._intersectables = [];
+
+        this.run();
 
     }
 
@@ -192,12 +194,31 @@ window.DataDoo = (function () {
 
     DataDoo.prototype.render3DLabels = function () {
         /*var self = this, dist, sc;
-         dist = self.camera.position.distanceTo(self.cameraControls.target);
-         sc = Math.max(0.25, Math.min(dist/self.goldenDim, 1.25));
-         _.each(self._3Dlabels, function (label) {
-         label.lookAt(self.camera.position);
-         label.scale.set(sc,sc,sc);
-         });*/
+        _.each(self._3Dlabels, function (label) {
+            if(label.lookAtCam === true){
+                label.lookAt(self.camera.position);
+            }
+            else{
+                if(label.myAxis && label.myAxis === "X"){
+                    label.rotation.x = -Math.PI/2;
+                    label.rotation.y = 0;
+                    label.rotation.z = Math.PI/2;
+                }
+
+                else if(label.myAxis && label.myAxis === "Y"){
+                    label.rotation.x = 0;
+                    label.rotation.y = 0;
+                    label.rotation.z = 0;
+                }
+
+                else if(label.myAxis && label.myAxis === "Z"){
+                    label.rotation.x = -Math.PI/2;
+                    label.rotation.y = 0;
+                    label.rotation.z = 0;
+                }
+            }
+
+        });*/
     };
 
     DataDoo.prototype.renderSprites = function () {
@@ -318,8 +339,7 @@ window.DataDoo = (function () {
 
                 primitive.position.set(posSupplied.x || posArr[0], posSupplied.y || posArr[1], posSupplied.z || posArr[2]);
                 primitive.shape.geometry.computeBoundingBox();
-                var label = new DataDoo.Label(primitive.text, new THREE.Vector3(0, 0, 0), this);
-                primitive.add(label);
+
 
                 this._nodes.push(primitive);
                 this._intersectables.push(primitive.shape);
@@ -412,15 +432,15 @@ window.DataDoo = (function () {
         },
         axes : {
             x : {
-                type : "number",
+                type : "mixed",
                 color : 0xff0000
             },
             y : {
-                type : "number",
+                type : "mixed",
                 color : 0x00ff00
             },
             z : {
-                type : "number",
+                type : "mixed",
                 color : 0x0000ff
             }
         },
