@@ -39,16 +39,18 @@ window.DataDoo = (function () {
         //    theme : 11
         //}
         params = params || {};
-        params = _.extend(DataDoo.sceneDefaultParams, params);
+        this.params = JSON.parse(JSON.stringify(DataDoo.sceneDefaultParams));
+        DataDoo.simpleDeepExtend(this.params, params);
 
-        this.gridBoolean = params.grid;
-        this.gridStep = params.gridStep;
-        this.goldenDim = params.goldenDim;
-        this.theme = DataDoo.themes[params.theme];
+
+        this.gridBoolean = this.params.grid;
+        this.gridStep = this.params.gridStep;
+        this.goldenDim = this.params.goldenDim;
+        this.theme = DataDoo.themes[this.params.theme];
 
         //Title and Description
-        this.title = params.title;
-        this.description = params.description;
+        this.title = this.params.title;
+        this.description = this.params.description;
 
         var box = $("<div></div>");
         var titleBlock = $("<h3></h3>");
@@ -62,14 +64,14 @@ window.DataDoo = (function () {
         box.css({"position" : "absolute", "margin" : "auto", "width" : "100%"});
         $("body").append(box);
 
-        if (params.canvas === undefined) {
-            params.canvas = document.createElement('canvas');
-            params.canvas.width = window.innerWidth;
-            params.canvas.height = window.innerHeight;
-            document.body.appendChild(params.canvas);
+        if (this.params.canvas === undefined) {
+            this.params.canvas = document.createElement('canvas');
+            this.params.canvas.width = window.innerWidth;
+            this.params.canvas.height = window.innerHeight;
+            document.body.appendChild(this.params.canvas);
         }
 
-        this.canvas = params.canvas;
+        this.canvas = this.params.canvas;
 
         this.scene = new THREE.Scene();
         this.scene2 = new THREE.Scene();
@@ -90,12 +92,11 @@ window.DataDoo = (function () {
         /*this.renderer.setClearColor(0xffffff, 1);*/
         this.renderer.setClearColor(this.theme[4], 1);
 
-        this.axesConf = params.axes;
-        this.cameraConf = params.camera;
+        this.axesConf = this.params.axes;
+        this.cameraConf = this.params.camera;
 
-        
-        this.lightsConf = params.lights;
-        this.sceneConf = params.scene;
+        this.lightsConf = this.params.lights;
+        this.sceneConf = this.params.scene;
 
         //Internal Arrays
         this._labelsDom = document.createElement("div");
@@ -106,6 +107,8 @@ window.DataDoo = (function () {
         this._sprites = [];
         this._nodes = [];
         this._intersectables = [];
+
+        this.run();
 
     }
 
@@ -191,11 +194,30 @@ window.DataDoo = (function () {
 
     DataDoo.prototype.render3DLabels = function () {
         /*var self = this, dist, sc;
-        dist = self.camera.position.distanceTo(self.cameraControls.target);
-        sc = Math.max(0.25, Math.min(dist/self.goldenDim, 1.25));
         _.each(self._3Dlabels, function (label) {
-            label.lookAt(self.camera.position);
-            label.scale.set(sc,sc,sc);
+            if(label.lookAtCam === true){
+                label.lookAt(self.camera.position);
+            }
+            else{
+                if(label.myAxis && label.myAxis === "X"){
+                    label.rotation.x = -Math.PI/2;
+                    label.rotation.y = 0;
+                    label.rotation.z = Math.PI/2;
+                }
+
+                else if(label.myAxis && label.myAxis === "Y"){
+                    label.rotation.x = 0;
+                    label.rotation.y = 0;
+                    label.rotation.z = 0;
+                }
+
+                else if(label.myAxis && label.myAxis === "Z"){
+                    label.rotation.x = -Math.PI/2;
+                    label.rotation.y = 0;
+                    label.rotation.z = 0;
+                }
+            }
+
         });*/
     };
 
@@ -203,7 +225,7 @@ window.DataDoo = (function () {
         var self = this, dist;
         _.each(self._sprites, function (sprite) {
             dist = sprite.position.distanceTo(self.camera.position);
-            var sc = 300/dist;
+            var sc = 300 / dist;
             sprite.scale.x = 120 + self.gridStep * (sc);
             sprite.scale.y = 50 + self.gridStep * (sc);
         });
@@ -288,26 +310,36 @@ window.DataDoo = (function () {
                 var posArr = [];
 
                 for (var k = 0, l = colNames.length; k < l; k++) {
-
-                    if (ds.column(colNames[k]).type === "number") {
-                        posArr.push(row[colNames[k]]);
-                    }
-                    else {
-                        if (k === 0) {
+                    if (k === 0) {
+                        if (this.params.axes.x.type === "number") {
+                            posArr.push(row[colNames[k]]);
+                        }
+                        else {
                             posArr.push(this.gridStep * this.axes.xAxis.positionHash[row[colNames[k]]]);
                         }
-                        else if (k === 1) {
+                    }
+                    else if (k === 1) {
+                        if (this.params.axes.y.type === "number") {
+                            posArr.push(row[colNames[k]]);
+                        }
+                        else {
                             posArr.push(this.gridStep * this.axes.yAxis.positionHash[row[colNames[k]]]);
                         }
-                        else if (k === 2) {
+                    }
+                    else if (k === 2) {
+                        if (this.params.axes.z.type === "number") {
+                            posArr.push(row[colNames[k]]);
+                        }
+                        else {
                             posArr.push(this.gridStep * this.axes.zAxis.positionHash[row[colNames[k]]]);
                         }
                     }
+
                 }
+
                 primitive.position.set(posSupplied.x || posArr[0], posSupplied.y || posArr[1], posSupplied.z || posArr[2]);
                 primitive.shape.geometry.computeBoundingBox();
-                var label = new DataDoo.Label(primitive.text, new THREE.Vector3(0, 0, 0), this);
-                primitive.add(label);
+
 
                 this._nodes.push(primitive);
                 this._intersectables.push(primitive.shape);
@@ -345,8 +377,16 @@ window.DataDoo = (function () {
                     success : fetchSuccess
                 }));
             }
+            //Surprisingly (or not), the underscore deferred fails.
+            //Using the good old jquery now.
+            /*_.when(promises).then(function () {
+             self.prepareAxes();
+             self.prepareGuides();
+             self.prepareGrid();
+             self.build();
+             });*/
 
-            _.when(promises).then(function () {
+            $.when.apply($, promises).done(function () {
                 self.prepareAxes();
                 self.prepareGuides();
                 self.prepareGrid();
@@ -392,12 +432,15 @@ window.DataDoo = (function () {
         },
         axes : {
             x : {
+                type : "mixed",
                 color : 0xff0000
             },
             y : {
+                type : "mixed",
                 color : 0x00ff00
             },
             z : {
+                type : "mixed",
                 color : 0x0000ff
             }
         },
@@ -574,6 +617,26 @@ window.DataDoo = (function () {
 
     ];
 
+    DataDoo.simpleDeepExtend = function (target, source) {
+        //This is a very light weight utility function.
+        //Do not use it for edge cases.
+        if (source !== null && typeof source === 'object') {
+            for (var prop in source) {
+                if (prop in target) {
+                    if (typeof target[prop] === "object") {
+                        DataDoo.simpleDeepExtend(target[prop], source[prop]);
+                    }
+                    else {
+                        target[prop] = source[prop];
+                    }
+                }
+                else {
+                    target[prop] = source[prop];
+                }
+            }
+        }
+    };
+
     return DataDoo;
 })();
 //This is the dataset for DataDoo. Think of this as the tables or database that hold your data, locally.
@@ -611,7 +674,8 @@ window.DataDoo = (function () {
         //Stuff all the column-name-arrays in this super-array.
         var allColNames = [], colNames, i, j, x, y, tempArr = [], label;
         for (i = 0, j = this.datasets.length; i < j; i++) {
-            allColNames.push(this.datasets[i].columnNames());
+            var ds = this.datasets[i];
+            allColNames.push(ds.columnNames());
         }
 
         //Check if all the column-name-arrays have the same length i.e. same number of columns
@@ -642,8 +706,10 @@ window.DataDoo = (function () {
 
         for (x = 0, y = this.datasets.length; x < y; x++) {
             tempArr.push(this.datasets[x].column(colNames[0]).data);
-            if (this.datasets[x].column(colNames[0]).type !== "number") {
+            if (this.ddI.params.axes.x.type !== "number" || this.datasets[x].column(colNames[0]).type !== "number") {
                 this.xAxis.colType = "mixed";
+                this.ddI.params.axes.x.type = this.xAxis.colType;
+
             }
         }
         this.xAxis.colUniqs = _.chain(tempArr).flatten().uniq().value();
@@ -658,8 +724,9 @@ window.DataDoo = (function () {
 
         for (x = 0, y = this.datasets.length; x < y; x++) {
             tempArr.push(this.datasets[x].column(colNames[1]).data);
-            if (this.datasets[x].column(colNames[1]).type !== "number") {
+            if (this.ddI.params.axes.y.type !== "number" || this.datasets[x].column(colNames[1]).type !== "number") {
                 this.yAxis.colType = "mixed";
+                this.ddI.params.axes.y.type = this.yAxis.colType;
             }
         }
         this.yAxis.colUniqs = _.chain(tempArr).flatten().uniq().value();
@@ -674,8 +741,9 @@ window.DataDoo = (function () {
 
         for (x = 0, y = this.datasets.length; x < y; x++) {
             tempArr.push(this.datasets[x].column(colNames[2]).data);
-            if (this.datasets[x].column(colNames[2]).type !== "number") {
+            if (this.ddI.params.axes.z.type !== "number" || this.datasets[x].column(colNames[2]).type !== "number") {
                 this.zAxis.colType = "mixed";
+                this.ddI.params.axes.z.type = this.zAxis.colType;
             }
         }
         this.zAxis.colUniqs = _.chain(tempArr).flatten().uniq().value();
@@ -694,36 +762,36 @@ window.DataDoo = (function () {
         var labelConfig = {size : 2.5, height : 0.1, curveSegments : 10, font : "helvetiker"};
 
         if (this.xAxis.colType === "number") {
-            this.xAxis.length = Math.max(_.max(this.xAxis.colUniqs), 0) - Math.min(_.min(this.xAxis.colUniqs), 0) + ddI.gridStep;
+            this.xAxis.length = Math.max(_.max(this.xAxis.colUniqs), 0) - Math.min(_.min(this.xAxis.colUniqs), 0) + this.ddI.gridStep;
             this.xAxis.from = new THREE.Vector3(Math.min(_.min(this.xAxis.colUniqs), 0), 0, 0);
-            this.xAxis.to = new THREE.Vector3(Math.max(_.max(this.xAxis.colUniqs), 0), 0, 0);
+            this.xAxis.to = new THREE.Vector3(Math.max(_.max(this.xAxis.colUniqs)+ this.ddI.gridStep, 0), 0, 0);
         }
         else {
             this.xAxis.length = this.xAxis.colUniqs.length * ddI.gridStep;
             this.xAxis.from = new THREE.Vector3(0, 0, 0);
-            this.xAxis.to = new THREE.Vector3((this.xAxis.colUniqs.length + 1) * ddI.gridStep, 0, 0);
+            this.xAxis.to = new THREE.Vector3(this.ddI.gridStep + (this.xAxis.colUniqs.length + 1) * ddI.gridStep, 0, 0);
         }
 
         if (this.yAxis.colType === "number") {
-            this.yAxis.length = Math.max(_.max(this.yAxis.colUniqs), 0) - Math.min(_.min(this.yAxis.colUniqs), 0) + ddI.gridStep;
+            this.yAxis.length = Math.max(_.max(this.yAxis.colUniqs), 0) - Math.min(_.min(this.yAxis.colUniqs), 0) + this.ddI.gridStep;
             this.yAxis.from = new THREE.Vector3(0, Math.min(_.min(this.yAxis.colUniqs), 0), 0);
-            this.yAxis.to = new THREE.Vector3(0, Math.max(_.max(this.yAxis.colUniqs), 0), 0);
+            this.yAxis.to = new THREE.Vector3(0, Math.max(_.max(this.yAxis.colUniqs)+ this.ddI.gridStep, 0), 0);
         }
         else {
-            this.yAxis.length = this.yAxis.colUniqs.length * ddI.gridStep;
+            this.yAxis.length = this.yAxis.colUniqs.length * this.ddI.gridStep;
             this.yAxis.from = new THREE.Vector3(0, 0, 0);
-            this.yAxis.to = new THREE.Vector3(0, (this.yAxis.colUniqs.length + 1) * ddI.gridStep, 0);
+            this.yAxis.to = new THREE.Vector3(0, this.ddI.gridStep + (this.yAxis.colUniqs.length + 1) * ddI.gridStep, 0);
         }
 
         if (this.zAxis.colType === "number") {
-            this.zAxis.length = Math.max(_.max(this.zAxis.colUniqs), 0) - Math.min(_.min(this.zAxis.colUniqs), 0) + ddI.gridStep;
+            this.zAxis.length = Math.max(_.max(this.zAxis.colUniqs), 0) - Math.min(_.min(this.zAxis.colUniqs), 0) + this.ddI.gridStep;
             this.zAxis.from = new THREE.Vector3(0, 0, Math.min(_.min(this.zAxis.colUniqs), 0));
-            this.zAxis.to = new THREE.Vector3(0, 0, Math.max(_.max(this.zAxis.colUniqs), 0));
+            this.zAxis.to = new THREE.Vector3(0, 0, Math.max(_.max(this.zAxis.colUniqs) + this.ddI.gridStep, 0));
         }
         else {
             this.zAxis.length = this.zAxis.colUniqs.length * ddI.gridStep;
             this.zAxis.from = new THREE.Vector3(0, 0, 0);
-            this.zAxis.to = new THREE.Vector3(0, 0, (this.zAxis.colUniqs.length + 1) * ddI.gridStep);
+            this.zAxis.to = new THREE.Vector3(0, 0, this.ddI.gridStep + (this.zAxis.colUniqs.length + 1) * ddI.gridStep);
         }
 
         xlineGeometry.vertices.push(this.xAxis.from);
@@ -794,7 +862,7 @@ window.DataDoo = (function () {
 
             if (this.xAxis.colType === "number") {
                 notchShape.position.set((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * i), this.xAxis.from.y, this.xAxis.from.z);
-                notchLabel = new THREE.Mesh(notchLabelGeom, labelMaterial);
+                notchLabelGeom = new THREE.TextGeometry((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * i), labelConfig);
             }
             else {
                 notchShape.position.set((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * (i + 1)), this.xAxis.from.y, this.xAxis.from.z);
@@ -808,6 +876,10 @@ window.DataDoo = (function () {
 
             notchLabel.rotateX(-Math.PI / 2);
             notchLabel.rotateZ(Math.PI / 2);
+
+            notchLabel.myAxis = "X";
+
+
             this.xAxis.add(notchShape);
             this.xAxis.add(notchLabel);
             this.xAxis.notchLabelsArray.push(notchLabel);
@@ -831,6 +903,9 @@ window.DataDoo = (function () {
             notchLabel = new THREE.Mesh(notchLabelGeom, labelMaterial);
             ddI._3Dlabels.push(notchLabel);
             notchLabel.position = new THREE.Vector3(notchShape.position.x + ddI.gridStep / 5, notchShape.position.y, notchShape.position.z);
+
+            notchLabel.myAxis = "Y";
+
             this.yAxis.add(notchShape);
             this.yAxis.add(notchLabel);
             this.yAxis.notchLabelsArray.push(notchLabel);
@@ -854,6 +929,9 @@ window.DataDoo = (function () {
             this.zAxis.positionHash[this.zAxis.colUniqs[i]] = i + 1;
             notchLabel.rotateX(-Math.PI/2);
             notchLabel.position = new THREE.Vector3(notchLabelGeom.boundingBox.min.x - notchLabelGeom.boundingBox.max.x - ddI.gridStep / 5, notchShape.position.y, notchShape.position.z);
+
+            notchLabel.myAxis = "Z";
+
             this.zAxis.add(notchShape);
             this.zAxis.add(notchLabel);
             this.zAxis.notchLabelsArray.push(notchLabel);
@@ -871,16 +949,58 @@ window.DataDoo = (function () {
 
     DataDoo.AxesHelper = AxesHelper;
 
+    AxesHelper.prototype.hideAllLabels = function(){
+        _.each(this.xAxis.notchLabelsArray, function(o){o.visible = false;});
+        _.each(this.yAxis.notchLabelsArray, function(o){o.visible = false;});
+        _.each(this.zAxis.notchLabelsArray, function(o){o.visible = false;});
+    };
+
+    AxesHelper.prototype.showAllLabels = function(){
+        _.each(this.xAxis.notchLabelsArray, function(o){o.visible = true;});
+        _.each(this.yAxis.notchLabelsArray, function(o){o.visible = true;});
+        _.each(this.zAxis.notchLabelsArray, function(o){o.visible = true;});
+    };
+
     AxesHelper.prototype.highlightLabels = function (xLabelIndex, yLabelIndex, zLabelIndex) {
-        this.xAxis.notchLabelsArray[xLabelIndex].scale.set(1.6,1.6,3.2);
-        this.yAxis.notchLabelsArray[yLabelIndex].scale.set(1.6,1.6,3.2);
-        this.zAxis.notchLabelsArray[zLabelIndex].scale.set(1.6,1.6,3.2);
+        if(xLabelIndex && this.xAxis.notchLabelsArray[xLabelIndex]) {
+            this.xAxis.notchLabelsArray[xLabelIndex].visible = true;
+            this.xAxis.notchLabelsArray[xLabelIndex].scale.set(1.6,1.6,3.2);
+            //this.xAxis.notchLabelsArray[xLabelIndex].lookAtCam = true;
+        }
+        if(yLabelIndex && this.yAxis.notchLabelsArray[yLabelIndex]) {
+            this.yAxis.notchLabelsArray[yLabelIndex].scale.set(1.6,1.6,3.2);
+            this.yAxis.notchLabelsArray[yLabelIndex].visible = true;
+            //this.yAxis.notchLabelsArray[yLabelIndex].lookAtCam = true;
+        }
+        if(zLabelIndex && this.zAxis.notchLabelsArray[zLabelIndex]) {
+            this.zAxis.notchLabelsArray[zLabelIndex].scale.set(1.6,1.6,3.2);
+            this.zAxis.notchLabelsArray[zLabelIndex].visible = true;
+            //this.zAxis.notchLabelsArray[zLabelIndex].lookAtCam = true;
+        }
     };
 
     AxesHelper.prototype.unhighlightLabels = function (xLabelIndex, yLabelIndex, zLabelIndex) {
-        this.xAxis.notchLabelsArray[xLabelIndex].scale.set(1,1,1);
-        this.yAxis.notchLabelsArray[yLabelIndex].scale.set(1,1,1);
-        this.zAxis.notchLabelsArray[zLabelIndex].scale.set(1,1,1);
+        if(xLabelIndex && this.xAxis.notchLabelsArray[xLabelIndex]) {
+            this.xAxis.notchLabelsArray[xLabelIndex].scale.set(1,1,1);
+            //this.xAxis.notchLabelsArray[xLabelIndex].lookAtCam = false;
+            /*this.xAxis.notchLabelsArray[xLabelIndex].rotation.x = -Math.PI/2;
+            this.xAxis.notchLabelsArray[xLabelIndex].rotation.y = 0;
+            this.xAxis.notchLabelsArray[xLabelIndex].rotation.z = Math.PI/2;*/
+        }
+        if(yLabelIndex && this.yAxis.notchLabelsArray[yLabelIndex]) {
+            this.yAxis.notchLabelsArray[yLabelIndex].scale.set(1,1,1);
+            //this.yAxis.notchLabelsArray[yLabelIndex].lookAtCam = false;
+            /*this.yAxis.notchLabelsArray[yLabelIndex].rotation.x = 0;
+            this.yAxis.notchLabelsArray[yLabelIndex].rotation.y = 0;
+            this.yAxis.notchLabelsArray[yLabelIndex].rotation.z = 0;*/
+        }
+        if(zLabelIndex && this.zAxis.notchLabelsArray[zLabelIndex]) {
+            this.zAxis.notchLabelsArray[zLabelIndex].scale.set(1,1,1);
+            //this.zAxis.notchLabelsArray[zLabelIndex].lookAtCam = false;
+            /*this.zAxis.notchLabelsArray[zLabelIndex].rotation.x = -Math.PI/2;
+            this.zAxis.notchLabelsArray[zLabelIndex].rotation.y = 0;
+            this.zAxis.notchLabelsArray[zLabelIndex].rotation.z = 0;*/
+        }
 
     };
 
@@ -894,7 +1014,7 @@ window.DataDoo = (function () {
         if (ddI.gridBoolean) {
             //the following code-block is similar to THREE.GridHelper
             //but manually coding it, to keep the customising options open
-            var size = (Math.max(ddI.axes.xAxis.colUniqs.length, ddI.axes.zAxis.colUniqs.length) + 2) * ddI.gridStep, step = ddI.gridStep;
+            var size = (Math.max(ddI.axes.xAxis.notchLabelsArray.length, ddI.axes.zAxis.notchLabelsArray.length) + 2) * ddI.gridStep, step = ddI.gridStep;
 
             var geometry = new THREE.Geometry();
             var material = new THREE.LineBasicMaterial({ color : /*0xBED6E5*/ ddI.theme[2], opacity : 1, linewidth : 1 });
@@ -1059,21 +1179,24 @@ window.DataDoo = (function () {
         this.row = rowData;
 
         this.myxVal = this.row[this.ddI.axes.xAxis.colName];
-        this.myxIndex = this.ddI.axes.xAxis.positionHash[this.myxVal] - 1;
+        this.myxIndex = this.ddI.params.axes.x.type === "number" ? this.ddI.axes.xAxis.positionHash[this.myxVal] : this.ddI.axes.xAxis.positionHash[this.myxVal] - 1;
 
         this.myyVal = this.row[this.ddI.axes.yAxis.colName];
-        this.myyIndex = this.ddI.axes.yAxis.positionHash[this.myyVal] - 1;
+        this.myyIndex = this.ddI.params.axes.y.type === "number" ? this.ddI.axes.yAxis.positionHash[this.myyVal] : this.ddI.axes.yAxis.positionHash[this.myyVal] - 1;
 
         this.myzVal = this.row[this.ddI.axes.zAxis.colName];
-        this.myzIndex = this.ddI.axes.zAxis.positionHash[this.myzVal] - 1;
+        this.myzIndex = this.ddI.params.axes.z.type === "number" ? this.ddI.axes.zAxis.positionHash[this.myzVal] : this.ddI.axes.zAxis.positionHash[this.myzVal] - 1;
 
         this.shape = configObj.shape || null;
         this.text = configObj.text || null;
         this.add(this.shape);
 
+        this.label = new DataDoo.Label(this.text, new THREE.Vector3(0, 0, 0), ddI);
+        this.add(this.label);
 
-        this.hoverOutline = new THREE.Mesh(this.shape.geometry, new THREE.MeshBasicMaterial( { color:0x000000, transparent:true, opacity:1, side:THREE.BackSide} ));
-        this.hoverOutline.scale.multiplyScalar(1.04);
+
+        this.hoverOutline = new THREE.Mesh(this.shape.geometry, new THREE.MeshBasicMaterial( { color:0x000000, transparent:true, opacity:0.8, side:THREE.BackSide} ));
+        this.hoverOutline.scale.multiplyScalar(1.02);
 
         /*this.boundingBox = new THREE.BoxHelper(this.shape);
         this.boundingBox.scale.multiplyScalar(1.05);
@@ -1088,19 +1211,32 @@ window.DataDoo = (function () {
     Primitive.prototype.constructor = Primitive;
 
     Primitive.prototype.onHoverIn = function(){
-        this.shape.scale.multiplyScalar(1.03);
+        this.ddI.renderer.domElement.style.cursor = "pointer";
+        _.each(this.ddI._nodes, function(o){o.shape.visible = false;});
+        this.shape.visible = true;
         this.shape.add(this.hoverOutline);
+        this.shape.material.opacity += 0.3;
+
+        _.each(this.ddI._labels, function(o){o.element.style.display = "none";});
+        this.label.element.style.display = "block";
 
         this.ddI.guides.drawGuides(this.position);
 
+        this.ddI.axes.hideAllLabels();
         this.ddI.axes.highlightLabels(this.myxIndex, this.myyIndex, this.myzIndex);
     };
 
     Primitive.prototype.onHoverOut = function(){
-        this.shape.scale.set(1,1,1);
+        this.ddI.renderer.domElement.style.cursor = "default";
+        _.each(this.ddI._nodes, function(o){o.shape.visible = true;});
         this.shape.remove(this.hoverOutline);
+        this.shape.material.opacity -= 0.3;
+
+        _.each(this.ddI._labels, function(o){o.element.style.display = "block";});
 
         this.ddI.guides.hideGuides();
+
+        this.ddI.axes.showAllLabels();
         this.ddI.axes.unhighlightLabels(this.myxIndex, this.myyIndex, this.myzIndex);
     };
 
@@ -1136,7 +1272,7 @@ window.DataDoo = (function () {
         this.rotateSpeed = 1.0;
 
         // Set to true to disable this control
-        this.noPan = false;
+        this.noPan = true;
         this.keyPanSpeed = 7.0;	// pixels moved per arrow key push
 
         // Set to true to automatically rotate around the target
@@ -1372,7 +1508,9 @@ window.DataDoo = (function () {
                 }
             }
             else {
-                if (INTERSECTED) INTERSECTED.parent.onHoverOut();
+                if (INTERSECTED) {
+                    INTERSECTED.parent.onHoverOut();
+                }
                 INTERSECTED = null;
             }
         }
@@ -1734,8 +1872,9 @@ window.DataDoo = (function () {
         document.addEventListener('contextmenu', function (event) {
             event.preventDefault();
         }, false);
+
         document.addEventListener('mousedown', onMouseDown, false);
-        document.addEventListener('mousemove', onMouseMove, false);
+        domElement.addEventListener('mousemove', onMouseMove, false);
         document.addEventListener('mouseup', onMouseUp, false);
         document.addEventListener('mousewheel', onMouseWheel, false);
         document.addEventListener('DOMMouseScroll', onMouseWheel, false); // firefox
@@ -1770,7 +1909,7 @@ window.DataDoo = (function () {
         inner.style.left = '-50%';
         inner.style.top = '-.5em';
         inner.style.padding = "5px";
-        inner.style.backgroundColor = "transparent";
+        inner.style.backgroundColor = "rgba(220,220,220,0.6)";
         //inner.style.border = "1px dashed silver";
 
 
