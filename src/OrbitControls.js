@@ -1,4 +1,3 @@
-
 /*
 * This class is originally plucked from Three.js repo.
 * But due to the unextensible design, I have adopted it in DataDoo itself.
@@ -271,7 +270,9 @@
                 }
             }
             else {
-                if (INTERSECTED) INTERSECTED.parent.onHoverOut();
+                if (INTERSECTED) {
+                    INTERSECTED.parent.onHoverOut();
+                }
                 INTERSECTED = null;
             }
         }

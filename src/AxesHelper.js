@@ -11,7 +11,8 @@
         //Stuff all the column-name-arrays in this super-array.
         var allColNames = [], colNames, i, j, x, y, tempArr = [], label;
         for (i = 0, j = this.datasets.length; i < j; i++) {
-            allColNames.push(this.datasets[i].columnNames());
+            var ds = this.datasets[i];
+            allColNames.push(ds.columnNames());
         }
 
         //Check if all the column-name-arrays have the same length i.e. same number of columns
@@ -42,8 +43,10 @@
 
         for (x = 0, y = this.datasets.length; x < y; x++) {
             tempArr.push(this.datasets[x].column(colNames[0]).data);
-            if (this.datasets[x].column(colNames[0]).type !== "number") {
+            if (this.ddI.params.axes.x.type !== "number" || this.datasets[x].column(colNames[0]).type !== "number") {
                 this.xAxis.colType = "mixed";
+                this.ddI.params.axes.x.type = this.xAxis.colType;
+
             }
         }
         this.xAxis.colUniqs = _.chain(tempArr).flatten().uniq().value();
@@ -58,8 +61,9 @@
 
         for (x = 0, y = this.datasets.length; x < y; x++) {
             tempArr.push(this.datasets[x].column(colNames[1]).data);
-            if (this.datasets[x].column(colNames[1]).type !== "number") {
+            if (this.ddI.params.axes.y.type !== "number" || this.datasets[x].column(colNames[1]).type !== "number") {
                 this.yAxis.colType = "mixed";
+                this.ddI.params.axes.y.type = this.yAxis.colType;
             }
         }
         this.yAxis.colUniqs = _.chain(tempArr).flatten().uniq().value();
@@ -74,8 +78,9 @@
 
         for (x = 0, y = this.datasets.length; x < y; x++) {
             tempArr.push(this.datasets[x].column(colNames[2]).data);
-            if (this.datasets[x].column(colNames[2]).type !== "number") {
+            if (this.ddI.params.axes.z.type !== "number" || this.datasets[x].column(colNames[2]).type !== "number") {
                 this.zAxis.colType = "mixed";
+                this.ddI.params.axes.z.type = this.zAxis.colType;
             }
         }
         this.zAxis.colUniqs = _.chain(tempArr).flatten().uniq().value();
@@ -194,7 +199,7 @@
 
             if (this.xAxis.colType === "number") {
                 notchShape.position.set((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * i), this.xAxis.from.y, this.xAxis.from.z);
-                notchLabel = new THREE.Mesh(notchLabelGeom, labelMaterial);
+                notchLabelGeom = new THREE.TextGeometry((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * i), labelConfig);
             }
             else {
                 notchShape.position.set((this.xAxis.from.x - (this.xAxis.from.x % ddI.gridStep)) + (ddI.gridStep * (i + 1)), this.xAxis.from.y, this.xAxis.from.z);

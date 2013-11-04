@@ -39,16 +39,18 @@ window.DataDoo = (function () {
         //    theme : 11
         //}
         params = params || {};
-        params = _.extend(DataDoo.sceneDefaultParams, params);
+        this.params = DataDoo.sceneDefaultParams;
+        DataDoo.simpleDeepExtend(this.params, params);
 
-        this.gridBoolean = params.grid;
-        this.gridStep = params.gridStep;
-        this.goldenDim = params.goldenDim;
-        this.theme = DataDoo.themes[params.theme];
+
+        this.gridBoolean = this.params.grid;
+        this.gridStep = this.params.gridStep;
+        this.goldenDim = this.params.goldenDim;
+        this.theme = DataDoo.themes[this.params.theme];
 
         //Title and Description
-        this.title = params.title;
-        this.description = params.description;
+        this.title = this.params.title;
+        this.description = this.params.description;
 
         var box = $("<div></div>");
         var titleBlock = $("<h3></h3>");
@@ -62,14 +64,14 @@ window.DataDoo = (function () {
         box.css({"position" : "absolute", "margin" : "auto", "width" : "100%"});
         $("body").append(box);
 
-        if (params.canvas === undefined) {
-            params.canvas = document.createElement('canvas');
-            params.canvas.width = window.innerWidth;
-            params.canvas.height = window.innerHeight;
-            document.body.appendChild(params.canvas);
+        if (this.params.canvas === undefined) {
+            this.params.canvas = document.createElement('canvas');
+            this.params.canvas.width = window.innerWidth;
+            this.params.canvas.height = window.innerHeight;
+            document.body.appendChild(this.params.canvas);
         }
 
-        this.canvas = params.canvas;
+        this.canvas = this.params.canvas;
 
         this.scene = new THREE.Scene();
         this.scene2 = new THREE.Scene();
@@ -90,12 +92,11 @@ window.DataDoo = (function () {
         /*this.renderer.setClearColor(0xffffff, 1);*/
         this.renderer.setClearColor(this.theme[4], 1);
 
-        this.axesConf = params.axes;
-        this.cameraConf = params.camera;
+        this.axesConf = this.params.axes;
+        this.cameraConf = this.params.camera;
 
-
-        this.lightsConf = params.lights;
-        this.sceneConf = params.scene;
+        this.lightsConf = this.params.lights;
+        this.sceneConf = this.params.scene;
 
         //Internal Arrays
         this._labelsDom = document.createElement("div");
@@ -191,19 +192,19 @@ window.DataDoo = (function () {
 
     DataDoo.prototype.render3DLabels = function () {
         /*var self = this, dist, sc;
-        dist = self.camera.position.distanceTo(self.cameraControls.target);
-        sc = Math.max(0.25, Math.min(dist/self.goldenDim, 1.25));
-        _.each(self._3Dlabels, function (label) {
-            label.lookAt(self.camera.position);
-            label.scale.set(sc,sc,sc);
-        });*/
+         dist = self.camera.position.distanceTo(self.cameraControls.target);
+         sc = Math.max(0.25, Math.min(dist/self.goldenDim, 1.25));
+         _.each(self._3Dlabels, function (label) {
+         label.lookAt(self.camera.position);
+         label.scale.set(sc,sc,sc);
+         });*/
     };
 
     DataDoo.prototype.renderSprites = function () {
         var self = this, dist;
         _.each(self._sprites, function (sprite) {
             dist = sprite.position.distanceTo(self.camera.position);
-            var sc = 300/dist;
+            var sc = 300 / dist;
             sprite.scale.x = 120 + self.gridStep * (sc);
             sprite.scale.y = 50 + self.gridStep * (sc);
         });
@@ -288,22 +289,33 @@ window.DataDoo = (function () {
                 var posArr = [];
 
                 for (var k = 0, l = colNames.length; k < l; k++) {
-
-                    if (ds.column(colNames[k]).type === "number") {
-                        posArr.push(row[colNames[k]]);
-                    }
-                    else {
-                        if (k === 0) {
+                    if (k === 0) {
+                        if (this.params.axes.x.type === "number") {
+                            posArr.push(row[colNames[k]]);
+                        }
+                        else {
                             posArr.push(this.gridStep * this.axes.xAxis.positionHash[row[colNames[k]]]);
                         }
-                        else if (k === 1) {
+                    }
+                    else if (k === 1) {
+                        if (this.params.axes.y.type === "number") {
+                            posArr.push(row[colNames[k]]);
+                        }
+                        else {
                             posArr.push(this.gridStep * this.axes.yAxis.positionHash[row[colNames[k]]]);
                         }
-                        else if (k === 2) {
+                    }
+                    else if (k === 2) {
+                        if (this.params.axes.z.type === "number") {
+                            posArr.push(row[colNames[k]]);
+                        }
+                        else {
                             posArr.push(this.gridStep * this.axes.zAxis.positionHash[row[colNames[k]]]);
                         }
                     }
+
                 }
+
                 primitive.position.set(posSupplied.x || posArr[0], posSupplied.y || posArr[1], posSupplied.z || posArr[2]);
                 primitive.shape.geometry.computeBoundingBox();
                 var label = new DataDoo.Label(primitive.text, new THREE.Vector3(0, 0, 0), this);
@@ -345,8 +357,16 @@ window.DataDoo = (function () {
                     success : fetchSuccess
                 }));
             }
+            //Surprisingly (or not), the underscore deferred fails.
+            //Using the good old jquery now.
+            /*_.when(promises).then(function () {
+             self.prepareAxes();
+             self.prepareGuides();
+             self.prepareGrid();
+             self.build();
+             });*/
 
-            _.when(promises).then(function () {
+            $.when.apply($, promises).done(function () {
                 self.prepareAxes();
                 self.prepareGuides();
                 self.prepareGrid();
@@ -392,12 +412,15 @@ window.DataDoo = (function () {
         },
         axes : {
             x : {
+                type : "number",
                 color : 0xff0000
             },
             y : {
+                type : "number",
                 color : 0x00ff00
             },
             z : {
+                type : "number",
                 color : 0x0000ff
             }
         },
@@ -573,6 +596,26 @@ window.DataDoo = (function () {
         ["#2c4259", "#9ed9d8", "#ede9f0", "#faf5f7", "#d4d0d1"]
 
     ];
+
+    DataDoo.simpleDeepExtend = function (target, source) {
+        //This is a very light weight utility function.
+        //Do not use it for edge cases.
+        if (source !== null && typeof source === 'object') {
+            for (var prop in source) {
+                if (prop in target) {
+                    if (typeof target[prop] === "object") {
+                        DataDoo.simpleDeepExtend(target[prop], source[prop]);
+                    }
+                    else {
+                        target[prop] = source[prop];
+                    }
+                }
+                else {
+                    target[prop] = source[prop];
+                }
+            }
+        }
+    };
 
     return DataDoo;
 })();

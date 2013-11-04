@@ -2,11 +2,11 @@
     <head>
         <style>
             body {
-                background:#fff;
-                margin:0;
-                overflow:hidden;
+                background: #fff;
+                margin: 0;
+                overflow: hidden;
                 font-family: "Lucida Console", "Lucida Sans Typewriter", Monaco, "Bitstream Vera Sans Mono", monospace;
-                text-align:center;
+                text-align: center;
             }
         </style>
     </head>
@@ -15,72 +15,151 @@
         <script src="../build/datadoo.js"></script>
         <script type="text/javascript">
 
+            var GH = {};
+            GH.CommitsParser = function (options) {
+            };
+            _.extend(GH.CommitsParser.prototype, Miso.Dataset.Parsers.prototype, {
+                parse : function (data) {
+                    var columns = ['week', 'dayName', /*'dayNumber', */'commitCount'];
+                    var dataColumns = { week : [], dayName : []/*, dayNumber : []*/, commitCount : [] };
+
+                    _.each(data, function (c) {
+                        var d = moment(c.commit.committer.date);
+                        var week = d.week();
+                        var dayName = d.format("dddd");
+                        var dayNumber = d.dayOfYear();
+
+                        //Find if an entry for this commit exists already by checking the dayNumber array
+                        var indx = _.indexOf(dataColumns.dayNumber, dayNumber);
+
+                        if (indx !== -1) {
+                            dataColumns.commitCount[indx]++;
+                        }
+                        else {
+                            dataColumns.week.push(week);
+                            dataColumns.dayName.push(dayName);
+                            //dataColumns.dayNumber.push(dayNumber);
+                            dataColumns.commitCount.push(Math.floor(100 * Math.random()));
+                        }
+                    });
+
+                    return {
+                        columns : columns,
+                        data : dataColumns
+                    };
+                }
+            });
+
+            var misoConfig = {
+                url : 'https://api.github.com/repos/misoproject/dataset/commits?per_page=10&callback=',
+                jsonp : true,
+                extract : function (response) {
+                    return response.data;
+                },
+                parser : GH.CommitsParser,
+                sync : true,
+
+                builder : function (rowData, rowIndex) {
+                    var g = new THREE.CubeGeometry(10, Math.abs(rowData.commitCount), 10);
+                    var cube = new THREE.Mesh(g, new THREE.MeshPhongMaterial({ color : 0xffcc00, transparent : true, opacity : 1, shininess : 10, shading : THREE.FlatShading }));
+                    return {
+                        shape : cube,
+                        text : rowData.commitCount
+                    }
+                }
+            };
+
+            var threeConfig = {
+                url : 'https://api.github.com/repos/mrdoob/three.js/commits?per_page=10&callback=',
+                jsonp : true,
+                extract : function (response) {
+                    return response.data;
+                },
+                parser : GH.CommitsParser,
+                sync : true,
+
+                builder : function (rowData, rowIndex) {
+                    var g = new THREE.CubeGeometry(10, Math.abs(rowData.commitCount), 10);
+                    var cube = new THREE.Mesh(g, new THREE.MeshPhongMaterial({ color : 0x00ffcc, transparent : true, opacity : 1, shininess : 10, shading : THREE.FlatShading }));
+                    return {
+                        shape : cube,
+                        text : rowData.commitCount
+                    }
+                }
+            };
+
+            var dsMiso = new DataDoo.Dataset(misoConfig);
+            var dsThree = new DataDoo.Dataset(threeConfig);
+
+            //var d = new DataDoo([dsMiso,dsThree]);
+            //d.run();
+
             var ds = new DataDoo.Dataset({
-                data: [
-                    { Course : "A", Marks : 15, Student : "Chanakya" },
-                    { Course : "B", Marks : 25, Student : "Sushant" },
-                    { Course : "B", Marks : 35, Student : "Vivek" },
-                    { Course : "C", Marks : 35, Student : "Azeem" },
-                    { Course : "D", Marks : 45, Student : "George" }
+                data : [
+                    { Marks : 15, /*Course : "A",*/ Year : "A191", Student : "Chanakya" },
+                    { Marks : 25, /*Course : "B",*/ Year : "A192", Student : "Sushant" },
+                    { Marks : 35, /*Course : "B",*/ Year : "A193", Student : "Vivek" },
+                    { Marks : 35, /*Course : "C",*/ Year : "A194", Student : "Azeem" },
+                    { Marks : 45, /*Course : "D",*/ Year : "A195", Student : "George" }
                 ],
 
-                builder : function(rowData, rowIndex){
-                    var g = new THREE.CubeGeometry(10,Math.abs(rowData.Marks),10);
-                    var cube = new THREE.Mesh(g, new THREE.MeshPhongMaterial( { color:0xffcc00, transparent:true, opacity:1, shininess:10,shading: THREE.FlatShading } ));
+                builder : function (rowData, rowIndex) {
+                    var g = new THREE.CubeGeometry(10, Math.abs(rowData.Marks), 10);
+                    var cube = new THREE.Mesh(g, new THREE.MeshPhongMaterial({ color : 0xffcc00, transparent : true, opacity : 1, shininess : 10, shading : THREE.FlatShading }));
                     return {
                         shape : cube,
                         //position : {y:rowData.Marks/2},
-                        text : rowData.Marks/*rowData.Student + "'s marks in Course : " + rowData.Course*/
+                        text : rowData.Marks
                     }
                 }
             });
 
             var ds2 = new DataDoo.Dataset({
-                data: [
-                    { Course : "E", Marks : 50 , Student : "Aditya"},
-                    { Course : "F", Marks : 60 , Student : "Akash"},
-                    { Course : "G", Marks : 70 , Student : "Patro"},
-                    { Course : "H", Marks : 80 , Student : "Arefin"}
+                data : [
+                    { Marks : 50, /*Course : "E",*/ Year : "A196", Student : "Aditya"},
+                    { Marks : 60, /*Course : "F",*/ Year : "A197", Student : "Akash"},
+                    { Marks : 70, /*Course : "G",*/ Year : "A198", Student : "Patro"},
+                    { Marks : 80, /*Course : "H",*/ Year : "A199", Student : "Arefin"}
                 ],
 
-                builder : function(rowData, rowIndex){
-                    var g = new THREE.SphereGeometry(Math.abs(rowData.Marks)/5, 200, 200);
-                    var sphere = new THREE.Mesh(g, new THREE.MeshPhongMaterial( { color:0xace123, transparent:true, opacity:1, shininess:0 } ));
+                builder : function (rowData, rowIndex) {
+                    var g = new THREE.SphereGeometry(Math.abs(rowData.Marks) / 5, 200, 200);
+                    var sphere = new THREE.Mesh(g, new THREE.MeshPhongMaterial({ color : 0xace123, transparent : true, opacity : 1, shininess : 0 }));
 
                     return {
                         shape : sphere,
                         //position : {y:rowData.Marks/2},
-                        text : rowData.Marks/*rowData.Student + "'s marks in Course : " + rowData.Course*/
+                        text : rowData.Marks
                     }
                 }
             });
 
-            var d = new DataDoo([ds,ds2]/*, {theme:Math.floor(Math.random()*50)}*/);
+            var d = new DataDoo([ds, ds2], {axes:{y:{type:"mixed"}}});
             d.run();
 
             /*var p = new THREE.Mesh(new THREE.CubeGeometry(10,10,10), new THREE.MeshBasicMaterial({color:0xff0000}));
-            var p2 = new THREE.Mesh(new THREE.CubeGeometry(10,10,10), new THREE.MeshBasicMaterial({color:0x00ff00}));
-            p.position.x=-40; p2.position.x=40;
-            d.scene.add(p); d.scene.add(p2);
+             var p2 = new THREE.Mesh(new THREE.CubeGeometry(10,10,10), new THREE.MeshBasicMaterial({color:0x00ff00}));
+             p.position.x=-40; p2.position.x=40;
+             d.scene.add(p); d.scene.add(p2);
 
-            var spline = new THREE.Spline( [p.position, p2.position, new THREE.Vector3(12,-35,70)] );
-            var geometry = new THREE.Geometry();
-            for (i = 0; i < 14; i++) {
-                index = i / ( 14 );
-                position = spline.getPoint(index);
-                geometry.vertices[ i ] = new THREE.Vector3(position.x, position.y, position.z);
-            };
-            geometry.dynamic = true;
-            geometry.verticesNeedUpdate = true;
-            d.scene.add(new THREE.Line(geometry, new THREE.LineBasicMaterial({color:0xffcc11})));
+             var spline = new THREE.Spline( [p.position, p2.position, new THREE.Vector3(12,-35,70)] );
+             var geometry = new THREE.Geometry();
+             for (i = 0; i < 14; i++) {
+             index = i / ( 14 );
+             position = spline.getPoint(index);
+             geometry.vertices[ i ] = new THREE.Vector3(position.x, position.y, position.z);
+             };
+             geometry.dynamic = true;
+             geometry.verticesNeedUpdate = true;
+             d.scene.add(new THREE.Line(geometry, new THREE.LineBasicMaterial({color:0xffcc11})));
 
-            setInterval(function(){
-                geometry.vertices[1].x=100*Math.random();
-                geometry.vertices[9].y=100*Math.random();
-                geometry.vertices[3].z=100*Math.random();
+             setInterval(function(){
+             geometry.vertices[1].x=100*Math.random();
+             geometry.vertices[9].y=100*Math.random();
+             geometry.vertices[3].z=100*Math.random();
 
-                geometry.verticesNeedUpdate = true;
-            },800);*/
+             geometry.verticesNeedUpdate = true;
+             },800);*/
 
         </script>
     </body>

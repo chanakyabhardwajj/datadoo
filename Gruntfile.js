@@ -30,7 +30,8 @@ module.exports = function (grunt) {
                         'src/vendor/jquery/jquery.js',
                         'src/vendor/underscore/underscore.js',
                         'src/vendor/miso.dataset/dist/miso.ds.deps.0.4.0.js',
-                        'src/vendor/momentjs/moment.js'
+                        'src/vendor/momentjs/moment.js',
+                        'src/vendor/tweenjs/index.js'
 
                     ]
                 },
