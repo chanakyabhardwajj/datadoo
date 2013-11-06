@@ -8,6 +8,15 @@
                 font-family: "Lucida Console", "Lucida Sans Typewriter", Monaco, "Bitstream Vera Sans Mono", monospace;
                 text-align: center;
             }
+
+            #footer{
+                position: absolute;
+                width: 100%;
+                height: 50px;
+                background-color: rgba(200,200,200,0.5);
+                bottom: 0px;
+                padding: 10px;
+            }
         </style>
     </head>
     <body>
@@ -134,7 +143,13 @@
                 }
             });
 
-            var d1 = new DataDoo([ds, ds2], {axes:{z:{type:"mixed"}}});
+            var d = new DataDoo([ds, ds2], {
+                axes:{
+                    z:{
+                        type:"mixed"
+                    }
+                }
+            });
 
 
             /*var p = new THREE.Mesh(new THREE.CubeGeometry(10,10,10), new THREE.MeshBasicMaterial({color:0xff0000}));
@@ -162,5 +177,9 @@
              },800);*/
 
         </script>
+
+        <div id="footer">
+            "This is DataDoo. A 3D data visualiser. The 3D graph that you see below has been automatically generated. As a user, you are only concerned with providing the data. The 3D visualization is completely abstracted away."
+        </div>
     </body>
 </html>
